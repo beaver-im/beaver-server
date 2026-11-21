@@ -14,7 +14,7 @@ import (
 //
 // 换票是 beaver-doc / doc 的独立机器视图接口，地址与请求体都在这里，调用方只管拿票。
 func GetTokenApi(ctx context.Context, clientID, clientSecret string) (string, int, error) {
-	out, err := ajax.Post[remotetype.TokenResponse](ctx, commonconfig.DocUrl, "/beaver-doc/api/doc/machine/v1/token", nil, remotetype.TokenRequest{
+	out, err := ajax.Post[remotetype.TokenResponse](ctx, commonconfig.DocUrl, "/beaver-doc/api/office/doc_s2s/v1/token", nil, remotetype.TokenRequest{
 		ClientID:     clientID,
 		ClientSecret: clientSecret,
 	})

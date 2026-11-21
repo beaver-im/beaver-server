@@ -21,7 +21,7 @@ ServiceAlias:
   workbench: platform_api
   ai: agent_api
   call: call_api
-  doc: doc_api
+  office: office_api
   backend: backend_admin
 Log:
   Encoding: json
@@ -70,12 +70,12 @@ Machine:
   ClientID: gateway
   Issuer: beaver-gateway
 # 公开端点正则：命中任一即不验外部票（登录/换票/预览/ws/回调等）。
-# 用 URL 六段式结构表达规范，避免逐条硬编码；新增 _public 组或 machine token 端点零配置。
+# 用 URL 六段式结构表达规范，避免逐条硬编码；新增 _public 组或 _s2s 换票端点零配置。
 PublicPatterns:
   # 通用规则 1：group 段以 _public 结尾的整组公开
   - ^/[^/]+/(?:api|admin)/[^/]+/[^/]+_public/v1/
-  # 通用规则 2：各团队的换票端点 group=machine + action=token
-  - ^/[^/]+/api/[^/]+/machine/v1/token$
+  # 通用规则 2：各团队的换票端点 group 以 _s2s 结尾（机器面统一后缀）+ action=token
+  - ^/[^/]+/api/[^/]+/[^/]+_s2s/v1/token$
   # 以下为命名不合规特例（group 未用 _public，须 action 级精确放行；规整命名后可删）：
   - ^/beaver/api/account/auth_token/v1/issue$      # 换票口
   - ^/beaver/api/asset/preview/v1/get$             # 文件预览
