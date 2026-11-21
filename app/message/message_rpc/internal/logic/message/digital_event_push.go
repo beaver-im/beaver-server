@@ -26,8 +26,10 @@ import (
 	"fmt"
 	"strings"
 
+	message_models "beaver/app/message/message_models/chat"
 	"beaver/app/message/message_rpc/internal/svc"
 	chat_rpc "beaver/app/message/message_rpc/pb"
+	"beaver/common/const/chattypeconst"
 	"beaver/common/const/mqwsconst"
 	"beaver/common/models/ctype"
 	"beaver/openevent"
@@ -60,13 +62,19 @@ func (p *digitalEventPusher) tryPush(in *chat_rpc.SendMsgReq, msg *ctype.Msg) {
 		return
 	}
 
-	conversationType, userIDs := conversation.ParseConversationWithType(in.ConversationId)
+	// 会话类型以会话元数据为准，不从会话ID前缀推断
+	conversationType, err := message_models.LoadConversationType(p.svcCtx.DB, in.ConversationId)
+	if err != nil {
+		p.logger.Warn(model.LogMsg{Text: "查询会话类型失败，跳过数字伙伴事件推送", Data: map[string]any{"conversationId": in.ConversationId, "err": err.Error()}})
+		return
+	}
+	userIDs := conversation.ParseConversationIDs(conversationType, in.ConversationId)
 	eventBody := p.buildEventBody(in, msg)
 
-	switch conversationType {
-	case 1:
+	switch {
+	case chattypeconst.IsP2P(conversationType):
 		p.pushPrivateChat(in.UserId, userIDs, eventBody)
-	case 2:
+	case conversationType == chattypeconst.Group:
 		p.pushGroupAt(in.UserId, in.ConversationId, msg, eventBody)
 	}
 }
@@ -118,7 +126,7 @@ func (p *digitalEventPusher) pushGroupAt(senderID, conversationID string, msg *c
 			continue
 		}
 		groupEvent := copyEventMap(event)
-		groupEvent["group_id"] = conversation.GetTargetIDByConversation(conversationID, senderID)
+		groupEvent["group_id"] = conversation.GetTargetIDByConversation(chattypeconst.Group, conversationID, senderID)
 		// builtin 模式：投 agent_task。
 		if res.Runtime == "builtin" {
 			p.pushAgentTask(res.DigitalId, groupEvent)

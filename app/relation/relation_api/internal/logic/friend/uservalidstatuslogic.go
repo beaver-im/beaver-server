@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"sort"
 
+	accttypes "beaver/app/account/account_rpc/pb"
 	chat_rpc "beaver/app/message/message_rpc/pb"
 	notification_rpc "beaver/app/notification/notification_rpc/pb"
 	"beaver/app/relation/relation_api/internal/svc"
@@ -248,9 +249,12 @@ func (l *UserValidStatusLogic) UserValidStatus(req *types.FriendValidStatusReq) 
 		}
 		tableUpdates = append(tableUpdates, verifyUpdates)
 
-		// 如果是同意添加好友，额外发送friends表版本更新
+		// 如果是同意添加好友，额外发送 friends + 双方 users 表版本更新。
+		// 建立好友关系 = friends 记录 + 双方用户资料，两张表都得推。客户端只读
+		// 本地 users 表渲染昵称头像，靠 users.version 触发 user_sync；漏推 users
+		// 会让好友在列表里显示为空昵称/空头像。
 		if friendVerify.RevStatus == 1 {
-			friendUpdates := map[string]interface{}{
+			tableUpdates = append(tableUpdates, map[string]interface{}{
 				"table": "friends",
 				"data": []map[string]interface{}{
 					{
@@ -258,8 +262,21 @@ func (l *UserValidStatusLogic) UserValidStatus(req *types.FriendValidStatusReq) 
 						"friendId": friendID, // 使用预生成的ID
 					},
 				},
+			})
+
+			for _, uid := range []string{friendVerify.SendUserID, friendVerify.RevUserID} {
+				info, uErr := l.svcCtx.UserRpc.UserInfo(context.Background(), &accttypes.UserInfoReq{UserID: uid})
+				if uErr != nil || info == nil || info.UserInfo == nil {
+					l.logger.Error(model.LogMsg{Text: "同意好友后查询用户资料失败，跳过该用户的 users 更新", Data: map[string]interface{}{"userId": uid, "err": fmt.Sprint(uErr)}})
+					continue
+				}
+				tableUpdates = append(tableUpdates, map[string]interface{}{
+					"table": "users",
+					"data": []map[string]interface{}{
+						{"userId": info.UserInfo.UserId, "version": info.UserInfo.Version},
+					},
+				})
 			}
-			tableUpdates = append(tableUpdates, friendUpdates)
 		}
 
 		payload1 := map[string]interface{}{

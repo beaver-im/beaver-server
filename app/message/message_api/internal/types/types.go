@@ -114,7 +114,7 @@ type ConversationInfoRes struct {
 	UpdatedAt      string `json:"updatedAt"`      //消息时间
 	IsTop          bool   `json:"isTop"`          //是否置顶
 	ConversationID string `json:"conversationId"` //会话id
-	ChatType       int    `json:"chatType"`       //会话类型 1:好友 2:群聊 3:AI机器人
+	ChatType       int    `json:"chatType"`       //会话类型 1:普通私聊 2:群聊 3:圈子 4:数字伙伴 5:机器人
 	Notice         string `json:"notice"`         //备注
 }
 

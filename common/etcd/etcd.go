@@ -110,7 +110,9 @@ func DeliveryAddress(etcdAddr string, serviceName string, addr string) {
 		})
 		return
 	}
-	defer client.Close()
+	// client 的生命周期与进程一致：KeepAlive 依赖它持续续约租约。
+	// 此处绝不能 Close，否则注册后立即断连、租约失效并触发无谓的重连窗口。
+	// 真正的断线重连由 keepAliveService -> reconnectEtcd 负责（那里会关闭旧 client 再重建）。
 
 	err = registerServiceWithRetry(client, etcdAddr, serviceName, addr)
 	if err != nil {

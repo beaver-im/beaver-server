@@ -62,7 +62,9 @@ func (l *GetConversationsListByIdsLogic) GetConversationsListByIds(in *chat_rpc.
 		return nil, err
 	}
 
-	var conversationList []*chat_rpc.ConversationListById
+	// 会话类型直接下发 ChatConversationMeta.Type（1普通私聊 2群聊 3圈子 4数字伙伴 5机器人），
+	// 客户端不再需要靠会话ID前缀猜类型。
+	conversationList := make([]*chat_rpc.ConversationListById, 0, len(conversations))
 	for _, conv := range conversations {
 		conversationList = append(conversationList, &chat_rpc.ConversationListById{
 			ConversationId: conv.ConversationID,

@@ -98,9 +98,10 @@ func (l *AddFriendLogic) AddFriend(req *types.AddFriendReq) (resp *types.AddFrie
 		l.logger.Error(model.LogMsg{Text: "目标用户不存在", Data: map[string]interface{}{"friendId": req.FriendID, "err": fmt.Sprintf("%v", err)}})
 		return nil, errors.New("用户不存在")
 	}
-	// 数字伙伴没有人点同意，搜索到了就直接成为好友，并建好私聊。
-	if friendInfo.UserInfo.UserType == int32(usertypeconst.UserTypeDigital) {
-		return l.addDigitalFriend(req)
+	// 非人类账号没有人点同意（数字伙伴、机器人），搜索到了就直接成为好友，并建好私聊。
+	if friendInfo.UserInfo.UserType == int32(usertypeconst.UserTypeDigital) ||
+		friendInfo.UserInfo.UserType == int32(usertypeconst.UserTypeBot) {
+		return l.addInstantFriend(req)
 	}
 
 	// 检查是否已经有待处理的好友请求
@@ -264,14 +265,14 @@ func (l *AddFriendLogic) AddFriend(req *types.AddFriendReq) (resp *types.AddFrie
 	return resp, nil
 }
 
-// addDigitalFriend 数字伙伴直接成为好友：写好友表、建私聊、发欢迎语，并通知两端同步。
-func (l *AddFriendLogic) addDigitalFriend(req *types.AddFriendReq) (*types.AddFriendRes, error) {
+// addInstantFriend 非人类账号（数字伙伴 / 机器人）直接成为好友：写好友表、建私聊、发欢迎语，并通知两端同步。
+func (l *AddFriendLogic) addInstantFriend(req *types.AddFriendReq) (*types.AddFriendRes, error) {
 	friendNextVersion := l.svcCtx.VersionGen.GetNextVersion("friends", "", "")
 	if friendNextVersion == -1 {
 		return nil, errors.New("系统错误")
 	}
 	friendID := uuid.New().String()
-	// 之前已经发出去的验证，数字伙伴不会点，这里直接收掉。
+	// 之前已经发出去的验证，非人类账号不会点，这里直接收掉。
 	l.svcCtx.DB.Model(&friend_models.FriendVerifyModel{}).
 		Where("((send_user_id = ? AND rev_user_id = ?) OR (send_user_id = ? AND rev_user_id = ?)) AND rev_status = 0",
 			req.UserID, req.FriendID, req.FriendID, req.UserID).
@@ -284,7 +285,7 @@ func (l *AddFriendLogic) addDigitalFriend(req *types.AddFriendReq) (*types.AddFr
 		Version:    friendNextVersion,
 	}).Error
 	if err != nil {
-		l.logger.Error(model.LogMsg{Text: "创建数字伙伴好友关系失败", Data: map[string]interface{}{"friendId": req.FriendID, "err": err.Error()}})
+		l.logger.Error(model.LogMsg{Text: "创建好友关系失败", Data: map[string]interface{}{"friendId": req.FriendID, "err": err.Error()}})
 		return nil, errors.New("添加好友失败")
 	}
 
@@ -297,14 +298,14 @@ func (l *AddFriendLogic) addDigitalFriend(req *types.AddFriendReq) (*types.AddFr
 		UserIds:        []string{req.UserID, req.FriendID},
 	})
 	if err != nil {
-		l.logger.Error(model.LogMsg{Text: "初始化数字伙伴私聊失败", Data: map[string]interface{}{"conversationId": conversationId, "err": err.Error()}})
+		l.logger.Error(model.LogMsg{Text: "初始化私聊失败", Data: map[string]interface{}{"conversationId": conversationId, "err": err.Error()}})
 		return nil, errors.New("初始化私聊失败")
 	}
 
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				l.logger.Error(model.LogMsg{Text: "发送数字伙伴欢迎消息panic", Data: map[string]interface{}{"panic": r}})
+				l.logger.Error(model.LogMsg{Text: "发送欢迎消息panic", Data: map[string]interface{}{"panic": r}})
 			}
 		}()
 		_, err := l.svcCtx.ChatRpc.SendNotificationMessage(context.Background(), &chat_rpc.SendNotificationMessageReq{
@@ -315,16 +316,21 @@ func (l *AddFriendLogic) addDigitalFriend(req *types.AddFriendReq) (*types.AddFr
 			ReadUserIds:    []string{req.UserID},
 		})
 		if err != nil {
-			l.logger.Error(model.LogMsg{Text: "发送数字伙伴欢迎消息失败", Data: map[string]interface{}{"conversationId": initResp.ConversationId, "err": err.Error()}})
+			l.logger.Error(model.LogMsg{Text: "发送欢迎消息失败", Data: map[string]interface{}{"conversationId": initResp.ConversationId, "err": err.Error()}})
 		}
 	}()
 
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				l.logger.Error(model.LogMsg{Text: "通知数字伙伴好友关系panic", Data: map[string]interface{}{"panic": r}})
+				l.logger.Error(model.LogMsg{Text: "通知好友关系panic", Data: map[string]interface{}{"panic": r}})
 			}
 		}()
+		// 建立好友关系 = friends 记录 + 双方用户资料，两张表都得推。
+		// 客户端的好友列表/会话列表里，对方昵称头像只读本地 users 表，靠这里的
+		// users.version 触发 user_sync 拉取。只推 friends 的话关系是有了，但本地
+		// 永远没有对方资料 → 空昵称空头像。数字伙伴/机器人没有客户端能点「同意」，
+		// 走的正是这条自动通过路径，最容易漏。
 		tableUpdates := []map[string]interface{}{
 			{
 				"table": "friends",
@@ -332,6 +338,19 @@ func (l *AddFriendLogic) addDigitalFriend(req *types.AddFriendReq) (*types.AddFr
 					{"version": friendNextVersion, "friendId": friendID},
 				},
 			},
+		}
+		for _, uid := range []string{req.UserID, req.FriendID} {
+			info, uErr := l.svcCtx.UserRpc.UserInfo(context.Background(), &accttypes.UserInfoReq{UserID: uid})
+			if uErr != nil || info == nil || info.UserInfo == nil {
+				l.logger.Error(model.LogMsg{Text: "自动通过好友后查询用户资料失败，跳过该用户的 users 更新", Data: map[string]interface{}{"userId": uid, "err": fmt.Sprint(uErr)}})
+				continue
+			}
+			tableUpdates = append(tableUpdates, map[string]interface{}{
+				"table": "users",
+				"data": []map[string]interface{}{
+					{"userId": info.UserInfo.UserId, "version": info.UserInfo.Version},
+				},
+			})
 		}
 		for _, pair := range [][2]string{{req.UserID, req.FriendID}, {req.FriendID, req.UserID}} {
 			l.svcCtx.RocketMQ.SendMessage(context.Background(), mqwsconst.MqTopicWs, map[string]interface{}{
@@ -347,6 +366,6 @@ func (l *AddFriendLogic) addDigitalFriend(req *types.AddFriendReq) (*types.AddFr
 		}
 	}()
 
-	l.logger.Info(model.LogMsg{Text: "数字伙伴已直接加为好友", Data: map[string]interface{}{"userId": req.UserID, "friendId": req.FriendID, "conversationId": initResp.ConversationId}})
+	l.logger.Info(model.LogMsg{Text: "非人类账号已直接加为好友", Data: map[string]interface{}{"userId": req.UserID, "friendId": req.FriendID, "conversationId": initResp.ConversationId}})
 	return &types.AddFriendRes{Version: friendNextVersion, Direct: true}, nil
 }
