@@ -276,6 +276,17 @@ UpdateReadSeqRes {
 )
 
 type (
+NewChatTopicReq {
+		UserID string `header:"Beaver-User-Id"` // 当前用户ID（网关注入的可信身份头）
+		ConversationID string `json:"conversationId"` // 会话ID
+	}
+
+NewChatTopicRes {
+		TopicID string `json:"topicId"` // 新话题ID；实际由下一条消息在 AI 侧创建，这里仅回传占位语义
+	}
+)
+
+type (
 GetForwardDetailsReq {
 		UserID string `header:"Beaver-User-Id"` // 当前用户ID（网关注入的可信身份头）
 		RecordID string `form:"recordId"`
@@ -827,6 +838,10 @@ service message {
 	@doc "更新会话已读序列号"
 	@handler updateReadSeq
 	post /beaver/api/message/chat/v1/update_read_seq (UpdateReadSeqReq) returns (UpdateReadSeqRes)
+
+	@doc "在当前会话开启新话题（话题 = AI 上下文边界，下一条消息起生效）"
+	@handler newChatTopic
+	post /beaver/api/message/chat/v1/new_topic (NewChatTopicReq) returns (NewChatTopicRes)
 
 	@doc "获取合并转发详情"
 	@handler getForwardDetails

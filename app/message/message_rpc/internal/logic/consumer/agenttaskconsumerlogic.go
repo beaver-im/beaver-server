@@ -29,6 +29,7 @@ import (
 
 	message_models "beaver/app/message/message_models/chat"
 	"beaver/app/message/message_rpc/internal/svc"
+	"beaver/common/const/agenttopicconst"
 	"beaver/common/const/mqwsconst"
 	"beaver/common/models/ctype"
 	"beaver/core/corerocketmq"
@@ -119,11 +120,18 @@ func (l *AgentTaskConsumerLogic) StartConsumer() error {
 			return nil
 		}
 
+		// 会话下可以有多个话题，每个话题是独立的 AI 上下文边界。
+		// 缓存当前话题 ID：有值就续该话题，空值（用户点了「新话题」被清掉）就让
+		// AI 侧新建话题。客户端不持有 topicId——它是服务端编排状态。
+		topicKey := agenttopicconst.Key(conversationID)
+		topicID, _ := l.svcCtx.Redis.Get(topicKey).Result()
+
 		// 经 agent_api S2S 调 Python agent SendMessage（fire-and-forget：只取成败，不等终稿）。
 		// 信封 code!=0 由 ajax 统一转成 error，这里只看 err。
-		_, err = agent.SendMessageApi(ctx, nil, &agenttype.SendMessageReq{
+		res, err := agent.SendMessageApi(ctx, nil, &agenttype.SendMessageReq{
 			UserId:         userID,
 			ConversationId: conversationID,
+			TopicId:        topicID,
 			ModelId:        "",
 			PartsJson:      string(partsJSON),
 			AgentId:        agentID,
@@ -135,6 +143,11 @@ func (l *AgentTaskConsumerLogic) StartConsumer() error {
 		if err != nil {
 			l.logger.Error(model.LogMsg{Text: "AgentRpc.SendMessage 调用失败", Data: map[string]any{"digitalId": digitalID, "messageId": messageID, "err": err.Error()}})
 			return nil
+		}
+		if res != nil && res.TopicId != "" {
+			if err := l.svcCtx.Redis.Set(topicKey, res.TopicId, agenttopicconst.AgentTopicTTL).Err(); err != nil {
+				l.logger.Error(model.LogMsg{Text: "缓存会话当前话题失败", Data: map[string]any{"conversationId": conversationID, "topicId": res.TopicId, "err": err.Error()}})
+			}
 		}
 
 		l.logger.Info(model.LogMsg{Text: "agent_task 投递 agent 成功", Data: map[string]any{"digitalId": digitalID, "messageId": messageID}})
