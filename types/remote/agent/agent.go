@@ -89,5 +89,9 @@ type (
 		LatestTopicId  string `json:"latestTopicId"`
 		Preview        string `json:"preview"`
 		Version        int64  `json:"version"`
+		// 会话绑定的编排来源（只回 id，名字/头像由客户端按 agents / teams 查）
+		AgentId string `json:"agentId"`
+		RoleId  string `json:"roleId"`
+		TeamId  string `json:"teamId"`
 	}
 )

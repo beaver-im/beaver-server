@@ -141,6 +141,3 @@ services:
       - "5601:5601"
     depends_on:
       - opensearch
-# 命名卷：避免 Windows/macOS 下 bind mount 的 uid/gid 权限问题（AccessDeniedException）。
-volumes:
-  opensearch-data:

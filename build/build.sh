@@ -19,15 +19,39 @@ fi
 # 获取参数
 module_name="$1"
 
-# 跳转到目标目录
-cd deploy/"$module_name" || {
-    echo "Error: Directory deploy/$module_name not found"
+# 二进制在 beaver_server 构建阶段的路径：如 account_api/account、asset_rpc/assetrpc
+declare -A BIN_PATHS=(
+    [account_api]="account_api/account"
+    [account_rpc]="account_rpc/accountrpc"
+    [asset_api]="asset_api/asset"
+    [asset_rpc]="asset_rpc/assetrpc"
+    [datasync_api]="datasync_api/datasync"
+    [gateway_api]="gateway_api/gateway"
+    [message_api]="message_api/message"
+    [message_rpc]="message_rpc/messagerpc"
+    [notification_api]="notification_api/notification"
+    [notification_rpc]="notification_rpc/notificationrpc"
+    [platform_api]="platform_api/platform"
+    [platform_rpc]="platform_rpc/platformrpc"
+    [relation_api]="relation_api/relation"
+    [relation_rpc]="relation_rpc/relationrpc"
+    [ws_api]="ws_api/ws"
+)
+bin_path="${BIN_PATHS[$module_name]}"
+if [ -z "$bin_path" ]; then
+    echo "Error: Unknown module $module_name (no binary path mapping)"
+    exit 1
+fi
+
+# 在 deploy 根目录用通用 Dockerfile 构建（服务配置由各 compose 挂载，不进镜像）
+cd "$ROOT_DIR/deploy" || {
+    echo "Error: Directory deploy not found: $ROOT_DIR/deploy"
     exit 1
 }
 
 # 构建镜像
-echo "Building image: $module_name"
-docker build -t "$module_name" .
+echo "Building image: $module_name (bin: $bin_path)"
+docker build --build-arg "BIN=$bin_path" -t "$module_name" -f Dockerfile .
 if [ $? -ne 0 ]; then
     echo "Error: Failed to build the image"
     exit 1

@@ -45,9 +45,9 @@ err := db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 
 ## 6.3 升级数据库：先分清建表与迁历史数据
 
-当前 [根 main.go](../../main.go) 是 `-db` 工具，内含建库/AutoMigrate/种子逻辑；
-[database/migrations.go](../../database/migrations.go) 也列 AllMigrations/RunMigrations，根入口没有直接调用这套函数。
-**重要定位**：这两处仅是**本地开发机集中建库与初始化辅助现状**，绝不表示生产环境共享同一 MySQL 服务器，也不意味着业务服务在运行期可以拿到其他库的连接权限；实际部署中各服务物理隔离且仅持自有库 DSN。两处重叠工具入口后续应合并清理不需要的一份，不长期并存（本次文档任务未修改源码、未运行）。
+当前 [根 main.go](../../main.go) 是唯一的 `-db` 工具，内含建库/AutoMigrate/种子逻辑。
+数据库连接凭据只在 main.go 顶部定义一次（`mysqlUser`/`mysqlAddr`，连接别的实例时自行替换），各库 DSN 由 `dbDSN(dbName)` 拼接（`dbName` 为空即连接实例本身，用于 CREATE DATABASE），不在多处重复，也不在源码里保留远程实例凭据；原先重叠且零调用的 `database/migrations.go` 已删除。
+**重要定位**：这里仅是**本地开发机集中建库与初始化辅助现状**，绝不表示生产环境共享同一 MySQL 服务器，也不意味着业务服务在运行期可以拿到其他库的连接权限；实际部署中各服务物理隔离且仅持自有库 DSN。
 
 数据库结构变更步骤：
 1. 直接改齐目标表模型、迁表登记、索引和读写逻辑；不需要为兼容旧版数据格式编写历史过渡层，废弃表和字段直接删除。

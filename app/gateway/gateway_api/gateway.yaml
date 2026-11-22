@@ -33,30 +33,31 @@ Limit:
   Burst: 200   # 峰值容忍
 # 网关统一验外部票 → 写可信身份头（admin 平面 Beaver-Admin-Id，其余 Beaver-User-Id）
 # → 注入机器票 → 转发。业务服务默认只挂 JwtS2s；外部票只在此处验。
-# 三类票各占一段配置：现阶段密钥同值（都取自签发方 Auth.AccessSecret），
-# 但形状分开，将来任一平面独立轮换不必动其余两段。票据平面另由 claims.Audience 判定。
-AuthBeaver:
-  # 主站 C 端用户票，签发方 app/account 的 auth_public。
-  AccessSecret: f81d1b2d8f69a503d848a2ad0b9908186bc435d36cf5a885c33491b51613240f38ff672700d60ffdf19466cc9a687620
-AuthOpen:
-  # 开放平台开发者票，签发方 beaver-open 的 developer 登录。
-  AccessSecret: f81d1b2d8f69a503d848a2ad0b9908186bc435d36cf5a885c33491b51613240f38ff672700d60ffdf19466cc9a687620
-AuthAdmin:
-  # 后台管理员票，签发方 beaver-backend 的 auth_public 登录。
-  AccessSecret: f81d1b2d8f69a503d848a2ad0b9908186bc435d36cf5a885c33491b51613240f38ff672700d60ffdf19466cc9a687620
+# 三类外部票统一挂在 Auth 段下，各占一段、密钥各不相同（分别取自各签发方的 Auth.AccessSecret）：
+# 网关按段取密钥验签，再靠 claims.Audience 分平面；改任一把须同步对应签发方仓。
+Auth:
+  AuthBeaver:
+    # 主站 C 端用户票，签发方 app/account 的 auth_public。
+    AccessSecret: beaver-jwt-user-5a99dd68227b4aa4bca260349995d485
+  AuthOpen:
+    # 开放平台开发者票，签发方 beaver-open 的 developer 登录。
+    AccessSecret: beaver-jwt-open-089b1407d2b0408dbef868f651750d4b
+  AuthAdmin:
+    # 后台管理员票，签发方 beaver-backend 的 auth_public 登录。
+    AccessSecret: beaver-jwt-admin-b2135d16210e40058bc10319272bb994
 # 网关注入到下游的机器票。一把密钥 = 一个目标团队，网关按路径 team 选密钥签发，
 # 下游用本团队的 S2S.Secret 验签；调用方拿 client_credentials 去目标换票也用目标那把。
 # 查表键与下方 Audiences 完全一致（team/surface 精确键 → team → Default）。
 Machine:
   Secrets:
-    beaver: beaver-s2s-01-core
-    beaver/admin: beaver-s2s-07-admin
-    beaver-open: beaver-s2s-02-open
-    beaver-social: beaver-s2s-03-social
-    beaver-doc: beaver-s2s-04-doc
-    beaver-call: beaver-s2s-05-call
-    beaver-ai: beaver-s2s-06-ai
-  DefaultSecret: beaver-s2s-01-core
+    beaver: beaver-s2s-core-b0db00321ca84fc783a2ba81505e82b1
+    beaver/admin: beaver-s2s-admin-2a8e5c1d7f4b6039a2c8e5d1f7b40639
+    beaver-open: beaver-s2s-open-a1c9e7d3405b4f268e5a1d7c9b3f6402
+    beaver-social: beaver-s2s-social-73d1e5b9a2c846f0b3e7d9a1c5f28064
+    beaver-doc: beaver-s2s-doc-8c4f1a6e2b9d5037a1e6f4c8d2b97053
+    beaver-call: beaver-s2s-call-1e6b4d9a7c2f8053b6e1a9d4c7f28305
+    beaver-ai: beaver-s2s-ai-c5e8a1d4b7f20396a1c5e8d4b7f20369
+  DefaultSecret: beaver-s2s-core-b0db00321ca84fc783a2ba81505e82b1
   DefaultAudience: core:api
   # 各 team 业务空壳写死的 S2S audience，网关注入机器票必须按 team 选对，否则 401。
   Audiences:

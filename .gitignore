@@ -17,3 +17,7 @@ scripts/stress/data/
 .gen_doc_api_tmp
 .gen_doc_tmp
 .tmpgen
+config_prod.yaml
+
+# 部署产物包（含明文密码/密钥，由 deploy/config.sh 构建）
+deploy/dist/

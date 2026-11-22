@@ -1,0 +1,11 @@
+
+services:
+  ws_api:
+    image: wsrh8888/ws_api:1.0.0
+    container_name: ws_api
+    network_mode: "host"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./ws.yaml:/etc/config.yaml:ro
+    restart: "no"
+    pull_policy: always 

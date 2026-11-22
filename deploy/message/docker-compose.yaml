@@ -1,0 +1,22 @@
+services:
+  message_rpc:
+    image: wsrh8888/message_rpc:1.0.0
+    container_name: message_rpc
+    network_mode: "host"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./message_rpc.yaml:/etc/config.yaml:ro
+    restart: "no"
+    pull_policy: always
+
+  message_api:
+    image: wsrh8888/message_api:1.0.0
+    container_name: message_api
+    network_mode: "host"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./message_api.yaml:/etc/config.yaml:ro
+    restart: "no"
+    pull_policy: always
+    depends_on:
+      - message_rpc

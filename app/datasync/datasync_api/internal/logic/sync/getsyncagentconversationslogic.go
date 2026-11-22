@@ -88,6 +88,9 @@ func (l *GetSyncAgentConversationsLogic) GetSyncAgentConversations(req *types.Ge
 			Preview:        item.Preview,
 			Module:         item.Module,
 			WorkspaceID:    item.WorkspaceId,
+			AgentID:        item.AgentId,
+			RoleID:         item.RoleId,
+			TeamID:         item.TeamId,
 		})
 	}
 

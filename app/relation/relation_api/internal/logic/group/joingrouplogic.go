@@ -180,7 +180,9 @@ func (l *JoinGroupLogic) JoinGroup(req *types.GroupJoinReq) (resp *types.GroupJo
 					return
 				}
 				payload, _ := json.Marshal(map[string]interface{}{
-					"requestId": requestVersion,
+					// 必须是申请记录主键：处理入群申请的接口按 id 定位记录，
+					// 这里若放 version 会导致通知里点「同意」永远失败。
+					"requestId": joinRequest.ID,
 					"groupId":   req.GroupID,
 					"userId":    req.UserID,
 					"message":   req.Message,

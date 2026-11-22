@@ -1,0 +1,50 @@
+Name: notification
+Host: 0.0.0.0
+Port: 21000
+Mysql:
+  DataSource: root:123456@tcp(127.0.0.1:3306)/beaver_notification?charset=utf8mb4&parseTime=True&loc=Local
+Redis:
+  Addr: 127.0.0.1:6379
+  Password: '123456'
+  DB: 0
+Log:
+  Encoding: json
+  TimeFormat: 2006-01-02T15:04:05
+  Stat: false
+Etcd: 127.0.0.1:2379
+UserRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: accountrpc.rpc
+AuthRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: accountrpc.rpc
+NotificationRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: notificationrpc.rpc
+FriendRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: relationrpc.rpc
+ChatRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: messagerpc.rpc
+RocketMQ:
+  Addr: 127.0.0.1:9876
+
+# 入站 S2S 机器票：本团队业务面共用一套凭据，票据受众统一 core:api。
+S2S:
+  Secret: beaver-s2s-core-b0db00321ca84fc783a2ba81505e82b1

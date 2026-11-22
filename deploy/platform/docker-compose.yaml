@@ -1,0 +1,22 @@
+services:
+  platform_rpc:
+    image: wsrh8888/platform_rpc:1.0.0
+    container_name: platform_rpc
+    network_mode: "host"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./platform_rpc.yaml:/etc/config.yaml:ro
+    restart: "no"
+    pull_policy: always
+
+  platform_api:
+    image: wsrh8888/platform_api:1.0.0
+    container_name: platform_api
+    network_mode: "host"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./platform_api.yaml:/etc/config.yaml:ro
+    restart: "no"
+    pull_policy: always
+    depends_on:
+      - platform_rpc

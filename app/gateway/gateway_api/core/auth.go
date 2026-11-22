@@ -188,7 +188,7 @@ func verifyTicket(r *http.Request, secret, audience, missingSecretMsg string) (*
 	if err != nil || claims.UserID == "" {
 		return nil, errors.New("票据无效或已过期")
 	}
-	// 三票可能共用同一密钥，只有 Audience 分平面。缺了这一步，普通用户票能直接打后台接口。
+	// 三票各有独立密钥，但仍校验 Audience 分平面作双保险；缺了这一步，票据错投平面就可能越权。
 	if !claims.VerifyAudience(audience, true) {
 		return nil, errors.New("票据与访问平面不匹配")
 	}

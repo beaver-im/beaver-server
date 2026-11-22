@@ -3,52 +3,22 @@
 # 获取当前脚本所在目录
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# 函数：按顺序停止服务
-stop_services() {
-    local service_type=$1
-    local pattern=$2
-    
-    echo "=== Stopping $service_type services ==="
-    
-    # 查找匹配模式的目录
-    for dir in "$SCRIPT_DIR"/*; do
-        if [ -d "$dir" ] && [[ "$(basename "$dir")" == *"$pattern"* ]]; then
-            if [ -f "$dir/docker-compose.yaml" ]; then
-                echo "Processing $service_type service: $(basename "$dir")"
-                cd "$dir" || { echo "Failed to navigate to directory: $dir"; continue; }
+# 停止所有含 docker-compose.yaml 的目录。
+# 各目录命名已统一，业务目录的 compose 内 RPC/API 一起停，无需按后缀分类。
+for dir in "$SCRIPT_DIR"/*; do
+    [ -d "$dir" ] || continue
+    [ -f "$dir/docker-compose.yaml" ] || continue
+    name="$(basename "$dir")"
 
-                echo "Stopping docker-compose services in $dir"
-                docker-compose down
-                echo "Services stopped in $dir"
-                
-                # 短暂等待服务停止
-                sleep 1
-            else
-                echo "docker-compose.yaml not found in $dir"
-            fi
-        fi
-    done
-}
+    echo "=== Stopping $name ==="
+    cd "$dir" || { echo "Failed to navigate to directory: $dir"; continue; }
+    docker-compose down
+    echo "=== $name stopped ==="
+    sleep 1
+done
 
-# 按顺序停止服务：Portal -> Admin -> API -> RPC
-echo "Stopping services in order: Portal -> Admin -> API -> RPC"
-
-# 1. 停止 Portal 服务
-stop_services "Portal" "_portal"
-
-# 2. 停止 Admin 服务
-stop_services "Admin" "_admin"
-
-# 3. 停止 API 服务
-stop_services "API" "_api"
-
-# 4. 停止 RPC 服务
-stop_services "RPC" "_rpc"
-
-# 清理容器和网络
-echo "Cleaning up containers and networks"
+# 清理停止的容器（服务均用 host 网络，无需清理 docker 网络）
+echo "Cleaning up stopped containers"
 docker container prune -f
-docker network prune -f
 
-
-echo "All services stopped and cleaned up." 
+echo "All services stopped and cleaned up."

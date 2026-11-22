@@ -1,0 +1,84 @@
+# RemoteProxy 唯一出站注册表：本仓出站到其它团队走各自标准 HTTP 契约 + 机器票 Bearer；
+# 外仓打 A 主体（Beaver）统一走 gateway_api 的 /beaver/api/... 标准契约，业务能力只有这一套 HTTP 契约；
+# 本仓出站不使用任何 /internal/* 私有端点，只走对端标准 .api 路径。
+RemoteProxy:
+  Open:
+    BaseURL: http://127.0.0.1:21900
+    ClientID: beaver-server
+    ClientSecret: beaver-s2s-open-server-256bf11a40d14dfda744da14969a5a1a
+  Ai:
+    BaseURL: http://127.0.0.1:22300
+    ClientID: beaver-server
+    ClientSecret: beaver-s2s-ai-server-4a19e36992084ffb826d7bb8d3f56717
+  # Agent beaver-agent(py) S2S 出站：跨仓禁 gRPC，走 /beaver-ai/api/agent/chat/v1/* 标准机器视图。
+  Agent:
+    BaseURL: http://127.0.0.1:22300
+    ClientID: beaver-server
+    ClientSecret: beaver-s2s-ai-server-4a19e36992084ffb826d7bb8d3f56717
+Name: message_rpc
+ListenOn: 0.0.0.0:30300
+Etcd:
+  Hosts:
+  - 127.0.0.1:2379
+  Key: messagerpc.rpc
+Mysql:
+  DataSource: root:123456@tcp(127.0.0.1:3306)/beaver_message?charset=utf8mb4&parseTime=True&loc=Local
+Log:
+  Encoding: json
+  TimeFormat: 2006-01-02T15:04:05
+  Stat: false
+RedisConf:
+  Addr: 127.0.0.1:6379
+  Password: '123456'
+  DB: 0
+DatasyncRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: datasyncrpc.rpc
+UserRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: accountrpc.rpc
+FriendRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: relationrpc.rpc
+GroupRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: relationrpc.rpc
+NotificationRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: notificationrpc.rpc
+PlatformRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: platformrpc.rpc
+RocketMQ:
+  Addr: 127.0.0.1:9876
+Push:
+  Enabled: false
+  FCM:
+    Enabled: false
+    ProjectID: ""
+    CredentialsFile: ""
+  APNs:
+    Enabled: false
+    KeyFile: ""
+    KeyID: ""
+    TeamID: ""
+    BundleID: ""
+    Production: false

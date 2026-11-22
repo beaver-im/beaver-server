@@ -1,0 +1,231 @@
+# 部署配置批量替换规则（模板）
+# 结构：rules -> 分组 -> 规则列表（与 config_prod.yaml 一致）
+#   - 带 key: 的规则是密钥，可用 ./gen_secrets.sh 重新生成
+#   - 密钥统一「带前缀短格式」：JWT = beaver-jwt-{user|open|admin}-{32hex}，
+#     S2S = beaver-s2s-{role}-{32hex}；前缀只标归属，便于开发时肉眼区分，32hex 提供 122bit 熵
+#   - old 是当前生效值，new 是目标值；JWT 两条目前已同值（当前状态快照）
+#   - 所有 new 值都是 REPLACE_ME_* 占位符，替换成真实值后才能运行 ./config.sh
+#   - 生产配置请复制本文件为 config_prod.yaml（已在 .gitignore 中），在副本上填写真实值
+# 用法：./config.sh --config config_prod.yaml
+# 脚本只改写 deploy/dist/ 产物里的服务 yaml（不含 docker-compose.yaml）；app/ 与 deploy/ 源码配置不动。
+#
+# ★ S2S 密钥跨仓配对铁律:
+#   - 本仓入站 S2S.Clients.<client>.ClientSecret（account.yaml）
+#     == 对端仓申请到的 ClientSecret。改了必须同步到对端仓，否则验签失败。
+#   - 出站 RemoteProxy.<对端>.ClientSecret 来自对端仓的分配，同样要与对端一致。
+#   - 共用 S2S.Secret 是网关注入下游票的签名密钥，改这里必须同步改网关 Machine.Secrets[core]。
+#   - 想换整套密钥：运行 ./gen_secrets.sh --config <规则文件>，它会更新规则文件并打印对端同步清单。
+
+rules:
+  # ========== 基础设施 ==========
+  etcd:
+    - name: Etcd 地址
+      old: "127.0.0.1:2379"
+      new: "REPLACE_ME_ETCD_ADDR"
+
+  mysql:
+    - name: MySQL 地址与账号（old 为 DSN 前缀，替换后库名 beaver_account → xxx_account）
+      old: "root:123456@tcp(127.0.0.1:3306)/beaver"
+      new: "REPLACE_ME_MYSQL_DSN_PREFIX"
+
+  redis:
+    - name: Redis 地址
+      old: "127.0.0.1:6379"
+      new: "REPLACE_ME_REDIS_ADDR"
+    - name: Redis 密码
+      old: "Password: '123456'"
+      new: "REPLACE_ME_REDIS_PASSWORD_LINE"
+
+  rocketmq:
+    - name: RocketMQ 地址
+      old: "127.0.0.1:9876"
+      new: "REPLACE_ME_ROCKETMQ_ADDR"
+
+  opensearch:
+    - name: OpenSearch 地址
+      old: "http://127.0.0.1:9200"
+      new: "REPLACE_ME_OPENSEARCH_ADDR"
+
+  # ========== 对象存储 / 邮件（生产环境若不用可忽略）==========
+  minio:
+    - name: MinIO 地址
+      old: "Endpoint: 127.0.0.1:9000"
+      new: "REPLACE_ME_MINIO_ENDPOINT_LINE"
+    - name: MinIO AccessKey
+      old: "AccessKey: minioadmin"
+      new: "REPLACE_ME_MINIO_ACCESSKEY_LINE"
+    - name: MinIO SecretKey
+      old: "SecretKey: minioadmin"
+      new: "REPLACE_ME_MINIO_SECRETKEY_LINE"
+    - name: MinIO Bucket
+      old: "Bucket: beaver"
+      new: "REPLACE_ME_MINIO_BUCKET_LINE"
+
+  smtp:
+    - name: SMTP 服务器
+      old: "Host: smtp.qq.com"
+      new: "REPLACE_ME_SMTP_HOST_LINE"
+    - name: SMTP 密码
+      old: "klokenvhymkobaif"
+      new: "REPLACE_ME_SMTP_PASSWORD"
+
+  qiniu:
+    - name: 七牛云文件访问域名
+      old: "your_qiniu_domain"
+      new: "REPLACE_ME_QINIU_DOMAIN"
+
+  # ========== 跨服务地址 ==========
+  addresses:
+    - name: 网关域名（Domain 字段，两处带引号两处不带）
+      old: "192.168.3.4:20800"
+      new: "REPLACE_ME_GATEWAY_DOMAIN"
+    - name: 开放平台 open_api 地址
+      old: "http://127.0.0.1:21900"
+      new: "REPLACE_ME_OPEN_BASEURL"
+    - name: 社交 social 地址
+      old: "http://127.0.0.1:22100"
+      new: "REPLACE_ME_SOCIAL_BASEURL"
+    - name: AI（ai_api + agent_api 同端口）地址
+      old: "http://127.0.0.1:22300"
+      new: "REPLACE_ME_AI_BASEURL"
+
+  # ========== JWT 用户票签名 ==========
+  # 三类外部票密钥各自独立，靠 claims.Audience 分平面；网关按 AuthBeaver/AuthOpen/AuthAdmin 段分别验签。
+  # section = 只在 yaml 里该段标题下替换（gateway 一份文件三段共存）；default = 文件无该段时全局替换（account/ws 等单段服务）。
+  jwt:
+    - name: JWT 主站用户票（account 签发、ws 验握手、网关 AuthBeaver 验票）
+      key: JWT_BEAVER
+      section: AuthBeaver
+      default: true
+      old: "beaver-jwt-user-5a99dd68227b4aa4bca260349995d485"
+      new: "REPLACE_ME_JWT_BEAVER"
+    - name: JWT 开放平台开发者票（beaver-server-open developer 签发、网关 AuthOpen 验票）
+      key: JWT_OPEN
+      section: AuthOpen
+      old: "beaver-jwt-open-089b1407d2b0408dbef868f651750d4b"
+      new: "REPLACE_ME_JWT_OPEN"
+    - name: JWT 后台管理员票（beaver-server-backend 签发、网关 AuthAdmin 验票）
+      key: JWT_ADMIN
+      section: AuthAdmin
+      old: "beaver-jwt-admin-b2135d16210e40058bc10319272bb994"
+      new: "REPLACE_ME_JWT_ADMIN"
+
+  # ========== S2S 机器票 ==========
+  # 命名规范: beaver-s2s-{签发方}-{接收方}-{32hex}
+  #   签发方 = 持有该密钥、用它验票的团队；接收方 = 拿到密钥去换票的团队
+  #   例: core-backend = core 签发、backend 持有，backend 访问 core 时用它换票
+  #   只有一段（如 core/open/admin）= 该团队业务面共用验票密钥（网关 Machine.Secrets 用）
+  # 每项 old=当前生效值、new=下次轮换目标；当前 old==new（状态快照）。
+  s2s:
+    # core 团队签发（本仓持有验票 / 分配给对端）
+    core:
+      - name: core 共用验票密钥（本仓 S2S.Secret + 网关 Machine.Secrets[beaver/Default]）
+        key: CORE
+        old: "beaver-s2s-core-b0db00321ca84fc783a2ba81505e82b1"
+        new: "REPLACE_ME_CORE"
+      - name: core 签发给 backend（backend 访问 core）
+        key: CORE_BACKEND
+        old: "beaver-s2s-core-backend-4014803bd8424192ba406a7b2e2fa84b"
+        new: "REPLACE_ME_CORE_BACKEND"
+      - name: core 签发给 open（open 访问 core）
+        key: CORE_OPEN
+        old: "beaver-s2s-core-open-d20742355d8840ba925d26e055246d96"
+        new: "REPLACE_ME_CORE_OPEN"
+      - name: core 签发给 social（social 访问 core）
+        key: CORE_SOCIAL
+        old: "beaver-s2s-core-social-f76f5e27e9fc4846979416fa7da3c5a9"
+        new: "REPLACE_ME_CORE_SOCIAL"
+      - name: core 签发给 call（call 访问 core）
+        key: CORE_CALL
+        old: "beaver-s2s-core-call-ff365be3367a4029b2345ef8dad54ee1"
+        new: "REPLACE_ME_CORE_CALL"
+      - name: core 签发给 agent（AI agent 访问 core）
+        key: CORE_AGENT
+        old: "beaver-s2s-core-agent-931a68bae0ea4eeeba4059dbda5b359b"
+        new: "REPLACE_ME_CORE_AGENT"
+
+    # open 团队签发
+    open:
+      - name: open 共用验票密钥（open S2S.Secret + 网关 Machine.Secrets[beaver-open]）
+        key: OPEN
+        old: "beaver-s2s-open-a1c9e7d3405b4f268e5a1d7c9b3f6402"
+        new: "REPLACE_ME_OPEN"
+      - name: open 签发给 server（本仓访问 open）
+        key: OPEN_SERVER
+        old: "beaver-s2s-open-server-256bf11a40d14dfda744da14969a5a1a"
+        new: "REPLACE_ME_OPEN_SERVER"
+      - name: open 签发给 backend（backend 访问 open）
+        key: OPEN_BACKEND
+        old: "beaver-s2s-open-backend-5e8b2a1f7c9d4e63a0b5f2d8c7e91364"
+        new: "REPLACE_ME_OPEN_BACKEND"
+
+    # social 团队签发
+    social:
+      - name: social 共用验票密钥（social S2S.Secret + 网关 Machine.Secrets[beaver-social]）
+        key: SOCIAL
+        old: "beaver-s2s-social-73d1e5b9a2c846f0b3e7d9a1c5f28064"
+        new: "REPLACE_ME_SOCIAL"
+      - name: social 签发给 server（本仓访问 social）
+        key: SOCIAL_SERVER
+        old: "beaver-s2s-social-server-d336db23e7bc49b5a89f4c587384cd16"
+        new: "REPLACE_ME_SOCIAL_SERVER"
+      - name: social 签发给 backend（backend 访问 social）
+        key: SOCIAL_BACKEND
+        old: "beaver-s2s-social-backend-2f6a9c3d8e1b4705a9c2e7d3f6b85140"
+        new: "REPLACE_ME_SOCIAL_BACKEND"
+
+    # doc 团队签发（beaver-server-online）
+    doc:
+      - name: doc 共用验票密钥（office S2S.Secret + 网关 Machine.Secrets[beaver-doc]）
+        key: DOC
+        old: "beaver-s2s-doc-8c4f1a6e2b9d5037a1e6f4c8d2b97053"
+        new: "REPLACE_ME_DOC"
+      - name: doc 签发给 server（本仓访问 doc）
+        key: DOC_SERVER
+        old: "beaver-s2s-doc-server-4a7e1c9d2f6b8053e1a9d7c4b2f68503"
+        new: "REPLACE_ME_DOC_SERVER"
+      - name: doc 签发给 backend（backend 访问 doc）
+        key: DOC_BACKEND
+        old: "beaver-s2s-doc-backend-6b3e8d1a4f7c2059b6e3a1d8c4f92057"
+        new: "REPLACE_ME_DOC_BACKEND"
+      - name: doc 签发给 open（open 访问 doc）
+        key: DOC_OPEN
+        old: "beaver-s2s-doc-open-9d2c5f8a1e6b4073c5d9f2a8b1e60374"
+        new: "REPLACE_ME_DOC_OPEN"
+
+    # call 团队签发
+    call:
+      - name: call 共用验票密钥（call S2S.Secret + 网关 Machine.Secrets[beaver-call]）
+        key: CALL
+        old: "beaver-s2s-call-1e6b4d9a7c2f8053b6e1a9d4c7f28305"
+        new: "REPLACE_ME_CALL"
+      - name: call 签发给 server（本仓访问 call）
+        key: CALL_SERVER
+        old: "beaver-s2s-call-server-7c3a9e1d4b6f2058a3e7c1d9f4b68502"
+        new: "REPLACE_ME_CALL_SERVER"
+
+    # ai 团队签发（beaver-server-ai）
+    ai:
+      - name: ai 共用验票密钥（agent_api secret + 网关 Machine.Secrets[beaver-ai]）
+        key: AI
+        old: "beaver-s2s-ai-c5e8a1d4b7f20396a1c5e8d4b7f20369"
+        new: "REPLACE_ME_AI"
+      - name: ai 签发给 server（本仓访问 ai）
+        key: AI_SERVER
+        old: "beaver-s2s-ai-server-4a19e36992084ffb826d7bb8d3f56717"
+        new: "REPLACE_ME_AI_SERVER"
+      - name: ai 签发给 backend（backend 访问 ai）
+        key: AI_BACKEND
+        old: "beaver-s2s-ai-backend-3d9f6a2c8b1e5074d3a9f6c2b8e17405"
+        new: "REPLACE_ME_AI_BACKEND"
+      - name: ai 签发给 open（open 访问 ai）
+        key: AI_OPEN
+        old: "beaver-s2s-ai-open-5f2c8a1d9e6b4073c5f2a8d1e9b60374"
+        new: "REPLACE_ME_AI_OPEN"
+
+    # admin 团队签发（beaver-server-backend）
+    admin:
+      - name: admin 共用验票密钥（backend S2S.Secret + 网关 Machine.Secrets[beaver/admin]）
+        key: ADMIN
+        old: "beaver-s2s-admin-2a8e5c1d7f4b6039a2c8e5d1f7b40639"
+        new: "REPLACE_ME_ADMIN"

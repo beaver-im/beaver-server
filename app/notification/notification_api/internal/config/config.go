@@ -22,7 +22,6 @@
 package config
 
 import (
-	"beaver/utils/s2s"
 
 	"github.com/zeromicro/go-zero/rest"
 	"github.com/zeromicro/go-zero/zrpc"
@@ -48,13 +47,8 @@ type Config struct {
 	NotificationRpc zrpc.RpcClientConf
 	// Auth 用户 JWT 签名密钥，本服务独立签发并校验用户票：
 	// 本服务独立验用户票，不信任任何外部直接塞进来的 Beaver-User-Id。
-	Auth struct {
-		AccessSecret string
-		AccessExpire int
-	}
 	// S2S 入站机器票：队间调用与本服务共用同一套路由，凭据受众统一 core:api。
 	S2S struct {
 		Secret  string                     `json:",optional"`
-		Clients map[string]s2s.ClientEntry `json:",optional"`
 	}
 }

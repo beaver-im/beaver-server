@@ -23,20 +23,20 @@ package main
 
 import (
 	auth_models "beaver/app/account/account_models/auth"
-	message_models "beaver/app/message/message_models/chat"
-	datasync_models "beaver/app/datasync/datasync_models/datasync"
+	user_models "beaver/app/account/account_models/user"
 	emoji_models "beaver/app/asset/asset_models/emoji"
 	file_models "beaver/app/asset/asset_models/file"
-	"beaver/app/relation/relation_models/friend"
-	group_models "beaver/app/relation/relation_models/group"
+	datasync_models "beaver/app/datasync/datasync_models/datasync"
+	message_models "beaver/app/message/message_models/chat"
 	notification_models "beaver/app/notification/notification_models/notification"
-	"beaver/app/platform/platform_models/feedback"
-	"beaver/app/platform/platform_models/report"
-	"beaver/app/platform/platform_models/track"
-	"beaver/app/platform/platform_models/update"
-	"beaver/app/platform/platform_models/workbench"
+	feedback_models "beaver/app/platform/platform_models/feedback"
 	org_models "beaver/app/platform/platform_models/org"
-	user_models "beaver/app/account/account_models/user"
+	report_models "beaver/app/platform/platform_models/report"
+	track_models "beaver/app/platform/platform_models/track"
+	update_models "beaver/app/platform/platform_models/update"
+	workbench_models "beaver/app/platform/platform_models/workbench"
+	friend_models "beaver/app/relation/relation_models/friend"
+	group_models "beaver/app/relation/relation_models/group"
 	"beaver/core/coregorm"
 	fileseed "beaver/database/file"
 	"beaver/database/platform"
@@ -46,6 +46,17 @@ import (
 
 	"gorm.io/gorm"
 )
+
+const (
+	// 本地初始化连接凭据：要连别的实例时自己替换这两行
+	mysqlUser = "root:123456"
+	mysqlAddr = "127.0.0.1:3306"
+)
+
+// dbDSN 按库名拼出完整连接串；dbName 为空时连接实例本身（用于 CREATE DATABASE）
+func dbDSN(dbName string) string {
+	return fmt.Sprintf("%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", mysqlUser, mysqlAddr, dbName)
+}
 
 type Options struct {
 	DB bool
@@ -61,13 +72,12 @@ func main() {
 		return
 	}
 
-	serverDSN := "root:123456@tcp(127.0.0.1:3306)/?charset=utf8mb4&parseTime=True&loc=Local"
-	serverDB := coregorm.InitGorm(serverDSN)
+	serverDB := coregorm.InitGorm(dbDSN(""))
 
 	databases := []string{
 		"beaver_account", "beaver_relation", "beaver_message",
 		"beaver_asset", "beaver_notification",
-		"beaver_platform", "beaver_datasync", "beaver_agent",
+		"beaver_platform", "beaver_datasync",
 	}
 	for _, name := range databases {
 		if err := serverDB.Exec("CREATE DATABASE IF NOT EXISTS `" + name + "` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci").Error; err != nil {
@@ -78,12 +88,10 @@ func main() {
 
 	migrations := []struct {
 		name string
-		dsn  string
 		run  func(*gorm.DB) error
 	}{
 		{
 			name: "beaver_account",
-			dsn:  "root:123456@tcp(127.0.0.1:3306)/beaver_account?charset=utf8mb4&parseTime=True&loc=Local",
 			run: func(db *gorm.DB) error {
 				return db.AutoMigrate(
 					&user_models.UserModel{}, &user_models.UserChangeLogModel{}, &user_models.UserSettingModel{},
@@ -93,7 +101,6 @@ func main() {
 		},
 		{
 			name: "beaver_relation",
-			dsn:  "root:123456@tcp(127.0.0.1:3306)/beaver_relation?charset=utf8mb4&parseTime=True&loc=Local",
 			run: func(db *gorm.DB) error {
 				return db.AutoMigrate(
 					&friend_models.FriendModel{},
@@ -109,7 +116,6 @@ func main() {
 		},
 		{
 			name: "beaver_message",
-			dsn:  "root:123456@tcp(127.0.0.1:3306)/beaver_message?charset=utf8mb4&parseTime=True&loc=Local",
 			run: func(db *gorm.DB) error {
 				return db.AutoMigrate(
 					&message_models.ChatMessage{},
@@ -123,7 +129,6 @@ func main() {
 		},
 		{
 			name: "beaver_asset",
-			dsn:  "root:123456@tcp(127.0.0.1:3306)/beaver_asset?charset=utf8mb4&parseTime=True&loc=Local",
 			run: func(db *gorm.DB) error {
 				return db.AutoMigrate(
 					&emoji_models.EmojiPackage{},
@@ -137,7 +142,6 @@ func main() {
 		},
 		{
 			name: "beaver_notification",
-			dsn:  "root:123456@tcp(127.0.0.1:3306)/beaver_notification?charset=utf8mb4&parseTime=True&loc=Local",
 			run: func(db *gorm.DB) error {
 				return db.AutoMigrate(
 					&notification_models.NotificationEvent{},
@@ -149,7 +153,6 @@ func main() {
 		},
 		{
 			name: "beaver_platform",
-			dsn:  "root:123456@tcp(127.0.0.1:3306)/beaver_platform?charset=utf8mb4&parseTime=True&loc=Local",
 			run: func(db *gorm.DB) error {
 				return db.AutoMigrate(
 					&track_models.TrackBucket{},
@@ -167,13 +170,11 @@ func main() {
 					&org_models.Staff{},
 					&org_models.DeptUser{},
 					&org_models.Admin{},
-					// AI/知识库业务表已随 AI 服务拆分至 beaver-ai（自建 beaver_ai 库）
 				)
 			},
 		},
 		{
 			name: "beaver_datasync",
-			dsn:  "root:123456@tcp(127.0.0.1:3306)/beaver_datasync?charset=utf8mb4&parseTime=True&loc=Local",
 			run: func(db *gorm.DB) error {
 				return db.AutoMigrate(&datasync_models.DatasyncModel{})
 			},
@@ -181,7 +182,7 @@ func main() {
 	}
 
 	for _, m := range migrations {
-		db := coregorm.InitGorm(m.dsn)
+		db := coregorm.InitGorm(dbDSN(m.name))
 		db.Exec("SET FOREIGN_KEY_CHECKS = 0")
 		if err := m.run(db); err != nil {
 			fmt.Printf("%s 表结构生成失败: %v\n", m.name, err)
@@ -191,9 +192,9 @@ func main() {
 		fmt.Printf("%s 表结构生成成功\n", m.name)
 	}
 
-	fileDB := coregorm.InitGorm("root:123456@tcp(127.0.0.1:3306)/beaver_asset?charset=utf8mb4&parseTime=True&loc=Local")
-	platformDB := coregorm.InitGorm("root:123456@tcp(127.0.0.1:3306)/beaver_platform?charset=utf8mb4&parseTime=True&loc=Local")
-	userDB := coregorm.InitGorm("root:123456@tcp(127.0.0.1:3306)/beaver_account?charset=utf8mb4&parseTime=True&loc=Local")
+	fileDB := coregorm.InitGorm(dbDSN("beaver_asset"))
+	platformDB := coregorm.InitGorm(dbDSN("beaver_platform"))
+	userDB := coregorm.InitGorm(dbDSN("beaver_account"))
 	authDB := userDB
 	_ = fileseed.InitDefaultFiles(fileDB)
 	_ = platform.InitPlatform(platformDB)

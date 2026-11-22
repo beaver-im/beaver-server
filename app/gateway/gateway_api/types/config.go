@@ -26,8 +26,8 @@ import "github.com/zeromicro/go-zero/core/logx"
 // Config 网关负责：验外部票 → 写可信身份头 → 注入机器票 → 转发。
 // 业务服务默认只验 S2S，身份由网关写入的头传递，故网关持有验票密钥与机器身份。
 //
-// 三类外部票的密钥各自独立成段（AuthBeaver / AuthOpen / AuthAdmin）：
-// 现阶段三份可填同一密钥，但配置形状必须分开，将来轮换其中一类不影响其余两类。
+// 三类外部票的密钥统一挂在 Auth 段下（Auth.AuthBeaver / Auth.AuthOpen / Auth.AuthAdmin），三把各不相同：
+// 各取自对应签发方（account / beaver-server-open / beaver-server-backend），轮换一类不影响其余两类。
 // 机器票（Machine）不混进外部票段——它不是「谁在用这个系统」，而是「网关以什么身份调下游」。
 type Config struct {
 	Name string
@@ -39,10 +39,8 @@ type Config struct {
 	Log          logx.LogConf
 	Limit        LimitConfig
 
-	// 三类外部票验签密钥，按平面各占一段，互不影响。
-	AuthBeaver AuthConfig `json:",optional"`
-	AuthOpen   AuthConfig `json:",optional"`
-	AuthAdmin  AuthConfig `json:",optional"`
+	// Auth 三类外部票验签密钥，统一挂在 Auth 下，按平面各占一段，互不影响。
+	Auth AuthConfigs `json:",optional"`
 	// Machine 网关作为内部调用方注入到业务的机器票（业务默认只挂 JwtS2s）。
 	Machine MachineConfig `json:",optional"`
 	// PublicPatterns 公开端点正则，命中任一即不验外部票（登录、换票口、文件预览等）。
@@ -57,6 +55,14 @@ type Config struct {
 type AuthRule struct {
 	Pattern string `json:",optional"`
 	Ticket  string `json:",optional"`
+}
+
+// AuthConfigs 三类外部票的验签密钥集合，按平面各占一段、三把独立。
+// 另由 claims.Audience 分平面作双保险；分开成段便于各自独立轮换。
+type AuthConfigs struct {
+	AuthBeaver AuthConfig `json:",optional"`
+	AuthOpen   AuthConfig `json:",optional"`
+	AuthAdmin  AuthConfig `json:",optional"`
 }
 
 // AuthConfig 单个平面的外部票验签密钥。

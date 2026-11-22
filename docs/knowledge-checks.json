@@ -61,7 +61,6 @@
     "utils/beaverlog/logger.go",
     "common/convert/convert_test.go",
     "utils/secret/secret_test.go",
-    "database/migrations.go",
     "main.go",
     "build/build.sh",
     "build/check.sh",

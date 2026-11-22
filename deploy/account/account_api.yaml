@@ -1,0 +1,94 @@
+# RemoteProxy 唯一出站注册表：本仓出站到其它团队走各自标准 HTTP 契约 + 机器票 Bearer；
+# 外仓打 A 主体（Beaver）统一走 gateway_api 的 /beaver/api/... 标准契约，业务能力只有这一套 HTTP 契约；
+# 本仓出站不使用任何 /internal/* 私有端点，只走对端标准 .api 路径。
+RemoteProxy:
+  Open:
+    BaseURL: http://127.0.0.1:21900
+    ClientID: beaver-server
+    ClientSecret: beaver-s2s-open-server-256bf11a40d14dfda744da14969a5a1a
+Name: account
+Host: 0.0.0.0
+Port: 20100
+Log:
+  Mode: file
+  Path: logs/account_api
+  Encoding: json
+  TimeFormat: 2006-01-02T15:04:05
+  KeepDays: 7
+  Level: info
+  Stat: false
+Etcd: 127.0.0.1:2379
+Auth:
+  AccessSecret: beaver-jwt-user-5a99dd68227b4aa4bca260349995d485
+  AccessExpire: 3600
+Mysql:
+  DataSource: root:123456@tcp(127.0.0.1:3306)/beaver_account?charset=utf8mb4&parseTime=True&loc=Local
+Redis:
+  Addr: 127.0.0.1:6379
+  Password: '123456'
+  DB: 0
+WhiteList:
+  - /beaver/api/account/auth_public/.*
+  - /beaver/api/asset/preview/v1/get
+Email:
+  QQ:
+    Host: smtp.qq.com
+    Port: 465
+    Username: 751135385@qq.com
+    Password: klokenvhymkobaif
+  # 未来可以添加其他邮箱服务商
+  # Gmail:
+  #   Host: smtp.gmail.com
+  #   Port: 587
+  #   Username: your_gmail@gmail.com
+  #   Password: your_gmail_app_password
+# account_rpc：user + auth 同进程（etcd accountrpc.rpc）
+AccountRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: accountrpc.rpc
+RelationRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: relationrpc.rpc
+NotificationRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: notificationrpc.rpc
+RocketMQ:
+  Addr: 127.0.0.1:9876
+
+S2S:
+  Secret: beaver-s2s-core-b0db00321ca84fc783a2ba81505e82b1
+  Clients:
+    beaver-backend:
+      ClientID: beaver-backend
+      ClientSecret: beaver-s2s-core-backend-4014803bd8424192ba406a7b2e2fa84b
+      Scopes: []
+      Enabled: true
+    beaver-open:
+      ClientID: beaver-open
+      ClientSecret: beaver-s2s-core-open-d20742355d8840ba925d26e055246d96
+      Scopes: []
+      Enabled: true
+    beaver-social:
+      ClientID: beaver-social
+      ClientSecret: beaver-s2s-core-social-f76f5e27e9fc4846979416fa7da3c5a9
+      Scopes: []
+      Enabled: true
+    beaver-call:
+      ClientID: beaver-call
+      ClientSecret: beaver-s2s-core-call-ff365be3367a4029b2345ef8dad54ee1
+      Scopes: []
+      Enabled: true
+    beaver-agent:
+      ClientID: beaver-agent
+      ClientSecret: beaver-s2s-core-agent-931a68bae0ea4eeeba4059dbda5b359b
+      Scopes: []
+      Enabled: true

@@ -1,0 +1,39 @@
+Name: platform
+Host: 0.0.0.0
+Port: 21600
+Mysql:
+  DataSource: root:123456@tcp(127.0.0.1:3306)/beaver_platform?charset=utf8mb4&parseTime=True&loc=Local
+Redis:
+  Addr: 127.0.0.1:6379
+  Password: '123456'
+  DB: 0
+Log:
+  Encoding: json
+  TimeFormat: 2006-01-02T15:04:05
+  Stat: false
+Etcd: 127.0.0.1:2379
+RocketMQ:
+  Addr: 127.0.0.1:9876
+OpenSearch:
+  Addr: http://127.0.0.1:9200
+  ClientLogIndex: beaver-logs
+FileRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: assetrpc.rpc
+PlatformRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: platformrpc.rpc
+UserRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: accountrpc.rpc
+S2S:
+  Secret: beaver-s2s-core-b0db00321ca84fc783a2ba81505e82b1

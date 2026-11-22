@@ -1,0 +1,22 @@
+services:
+  notification_rpc:
+    image: wsrh8888/notification_rpc:1.0.0
+    container_name: notification_rpc
+    network_mode: "host"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./notification_rpc.yaml:/etc/config.yaml:ro
+    restart: "no"
+    pull_policy: always
+
+  notification_api:
+    image: wsrh8888/notification_api:1.0.0
+    container_name: notification_api
+    network_mode: "host"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./notification_api.yaml:/etc/config.yaml:ro
+    restart: "no"
+    pull_policy: always
+    depends_on:
+      - notification_rpc
