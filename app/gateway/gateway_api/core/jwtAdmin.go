@@ -29,7 +29,7 @@ import (
 
 // verifyAdminTicket 验后台管理员票：密钥取 Auth.AuthAdmin.AccessSecret，
 // 受众必须是 beaver:admin，签发行是 beaver-backend 的登录。
-// 该票只能进后台管理面（/beaver/admin/...），验过后网关写的是 Beaver-Admin-Id。
+// 该票只能进后台管理面（/beaver-admin/api/...），验过后网关写的是 Beaver-Admin-Id。
 func (p Proxy) verifyAdminTicket(r *http.Request) (*jwts.CustomClaims, error) {
 	return verifyTicket(r, p.Config.Auth.AuthAdmin.AccessSecret, jwts.AudienceAdmin, "网关未配置后台管理票密钥")
 }

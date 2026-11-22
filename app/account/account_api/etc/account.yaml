@@ -29,7 +29,7 @@ Redis:
   DB: 0
 WhiteList:
   - /beaver/api/account/auth_public/.*
-  - /beaver/api/asset/preview/v1/get
+  - /beaver/api/asset/preview_public/v1/get
 Email:
   QQ:
     Host: smtp.qq.com

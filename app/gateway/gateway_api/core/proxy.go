@@ -73,6 +73,10 @@ func NewProxy(config types.Config) (*Proxy, error) {
 	if err != nil {
 		return nil, err
 	}
+	// 公开白名单为空 = 连登录都要带票，配置漏拷时就表现为全站 401，启动先喊一声。
+	if len(config.PublicPatterns) == 0 {
+		apiGwLogger.Error(model.LogMsg{Text: "gateway.yaml 未配置 PublicPatterns，登录等公开端点会被要求带票"})
+	}
 	return &Proxy{Config: config, auth: matcher}, nil
 }
 

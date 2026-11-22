@@ -242,14 +242,19 @@ func (p Proxy) injectMachineTicket(r *http.Request) error {
 	return nil
 }
 
-// machineAudience 按 team/surface 选机器票受众：/beaver/admin/... → admin:internal，
-// /beaver-open/api/... → open:internal，主站 /beaver/api/... → core:api。
-// 先查 team/surface 精确键，再回退 team，最后回退默认。
+// machineAudience 按 team/surface/service 选机器票受众：
+// /beaver-admin/api/... → admin:internal，/beaver-open/api/... → open:internal，
+// 主站 /beaver/api/... → core:api。
+// 查表顺序：team/surface/service 精确键 → team/surface → team → 默认。
+// 三段键用于"路径 team 归主站、实现却在其它团队服务"的跨界端点（如 oauth 面）：
+// 其机器票受众必须按目标服务选，否则下游 JwtS2s 验不过。
 func (p Proxy) machineAudience(path string) string {
 	m := p.Config.Machine
 	aud := m.DefaultAudience
-	team, surface := teamAndSurface(path)
-	if configured, ok := m.Audiences[team+"/"+surface]; ok {
+	team, surface, service := pathKey(path)
+	if configured, ok := m.Audiences[team+"/"+surface+"/"+service]; ok {
+		aud = configured
+	} else if configured, ok := m.Audiences[team+"/"+surface]; ok {
 		aud = configured
 	} else if configured, ok := m.Audiences[team]; ok {
 		aud = configured
@@ -257,12 +262,15 @@ func (p Proxy) machineAudience(path string) string {
 	return aud
 }
 
-// machineSecret 按 team/surface 选机器票密钥，查表口径与 machineAudience 完全一致：
-// 先查 team/surface 精确键，再回退 team，最后回退 DefaultSecret / 旧 Secret。
-// 密钥与受众用同一套路径映射，保证「发给 team-X 的票」只用 team-X 的密钥签发与校验。
+// machineSecret 选机器票密钥，查表口径与 machineAudience 完全一致：
+// team/surface/service → team/surface → team → DefaultSecret / 旧 Secret。
+// 密钥与受众用同一套路径映射，保证「发给目标服务的票」签发与校验用同一把密钥。
 func (p Proxy) machineSecret(path string) string {
 	m := p.Config.Machine
-	team, surface := teamAndSurface(path)
+	team, surface, service := pathKey(path)
+	if configured, ok := m.Secrets[team+"/"+surface+"/"+service]; ok {
+		return configured
+	}
 	if configured, ok := m.Secrets[team+"/"+surface]; ok {
 		return configured
 	}
@@ -275,17 +283,21 @@ func (p Proxy) machineSecret(path string) string {
 	return m.Secret
 }
 
-// teamAndSurface 取六段路径的前两段（team/surface），用于选择机器票受众。
-// 主站后台管理面 /beaver/admin/... 与 C 端 /beaver/api/... 同 team 不同 audience。
-func teamAndSurface(path string) (string, string) {
+// pathKey 取六段路径的前三段（team/surface/service），用于机器票密钥与受众查表。
+// 后台管理面 /beaver-admin/api/... 与 C 端 /beaver/api/... 分属不同 team。
+func pathKey(path string) (string, string, string) {
 	parts := strings.Split(strings.TrimPrefix(path, "/"), "/")
-	if len(parts) == 0 {
-		return "", ""
+	var team, surface, service string
+	if len(parts) > 0 {
+		team = parts[0]
 	}
-	if len(parts) == 1 {
-		return parts[0], ""
+	if len(parts) > 1 {
+		surface = parts[1]
 	}
-	return parts[0], parts[1]
+	if len(parts) > 2 {
+		service = parts[2]
+	}
+	return team, surface, service
 }
 
 // bearerToken 只取 Authorization: Bearer 的裸票，用于机器票判定（机器票不走 Token 头 / query）。
