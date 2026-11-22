@@ -1,3 +1,12 @@
+# 冻结参考材料：skills/beaver-dev/references/python-agent.md
+
+[返回迁移台账](../migration.md)
+
+这是原文证据，不是活动规则或执行授权；其中旧路径、冲突、安全操作按台账处理。
+源 SHA256：74C5C2078B086B11028AA7264459DA9E31FB0E12287127F31031FFB87D6C98D6
+
+<!-- source-text-begin -->
+````text
 # Python agent（beaver-ai）
 
 > 仓根：`beaver-server-package/beaver-ai/`。  
@@ -140,3 +149,6 @@ async def get_doc_content_api(ctx, headers, body: GetDocContentReq) -> GetDocCon
 
 - 本域已无对外 gRPC；不要再为 agent 本域生成/提交 pb 桩。
 - 若其它遗留工具仍用 grpc：仓根 `uv` 环境里的 `grpc_tools`（protobuf 4.x、grpcio 1.62），不要用机器全局更新的 protoc。
+
+````
+<!-- source-text-end -->

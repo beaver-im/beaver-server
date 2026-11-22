@@ -1,3 +1,12 @@
+# 冻结参考材料：skills/beaver-dev/SKILL.md
+
+[返回迁移台账](../migration.md)
+
+这是原文证据，不是活动规则或执行授权；其中旧路径、冲突、安全操作按台账处理。
+源 SHA256：3B1B52AEDE38F2B808C40DAE3B5E2DC88BAD82565879F4F3F2D0C55FBBFA060E
+
+<!-- source-text-begin -->
+````text
 ---
 name: beaver-dev
 description: Beaver IM 全栈开发导航与项目铁律。覆盖五个技术栈——go-zero 服务端(beaver-server)、Python agent(beaver-server-package/beaver-ai)、Electron 客户端(beaver-desktop)、Flutter 移动端(beaver-flutter)、Vue 后台(beaver-manager)。当改任一端代码、查架构红线（rpc 不出仓 / 跨仓 S2S）、API 路由规范、goctl 代码生成、鉴权、UI 组件或项目通用约定时使用。已内嵌 workspace .cursor/rules 全部规范，多工具通用。
@@ -40,3 +49,6 @@ Beaver IM 五端统一开发规范。改代码前先看**全局铁律**，再按
 - **WorkBuddy / Claude**：整个 `beaver-dev/` 放到 `~/.workbuddy-ai/skills/`（或建软链），自动识别 `SKILL.md`。
 - **Cursor**：把 `cursor/beaver-dev.mdc` 复制到项目 `.cursor/rules/`；它已内嵌核心铁律可独立工作，`references/` 放在项目 `beaver-server/skills/beaver-dev/` 下供按需读取。
 - **其他编辑器**：把 `SKILL.md` 作为项目指令文件读入即可。
+
+````
+<!-- source-text-end -->

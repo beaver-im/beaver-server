@@ -374,4 +374,8 @@ Contributors will be recognized in:
 
 ---
 
-Thank you for contributing to Beaver IM! 🦫 
+Thank you for contributing to Beaver IM! 🦫
+
+## 本仓当前工程规范
+
+请先读 [中文工程手册](docs/README.md) 与 [实施/验证清单](docs/workflow.md)。上文通用示例不替代当前契约、真实目录和工具版本；生成/构建/启动须在任务授权范围内。

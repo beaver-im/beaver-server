@@ -1,3 +1,12 @@
+# 冻结参考材料：skills/beaver-dev/references/vue-admin.md
+
+[返回迁移台账](../migration.md)
+
+这是原文证据，不是活动规则或执行授权；其中旧路径、冲突、安全操作按台账处理。
+源 SHA256：351E52F2AB5CC2338B2A21C26821AD8BD4F11D3EEF4B4E264FF77339A835F7A0
+
+<!-- source-text-begin -->
+````text
 # Vue 后台系统（beaver-manager）
 
 > 依据仓库现状整理（`package.json` / `src/` 结构）。此端暂无独立 `.cursor/rules`，遵循下面既有约定。
@@ -42,3 +51,6 @@ npm run lint         # eslint . --fix
 - 全局状态走 `pinia/`，类型放 `types/`。
 - 组件用 Element Plus 原生能力优先，少自造表单控件样式。
 - 遵循全局约定：文件命名不以大写开头、多词驼峰；版权头与现有文件一致、完整保留。
+
+````
+<!-- source-text-end -->

@@ -1,3 +1,12 @@
+# 冻结参考材料：skills/beaver-dev/references/go-zero-server.md
+
+[返回迁移台账](../migration.md)
+
+这是原文证据，不是活动规则或执行授权；其中旧路径、冲突、安全操作按台账处理。
+源 SHA256：4197E60E5A125D2FA2BF2A8766CE58B0CD516161060F3269B767BE78802EE225
+
+<!-- source-text-begin -->
+````text
 # go-zero 服务端（beaver-server）
 
 ## 公共（全仓）
@@ -372,3 +381,6 @@ return res, nil
 - 新增 service 名可能误建额外 main：只删本次误生成的。
 - 本仓 import 短名 `beaver/...`；独立仓按各自 go.mod module。
 - rpc 生成物目录统一 `pb/` + `go_package = "./pb"`；改落点时 import 路径、无别名文件的 `types.` 限定符、生成文件 `package` 名必须一起迁移，不要半改半留。
+
+````
+<!-- source-text-end -->

@@ -1,3 +1,12 @@
+# 冻结参考材料：skills/beaver-dev/references/electron-desktop.md
+
+[返回迁移台账](../migration.md)
+
+这是原文证据，不是活动规则或执行授权；其中旧路径、冲突、安全操作按台账处理。
+源 SHA256：94884A6F919B0F85E9AF5F8E498D21EFA1E59AD9256F7489B93EC555ADDF9CD0
+
+<!-- source-text-begin -->
+````text
 # Electron 客户端（beaver-desktop）
 
 > 来源：`.cursor/rules/rule.mdc`（PC 端部分）+ `.cursor/rules/beaver-desktop-ui.mdc`。
@@ -35,3 +44,6 @@ preloadModule: path.resolve(__dirname, 'src/preload'),
 ## 版权头（强制）
 
 新建或改文件时，顶部版权头必须与现有文件一致，完整保留 `beaver-desktop-header-v2` 整段（含中英文说明）。禁止缩短、删改、替换文件头版权与许可声明。版本标记：`beaver-desktop-header-v2`。
+
+````
+<!-- source-text-end -->

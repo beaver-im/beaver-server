@@ -1,0 +1,265 @@
+{
+  "schemaVersion": 1,
+  "documents": [
+    "AGENTS.md",
+    "docs/README.md",
+    "docs/architecture.md",
+    "docs/standards/01-layout.md",
+    "docs/standards/02-contracts-codegen.md",
+    "docs/standards/03-boundaries-remote.md",
+    "docs/standards/04-runtime-security.md",
+    "docs/standards/05-data-sync.md",
+    "docs/standards/06-deployment.md",
+    "docs/workflow.md",
+    "docs/modules/domains.md",
+    "docs/modules/realtime.md",
+    "docs/modules/subservices.md",
+    "docs/modules/integration.md",
+    "docs/decisions/README.md",
+    "docs/decisions/0001-contract-first.md",
+    "docs/decisions/template.md",
+    "docs/tasks/README.md",
+    "docs/tasks/template.md",
+    "docs/appendices/migration.md",
+    "docs/appendices/source-material/navigation.md",
+    "docs/appendices/source-material/cursor-entry.md",
+    "docs/appendices/source-material/go-zero-server.md",
+    "docs/appendices/source-material/python-agent.md",
+    "docs/appendices/source-material/electron-desktop.md",
+    "docs/appendices/source-material/flutter-mobile.md",
+    "docs/appendices/source-material/vue-admin.md"
+  ],
+  "paths": [
+    "go.mod",
+    "go.sum",
+    "template/api/handler.tpl",
+    "template/api/logic.tpl",
+    "template/api/context.tpl",
+    "template/api/routes.tpl",
+    "template/api/types.tpl",
+    "template/rpc/logic.tpl",
+    "template/rpc/logic-func.tpl",
+    "app/account/account_api/account_api.api",
+    "app/account/account_api/api/user.api",
+    "app/account/account_api/internal/logic/user/userinfologic.go",
+    "app/account/account_api/internal/svc/servicecontext.go",
+    "app/account/account_rpc/account.proto",
+    "app/account/account_rpc/accountrpc.go",
+    "app/message/message_rpc/chat_rpc.proto",
+    "app/message/message_rpc/internal/logic/message/sendmsglogic.go",
+    "app/message/message_rpc/internal/logic/consumer",
+    "app/ws/ws_api/api/socket.api",
+    "app/ws/ws_api/api/types.api",
+    "app/ws/ws_api/internal/logic/websocket/enter.go",
+    "app/ws/ws_api/internal/logic/websocket/heartbeat/manager.go",
+    "app/datasync/datasync_api/internal/logic/sync/getsyncchatmessageslogic.go",
+    "app/gateway/gateway_api/core/auth.go",
+    "app/gateway/gateway_api/core/proxy.go",
+    "middleware/jwt/jwtS2s.go",
+    "common/response/enter.go",
+    "utils/ajax/ajax.go",
+    "utils/beaverlog/logger.go",
+    "common/convert/convert_test.go",
+    "utils/secret/secret_test.go",
+    "database/migrations.go",
+    "main.go",
+    "build/build.sh",
+    "build/check.sh",
+    "Dockerfile",
+    "remote/doc/content.go",
+    "remote/doc/remote.go",
+    "types/remote/doc/doc.go",
+    "types/remote/token.go",
+    "app/account/account_api/api/auth_public.api",
+    "app/account/account_api/internal/config/config.go",
+    "app/asset/asset_api/internal/config/config.go",
+    "app/datasync/datasync_api/internal/svc/servicecontext.go"
+  ],
+  "commands": [
+    {
+      "id": "account-api-generate",
+      "cwd": "app/account/account_api",
+      "executable": "goctl",
+      "command": "goctl api go --api account_api.api --dir . --home ../../../template",
+      "requiredPaths": [
+        "account_api.api",
+        "../../../template/api/handler.tpl"
+      ],
+      "evidence": [
+        {
+          "file": "app/account/account_api/account_api.api",
+          "contains": "goctl api go -api account_api.api -dir . --home ../../../template"
+        }
+      ]
+    },
+    {
+      "id": "account-api-validate",
+      "cwd": "app/account/account_api",
+      "executable": "goctl",
+      "command": "goctl api validate --api account_api.api",
+      "requiredPaths": [
+        "account_api.api"
+      ],
+      "evidence": [
+        {
+          "file": "docs/standards/02-contracts-codegen.md",
+          "contains": "goctl api validate --api account_api.api"
+        }
+      ]
+    },
+    {
+      "id": "account-rpc-generate",
+      "cwd": "app/account/account_rpc",
+      "executable": "goctl",
+      "command": "goctl rpc protoc account.proto --go_out=. --go-grpc_out=. -m --zrpc_out=. --home ../../../template",
+      "requiredPaths": [
+        "account.proto",
+        "../../../template/rpc/logic.tpl"
+      ],
+      "evidence": [
+        {
+          "file": "app/account/account_rpc/account.proto",
+          "contains": "option go_package = \"./pb\";"
+        }
+      ]
+    },
+    {
+      "id": "existing-tests",
+      "cwd": ".",
+      "executable": "go",
+      "command": "go test ./common/convert ./utils/secret",
+      "requiredPaths": [
+        "common/convert/convert_test.go",
+        "utils/secret/secret_test.go"
+      ],
+      "evidence": []
+    },
+    {
+      "id": "knowledge",
+      "cwd": ".",
+      "executable": "powershell",
+      "command": "powershell -NoProfile -File scripts/check-knowledge.ps1",
+      "requiredPaths": [
+        "scripts/check-knowledge.ps1",
+        "docs/knowledge-checks.json"
+      ],
+      "evidence": []
+    }
+  ],
+  "migration": [
+    {
+      "source": "skills/beaver-dev/SKILL.md",
+      "snapshot": "docs/appendices/source-material/navigation.md",
+      "sha256": "3B1B52AEDE38F2B808C40DAE3B5E2DC88BAD82565879F4F3F2D0C55FBBFA060E"
+    },
+    {
+      "source": "skills/beaver-dev/cursor/beaver-dev.mdc",
+      "snapshot": "docs/appendices/source-material/cursor-entry.md",
+      "sha256": "F3EB83967C72E5885DF3F32AD7001A9EB5BCC74F283413A597C66CB138A38F25"
+    },
+    {
+      "source": "skills/beaver-dev/references/go-zero-server.md",
+      "snapshot": "docs/appendices/source-material/go-zero-server.md",
+      "sha256": "4197E60E5A125D2FA2BF2A8766CE58B0CD516161060F3269B767BE78802EE225"
+    },
+    {
+      "source": "skills/beaver-dev/references/python-agent.md",
+      "snapshot": "docs/appendices/source-material/python-agent.md",
+      "sha256": "74C5C2078B086B11028AA7264459DA9E31FB0E12287127F31031FFB87D6C98D6"
+    },
+    {
+      "source": "skills/beaver-dev/references/electron-desktop.md",
+      "snapshot": "docs/appendices/source-material/electron-desktop.md",
+      "sha256": "94884A6F919B0F85E9AF5F8E498D21EFA1E59AD9256F7489B93EC555ADDF9CD0"
+    },
+    {
+      "source": "skills/beaver-dev/references/flutter-mobile.md",
+      "snapshot": "docs/appendices/source-material/flutter-mobile.md",
+      "sha256": "DD70D2A2F59B71F3E3486787B26FD26AF1B6BCACDF305D2904E8DA7B9C5BFCE2"
+    },
+    {
+      "source": "skills/beaver-dev/references/vue-admin.md",
+      "snapshot": "docs/appendices/source-material/vue-admin.md",
+      "sha256": "351E52F2AB5CC2338B2A21C26821AD8BD4F11D3EEF4B4E264FF77339A835F7A0"
+    }
+  ],
+  "validationBoundary": "Documentation links/path/evidence and frozen-source hashes only. Does not run business commands or prove code compliance.",
+  "migrationTopics": [
+    "G01",
+    "G02",
+    "G03",
+    "G04",
+    "G05",
+    "G06",
+    "G07",
+    "G08",
+    "G09",
+    "G10",
+    "G11",
+    "G12",
+    "G13",
+    "G14",
+    "G15",
+    "G16",
+    "G17",
+    "G18",
+    "G19",
+    "G20",
+    "G21",
+    "G22",
+    "G23",
+    "G24",
+    "G25",
+    "G26",
+    "G27",
+    "G28",
+    "G29",
+    "G30",
+    "G31",
+    "G32",
+    "G33",
+    "G34",
+    "G35",
+    "G36",
+    "G37",
+    "G38",
+    "G39",
+    "G40",
+    "N01",
+    "N02",
+    "N03",
+    "N04",
+    "N05",
+    "N06",
+    "P01",
+    "P02",
+    "P03",
+    "P04",
+    "P05",
+    "P06",
+    "P07",
+    "P08",
+    "P09",
+    "P10",
+    "P11",
+    "E01",
+    "E02",
+    "E03",
+    "F01",
+    "F02",
+    "V01",
+    "V02",
+    "U01",
+    "U02",
+    "U03",
+    "U04",
+    "U05"
+  ],
+  "managedDocDirectories": [
+    "docs/standards",
+    "docs/modules",
+    "docs/decisions",
+    "docs/tasks",
+    "docs/appendices"
+  ]
+}

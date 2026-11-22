@@ -1,6 +1,6 @@
 # go-zero 规范符合性审查（app/ 目录）
 
-> 依据：`skills/beaver-dev/references/go-zero-server.md`
+> 历史依据：[冻结 Go 规则原文](docs/appendices/source-material/go-zero-server.md)；现行要求见[第 3 章](docs/standards/02-contracts-codegen.md)。下列历史通过记录未在本次重新验证。
 > 范围：`f:/code/mine/github/beaver-server/app/` 全部 9 个域
 > 方式：静态扫描 + 逐条对照规范硬性要求。
 > 说明：已排除误报（如业务字段 `json:"code"`/`json:"msg"`、注释里的 URL `platform/*`）。

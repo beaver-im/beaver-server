@@ -1,3 +1,12 @@
+# 冻结参考材料：skills/beaver-dev/cursor/beaver-dev.mdc
+
+[返回迁移台账](../migration.md)
+
+这是原文证据，不是活动规则或执行授权；其中旧路径、冲突、安全操作按台账处理。
+源 SHA256：F3EB83967C72E5885DF3F32AD7001A9EB5BCC74F283413A597C66CB138A38F25
+
+<!-- source-text-begin -->
+````text
 ---
 description: Beaver IM 全栈开发导航与项目铁律，覆盖 go-zero 服务端、Python agent、Electron 客户端、Flutter 移动端、Vue 后台
 globs:
@@ -35,3 +44,6 @@ alwaysApply: true
 ## 安装
 
 把本文件复制到项目 `.cursor/rules/` 即生效；`references/` 随 skill 一起放在项目 `beaver-server/skills/beaver-dev/` 下， agent 会按需读取。
+
+````
+<!-- source-text-end -->

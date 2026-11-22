@@ -1,5 +1,7 @@
 # 🦫 Beaver IM - 企业级即时通讯平台
 
+> 开发与 AI 协作请先读 **[中文工程手册](docs/README.md)**：go-zero 先写 .api/.proto，再用 goctl 生成。旧版本/目录示例以当前源码和手册核验说明为准。
+
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-2.1.1-blue.svg)](VERSION)
 [![Go](https://img.shields.io/badge/go-1.24+-blue.svg)](https://golang.org/)
