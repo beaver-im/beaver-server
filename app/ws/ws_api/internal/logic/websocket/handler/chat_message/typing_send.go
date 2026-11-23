@@ -33,6 +33,7 @@ import (
 	"beaver/app/ws/ws_api/internal/svc"
 	"beaver/app/ws/ws_api/internal/types"
 	type_struct "beaver/app/ws/ws_api/types"
+	"beaver/common/const/chattypeconst"
 	mqwsconst "beaver/common/const/mqwsconst"
 	"beaver/common/wsEnum/wsCommandConst"
 	"beaver/common/wsEnum/wsTypeConst"
@@ -85,8 +86,20 @@ func HandleTypingSend(
 }
 
 func getTypingPeerIDs(ctx context.Context, svcCtx *svc.ServiceContext, currentUserID, conversationID string) ([]string, error) {
-	convType, userIDs := conversation.ParseConversationWithType(conversationID)
-	if convType == 1 {
+	// 会话类型以会话元数据为准，不从会话ID前缀推断
+	convRes, err := svcCtx.ChatRpc.GetConversationsListByIds(ctx, &chattypes.GetConversationsListByIdsReq{
+		ConversationIds: []string{conversationID},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("查询会话类型失败: %w", err)
+	}
+	if len(convRes.Conversations) == 0 {
+		return nil, fmt.Errorf("会话不存在")
+	}
+	convType := int(convRes.Conversations[0].Type)
+
+	if chattypeconst.IsP2P(convType) {
+		userIDs := conversation.ParseConversationIDs(convType, conversationID)
 		var peers []string
 		for _, uid := range userIDs {
 			if uid != currentUserID {
@@ -94,12 +107,12 @@ func getTypingPeerIDs(ctx context.Context, svcCtx *svc.ServiceContext, currentUs
 			}
 		}
 		if len(peers) == 0 {
-			return nil, fmt.Errorf("无效的私聊会话")
+			return nil, fmt.Errorf("无效的两人会话")
 		}
 		return peers, nil
 	}
 
-	groupID := conversation.GetTargetIDByConversation(conversationID, currentUserID)
+	groupID := conversation.GetTargetIDByConversation(convType, conversationID, currentUserID)
 	membersRes, err := svcCtx.GroupRpc.GetGroupMembers(ctx, &relationtypes.GetGroupMembersReq{
 		GroupID: groupID,
 	})

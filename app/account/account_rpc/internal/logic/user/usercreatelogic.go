@@ -26,7 +26,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	user_models "beaver/app/account/account_models/user"
@@ -37,17 +36,23 @@ import (
 	utils "beaver/utils/rand"
 )
 
-const (
-	minUserID = 100000
+// 工号序号统一从 100000 起；Redis 计数器里存"当前已用到的最大序号"。
+const minUserID = 100000
 
-	// user_id 即工号，按用户类型加前缀：普通用户纯 6 位数字，bot BOT+6位，数字伙伴 DG+6位。
-	// 新增用户类型时在这里加一行前缀 + 一个计数器 key 即可。
-	userIDKeyNormal  = "user_id_counter"
-	userIDKeyBot     = "user_id_bot_counter"
-	userIDKeyDigital = "user_id_digital_counter"
-	prefixBot        = "BOT"
-	prefixDigital    = "DG"
-)
+// userIDRule 是某类用户 user_id（即工号）的生成规则：
+// prefix 为单字母类型前缀，key 为该类型独立的 Redis 自增计数器。
+type userIDRule struct {
+	prefix string
+	key    string
+}
+
+// userIDRules 是工号规则的唯一注册表：单字母类型前缀 + 6 位自增序号。
+// 普通用户不加前缀；新增用户类型只需在这里加一行。
+var userIDRules = map[int8]userIDRule{
+	user_models.UserTypeNormal:  {prefix: "", key: "user_id_counter"},
+	user_models.UserTypeBot:     {prefix: "B", key: "user_id_bot_counter"},   // B = Bot，外接机器人
+	user_models.UserTypeDigital: {prefix: "A", key: "user_id_agent_counter"}, // A = Agent，数字伙伴（智能体）
+}
 
 type UserCreateLogic struct {
 	ctx    context.Context
@@ -63,96 +68,41 @@ func NewUserCreateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UserCr
 	}
 }
 
-// generateUserID 按用户类型生成 user_id（即工号）：
-// 普通用户纯 6 位数字；bot BOT+6位；数字伙伴 DG+6位。前缀在 const 里集中定义，新增类型加一行即可。
+// generateUserID 按用户类型生成 user_id（即工号）：单字母类型前缀 + 6 位自增序号。
+// 普通用户不加前缀（100000），Agent 为 A100000，Bot 为 B100000。
 func (l *UserCreateLogic) generateUserID(userType int8) (string, error) {
-	key, prefix := userIDKeyNormal, ""
-	switch userType {
-	case user_models.UserTypeBot:
-		key, prefix = userIDKeyBot, prefixBot
-	case user_models.UserTypeDigital:
-		key, prefix = userIDKeyDigital, prefixDigital
+	rule, ok := userIDRules[userType]
+	if !ok {
+		// 未知类型直接失败，避免静默生成普通用户号造成号段污染。
+		return "", fmt.Errorf("未知用户类型: %d", userType)
 	}
 
-	if err := l.initializeIDCounter(key, prefix); err != nil {
-		l.logger.Error(model.LogMsg{
-			Text: "初始化用户ID计数器失败",
-			Data: map[string]any{"prefix": prefix, "err": err.Error()},
-		})
+	// 计数器首次初始化为 minUserID-1，INCR 后从 minUserID 开始；已存在则沿用它。
+	if err := l.svcCtx.Redis.SetNX(rule.key, minUserID-1, 0).Err(); err != nil {
 		return "", fmt.Errorf("初始化用户ID计数器失败: %v", err)
 	}
 
-	result := l.svcCtx.Redis.Incr(key)
+	result := l.svcCtx.Redis.Incr(rule.key)
 	if result.Err() != nil {
 		l.logger.Error(model.LogMsg{
 			Text: "生成用户ID失败",
-			Data: map[string]any{"prefix": prefix, "err": result.Err().Error()},
+			Data: map[string]any{"prefix": rule.prefix, "err": result.Err().Error()},
 		})
 		return "", fmt.Errorf("生成用户ID失败: %v", result.Err())
 	}
 
-	if prefix == "" {
+	if rule.prefix == "" {
 		return strconv.FormatInt(result.Val(), 10), nil
 	}
-	return fmt.Sprintf("%s%06d", prefix, result.Val()), nil
-}
-
-// initializeIDCounter 从库里同类 user_id 的最大序号续接，保证不与存量撞号。
-func (l *UserCreateLogic) initializeIDCounter(key, prefix string) error {
-	exists := l.svcCtx.Redis.Exists(key)
-	if exists.Err() != nil {
-		return fmt.Errorf("检查用户ID计数器失败: %v", exists.Err())
-	}
-	if exists.Val() != 0 {
-		return nil
-	}
-
-	var maxUser user_models.UserModel
-	var current int64
-	if prefix == "" {
-		// 普通用户：纯数字 user_id，从 100000 起。
-		err := l.svcCtx.DB.Select("user_id").
-			Where("user_id REGEXP '^[0-9]+$'").
-			Order("CAST(user_id AS UNSIGNED) DESC").
-			First(&maxUser).Error
-		current = minUserID - 1
-		if err == nil && maxUser.UserID != "" {
-			if n, parseErr := strconv.ParseInt(maxUser.UserID, 10, 64); parseErr == nil {
-				current = n
-			}
-		} else if err != nil && err.Error() != "record not found" {
-			return fmt.Errorf("查询最大用户ID失败: %v", err)
-		}
-	} else {
-		// 带前缀：取同前缀里最大的序号续接。
-		start := len(prefix) + 1
-		err := l.svcCtx.DB.Select("user_id").
-			Where("user_id LIKE ?", prefix+"%").
-			Order(fmt.Sprintf("CAST(SUBSTRING(user_id, %d) AS UNSIGNED) DESC", start)).
-			First(&maxUser).Error
-		if err == nil && maxUser.UserID != "" {
-			if n, parseErr := strconv.ParseInt(strings.TrimPrefix(maxUser.UserID, prefix), 10, 64); parseErr == nil {
-				current = n
-			}
-		} else if err != nil && err.Error() != "record not found" {
-			return fmt.Errorf("查询最大用户ID失败: %v", err)
-		}
-	}
-
-	// 计数器存"当前已用到的最大序号"，下一次 INCR 正好得到 +1。
-	if err := l.svcCtx.Redis.Set(key, current, 0).Err(); err != nil {
-		return fmt.Errorf("设置用户ID计数器失败: %v", err)
-	}
-	l.logger.Info(model.LogMsg{
-		Text: "用户ID计数器初始化完成",
-		Data: map[string]interface{}{"prefix": prefix, "current": current},
-	})
-	return nil
+	return fmt.Sprintf("%s%06d", rule.prefix, result.Val()), nil
 }
 
 func (l *UserCreateLogic) UserCreate(in *pb.UserCreateReq) (*pb.UserCreateRes, error) {
+	// UserType 必传，由 generateUserID 的号段注册表校验；不传直接失败，不做默认兜底。
+	userType := int8(in.UserType)
+
 	// 验证必填字段（Bot / Digital 用户不需要联系方式）
-	isSystemUser := in.UserType == int32(user_models.UserTypeBot) || in.UserType == int32(user_models.UserTypeDigital)
+	isSystemUser := userType == user_models.UserTypeBot || userType == user_models.UserTypeDigital
 	if !isSystemUser {
 		if in.Phone == "" && in.Email == "" {
 			return nil, errors.New("手机号或邮箱至少需要提供一个")
@@ -192,8 +142,8 @@ func (l *UserCreateLogic) UserCreate(in *pb.UserCreateReq) (*pb.UserCreateRes, e
 		nickName = in.NickName
 	}
 
-	// 生成 user_id（即工号）：普通用户 6 位数字、bot BOT+6位、数字伙伴 DG+6位。
-	userID, genErr := l.generateUserID(int8(in.UserType))
+	// 生成 user_id（即工号）：普通用户 100000、Agent A100000、Bot B100000。
+	userID, genErr := l.generateUserID(userType)
 	if genErr != nil {
 		return nil, errors.New("生成用户ID失败")
 	}
@@ -220,11 +170,8 @@ func (l *UserCreateLogic) UserCreate(in *pb.UserCreateReq) (*pb.UserCreateRes, e
 		Source:   in.Source,
 		NickName: nickName,
 		Abstract: in.Abstract,
-		UserType: int8(in.UserType),
+		UserType: userType,
 		Version:  version,
-	}
-	if user.UserType == 0 {
-		user.UserType = user_models.UserTypeNormal
 	}
 
 	err = l.svcCtx.DB.Create(&user).Error

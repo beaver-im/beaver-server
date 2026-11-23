@@ -1994,7 +1994,7 @@ func (x *GetConversationsListByIdsReq) GetSince() int64 {
 type ConversationListById struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	ConversationId string                 `protobuf:"bytes,1,opt,name=conversation_id,json=conversationId,proto3" json:"conversation_id,omitempty"` // 会话ID
-	Type           int32                  `protobuf:"varint,2,opt,name=type,proto3" json:"type,omitempty"`                                          // 会话类型 1=私聊 2=群聊
+	Type           int32                  `protobuf:"varint,2,opt,name=type,proto3" json:"type,omitempty"`                                          // 会话类型 1=普通私聊 2=群聊 3=圈子 4=数字伙伴 5=机器人
 	Seq            int64                  `protobuf:"varint,3,opt,name=seq,proto3" json:"seq,omitempty"`                                            // 最新消息序列号
 	Version        int64                  `protobuf:"varint,4,opt,name=version,proto3" json:"version,omitempty"`                                    // 会话元信息版本号
 	unknownFields  protoimpl.UnknownFields
@@ -2267,7 +2267,7 @@ func (x *GetUserConversationSettingsListByIdsRes) GetUserConversationSettings() 
 type InitializeConversationReq struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	ConversationId string                 `protobuf:"bytes,1,opt,name=conversation_id,json=conversationId,proto3" json:"conversation_id,omitempty"` // 会话ID（调用方生成）
-	Type           int32                  `protobuf:"varint,2,opt,name=type,proto3" json:"type,omitempty"`                                          // 会话类型: 1=私聊 2=群聊 3=圈子
+	Type           int32                  `protobuf:"varint,2,opt,name=type,proto3" json:"type,omitempty"`                                          // 会话类型: 1=普通私聊 2=群聊 3=圈子 4=数字伙伴 5=机器人（两人会话传1即可，服务端按对端账号类型自动判定4/5）
 	UserIds        []string               `protobuf:"bytes,3,rep,name=user_ids,json=userIds,proto3" json:"user_ids,omitempty"`                      // 参与用户ID列表
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
@@ -4287,7 +4287,7 @@ const file_chat_rpc_proto_rawDesc = "" +
 	"\x14GetSyncMessageMedias\x12!.chat_rpc.GetSyncMessageMediasReq\x1a!.chat_rpc.GetSyncMessageMediasRes\x12P\n" +
 	"\x10ListChatMessages\x12\x1d.chat_rpc.ListChatMessagesReq\x1a\x1d.chat_rpc.ListChatMessagesRes\x12V\n" +
 	"\x12UpdateChatMessages\x12\x1f.chat_rpc.UpdateChatMessagesReq\x1a\x1f.chat_rpc.UpdateChatMessagesRes\x12b\n" +
-	"\x16GetSyncDeletedMessages\x12#.chat_rpc.GetSyncDeletedMessagesReq\x1a#.chat_rpc.GetSyncDeletedMessagesResB\tZ\a./typesb\x06proto3"
+	"\x16GetSyncDeletedMessages\x12#.chat_rpc.GetSyncDeletedMessagesReq\x1a#.chat_rpc.GetSyncDeletedMessagesResB\x06Z\x04./pbb\x06proto3"
 
 var (
 	file_chat_rpc_proto_rawDescOnce sync.Once

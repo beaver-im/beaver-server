@@ -246,7 +246,7 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			{
 				// 文件预览
 				Method:  http.MethodGet,
-				Path:    "/beaver/api/asset/preview/v1/get",
+				Path:    "/beaver/api/asset/preview_public/v1/get",
 				Handler: file.PreviewHandler(serverCtx),
 			},
 		},

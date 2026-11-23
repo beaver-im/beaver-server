@@ -246,13 +246,13 @@ type ResetUserPasswordRes struct {
 	Success bool `json:"success,optional"`
 }
 
-type S2STokenReq struct {
+type AuthTokenReq struct {
 	GrantType    string `json:"grant_type,optional"`
 	ClientID     string `json:"client_id"`
 	ClientSecret string `json:"client_secret"`
 }
 
-type S2STokenRes struct {
+type AuthTokenRes struct {
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
 	ExpiresIn   int64  `json:"expires_in"`
@@ -321,7 +321,7 @@ type UserCreateReq struct {
 	Source   int32  `json:"source,optional"`
 	Email    string `json:"email,optional"`
 	NickName string `json:"nickName,optional"`
-	UserType int32  `json:"userType,optional"`
+	UserType int32  `json:"userType"`
 	Abstract string `json:"abstract,optional"`
 }
 
@@ -381,7 +381,7 @@ type UserListReq struct {
 	Source   int32  `json:"source,optional"`
 	UserID   string `json:"userId,optional"`
 	Keyword  string `json:"keyword,optional"`
-	UserType int32  `json:"userType,optional"`
+	UserType int32  `json:"userType"`
 }
 
 type UserListRes struct {

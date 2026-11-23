@@ -24,13 +24,13 @@ package logic
 import (
 	"context"
 	"errors"
-	"strings"
 
 	accttypes "beaver/app/account/account_rpc/pb"
 	"beaver/app/message/message_api/internal/svc"
 	"beaver/app/message/message_api/internal/types"
 	message_models "beaver/app/message/message_models/chat"
 	relationtypes "beaver/app/relation/relation_rpc/pb"
+	"beaver/common/const/chattypeconst"
 	beaverlog "beaver/utils/beaverlog"
 	"beaver/utils/beaverlog/model"
 	"beaver/utils/conversation"
@@ -65,7 +65,7 @@ func (l *ConversationInfoLogic) ConversationInfo(req *types.ConversationInfoReq)
 
 	var conversationMeta message_models.ChatConversationMeta
 	metaErr := l.svcCtx.DB.Where("conversation_id = ?", req.ConversationID).First(&conversationMeta).Error
-	if metaErr != nil && !errors.Is(metaErr, gorm.ErrRecordNotFound) {
+	if metaErr != nil {
 		l.logger.Error(model.LogMsg{
 			Text: "查询会话元数据失败",
 			Data: map[string]any{
@@ -74,12 +74,14 @@ func (l *ConversationInfoLogic) ConversationInfo(req *types.ConversationInfoReq)
 				"err":            metaErr.Error(),
 			},
 		})
+		if errors.Is(metaErr, gorm.ErrRecordNotFound) {
+			return nil, errors.New("会话不存在")
+		}
+		return nil, metaErr
 	}
 
 	if err == nil {
-		if metaErr == nil {
-			resp.MsgPreview = conversationMeta.LastMessage
-		}
+		resp.MsgPreview = conversationMeta.LastMessage
 		resp.UpdatedAt = userConversation.UpdatedAt.String()
 		resp.IsTop = userConversation.IsPinned
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -94,26 +96,24 @@ func (l *ConversationInfoLogic) ConversationInfo(req *types.ConversationInfoReq)
 		return nil, err
 	}
 
-	convType := conversation.GetConversationType(req.ConversationID)
-	switch convType {
-	case 3: // 圈子（名称/头像由客户端补齐）
-		resp.ChatType = 3
+	// 会话类型以会话元数据为准，不从会话ID前缀推断
+	convType := conversationMeta.Type
+	resp.ChatType = convType
+	switch {
+	case convType == chattypeconst.Circle: // 圈子（名称/头像由客户端补齐）
 		resp.NickName = "圈子"
 		resp.Avatar = ""
-	case 1: // 私聊
-		ids := strings.Split(req.ConversationID, "_")
+	case chattypeconst.IsP2P(convType): // 两人会话（普通私聊/数字伙伴/机器人）
+		ids := conversation.ParseConversationIDs(convType, req.ConversationID)
 		opponentID := ""
-		if len(ids) >= 3 {
-			if ids[1] == req.UserID {
-				opponentID = ids[2]
-			} else {
-				opponentID = ids[1]
-			}
-		} else if len(ids) >= 2 {
-			opponentID = ids[0]
+		if len(ids) == 2 {
 			if ids[0] == req.UserID {
 				opponentID = ids[1]
+			} else {
+				opponentID = ids[0]
 			}
+		} else if len(ids) == 1 {
+			opponentID = ids[0]
 		}
 		userRes, userErr := l.svcCtx.UserRpc.UserInfo(l.ctx, &accttypes.UserInfoReq{
 			UserID: opponentID,
@@ -143,12 +143,8 @@ func (l *ConversationInfoLogic) ConversationInfo(req *types.ConversationInfoReq)
 		}
 		resp.Avatar = userRes.UserInfo.Avatar
 		resp.NickName = userRes.UserInfo.NickName
-		resp.ChatType = 1
 	default: // 群聊
-		groupID := req.ConversationID
-		if strings.HasPrefix(groupID, "group_") {
-			groupID = strings.TrimPrefix(groupID, "group_")
-		}
+		groupID := conversation.GetTargetIDByConversation(chattypeconst.Group, req.ConversationID, req.UserID)
 		groupRes, groupErr := l.svcCtx.GroupRpc.GetGroupsListByIds(l.ctx, &relationtypes.GetGroupsListByIdsReq{
 			GroupIDs: []string{groupID},
 		})
@@ -178,7 +174,6 @@ func (l *ConversationInfoLogic) ConversationInfo(req *types.ConversationInfoReq)
 		group := groupRes.Groups[0]
 		resp.Avatar = group.Avatar
 		resp.NickName = group.Name
-		resp.ChatType = 2
 	}
 
 	l.logger.Info(model.LogMsg{

@@ -145,6 +145,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: chat.UpdateReadSeqHandler(serverCtx),
 				},
 				{
+					// 在当前会话开启新话题（下一条消息起生效）
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/message/chat/v1/new_topic",
+					Handler: chat.NewChatTopicHandler(serverCtx),
+				},
+				{
 					// 查会话成员 ID 列表
 					Method:  http.MethodPost,
 					Path:    "/beaver/api/message/chat_s2s/v1/conversation_members",

@@ -32,6 +32,7 @@ import (
 	chatrpcutils "beaver/app/message/message_rpc/internal/utils"
 	chat_rpc "beaver/app/message/message_rpc/pb"
 	"beaver/app/relation/relation_rpc/pb"
+	"beaver/common/const/chattypeconst"
 	mqwsconst "beaver/common/const/mqwsconst"
 	"beaver/common/models/ctype"
 	"beaver/common/wsEnum/wsCommandConst"
@@ -313,21 +314,27 @@ func (l *SendMsgLogic) BuildMsgFromProto(protoMsg *chat_rpc.Msg) *ctype.Msg {
 }
 
 func (l *SendMsgLogic) SendMsg(in *chat_rpc.SendMsgReq) (*chat_rpc.SendMsgRes, error) {
-	conversationType, userIds := conversation.ParseConversationWithType(in.ConversationId)
+	// 会话类型以会话元数据为准，不从会话ID前缀推断
+	conversationType, err := message_models.LoadConversationType(l.svcCtx.DB, in.ConversationId)
+	if err != nil {
+		l.logger.Error(model.LogMsg{Text: "查询会话类型失败", Data: map[string]interface{}{"conversationId": in.ConversationId, "err": err.Error()}})
+		return nil, errors.New("会话不存在")
+	}
+	userIds := conversation.ParseConversationIDs(conversationType, in.ConversationId)
 
-	if conversationType == 1 {
-		// 私聊需要验证好友关系（与 Digital 对话时跳过）
+	if chattypeconst.IsP2P(conversationType) {
+		// 两人会话需要验证好友关系（与 Digital 对话时跳过）
 		if !strings.Contains(in.ConversationId, in.UserId) {
 			l.logger.Error(model.LogMsg{Text: "用户id不匹配", Data: map[string]interface{}{"userId": in.UserId, "conversationId": in.ConversationId}})
 			return nil, errors.New("异常操作")
 		}
 
 		if len(userIds) != 2 {
-			l.logger.Error(model.LogMsg{Text: "私聊会话ID解析失败，期望2个用户ID", Data: map[string]interface{}{"userIds": userIds}})
-			return nil, errors.New("无效的私聊会话ID")
+			l.logger.Error(model.LogMsg{Text: "两人会话ID解析失败，期望2个用户ID", Data: map[string]interface{}{"userIds": userIds}})
+			return nil, errors.New("无效的两人会话ID")
 		}
 
-		skipFriendCheck := isOpenDigitalSender(in.DeviceId)
+		skipFriendCheck := isOpenDigitalSender(in.DeviceId) || conversationType == chattypeconst.Digital
 		if !skipFriendCheck {
 			for _, uid := range userIds {
 				if uid != in.UserId && isDigitalPeer(l.ctx, uid) {
@@ -355,8 +362,8 @@ func (l *SendMsgLogic) SendMsg(in *chat_rpc.SendMsgReq) (*chat_rpc.SendMsgRes, e
 				return nil, errors.New("无法发送消息")
 			}
 		}
-	} else if conversationType == 2 {
-		groupID := conversation.GetTargetIDByConversation(in.ConversationId, in.UserId)
+	} else if conversationType == chattypeconst.Group {
+		groupID := conversation.GetTargetIDByConversation(conversationType, in.ConversationId, in.UserId)
 		canSend, err := l.svcCtx.GroupRpc.CanSendGroupMessage(l.ctx, &pb.CanSendGroupMessageReq{
 			GroupId: groupID,
 			UserId:  in.UserId,
@@ -382,7 +389,7 @@ func (l *SendMsgLogic) SendMsg(in *chat_rpc.SendMsgReq) (*chat_rpc.SendMsgRes, e
 
 	// 获取下一个消息序列号（消息表内部序列号）
 	var maxSeq int64
-	err := l.svcCtx.DB.Model(&message_models.ChatMessage{}).
+	err = l.svcCtx.DB.Model(&message_models.ChatMessage{}).
 		Where("conversation_id = ?", in.ConversationId).
 		Select("COALESCE(MAX(seq), 0)").
 		Scan(&maxSeq).Error

@@ -94,9 +94,11 @@ services:
     entrypoint: >
       sh -c "sleep 10 &&
       mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t ws_push_topic &&
+      mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t ws_bot_push_topic &&
       mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t beaver_logs &&
       mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t agent_task &&
-      mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t agent_done"
+      mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t agent_done &&
+      mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t workflow_task"
 
   rocketmq-console:
     image: apacherocketmq/rocketmq-dashboard:latest
@@ -141,6 +143,3 @@ services:
       - "5601:5601"
     depends_on:
       - opensearch
-# 命名卷：避免 Windows/macOS 下 bind mount 的 uid/gid 权限问题（AccessDeniedException）。
-volumes:
-  opensearch-data:

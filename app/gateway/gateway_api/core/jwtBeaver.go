@@ -27,9 +27,9 @@ import (
 	"beaver/utils/jwts"
 )
 
-// verifyBeaverTicket 验主站 C 端用户票：密钥取 AuthBeaver.AccessSecret，
+// verifyBeaverTicket 验主站 C 端用户票：密钥取 Auth.AuthBeaver.AccessSecret，
 // 受众必须是 beaver:user，签发行是 app/account 的 auth_public 登录。
 // 该票只能进主站 C 端面（/beaver/api/...），拿去打门户或后台会被受众判定拒绝。
 func (p Proxy) verifyBeaverTicket(r *http.Request) (*jwts.CustomClaims, error) {
-	return verifyTicket(r, p.Config.AuthBeaver.AccessSecret, jwts.AudienceUser, "网关未配置主站用户票密钥")
+	return verifyTicket(r, p.Config.Auth.AuthBeaver.AccessSecret, jwts.AudienceUser, "网关未配置主站用户票密钥")
 }

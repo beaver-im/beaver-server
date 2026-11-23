@@ -54,7 +54,12 @@ type (
 	}
 
 	// SendMessageRes 发消息回包的 result（fire-and-forget，无业务字段）。
-	SendMessageRes struct{}
+	// SendMessageRes 里 topicId 是 AI 侧实际落的话题 ID。
+	// 客户端开启新话题后必须把这条会话缓存的 topicId 清掉，
+	// 否则下一条 IM 消息会继续挂在旧话题上。
+	SendMessageRes struct {
+		TopicId string `json:"topicId"`
+	}
 )
 
 // ListConversationsApi 列会话：Req + Res + 本接口专属子类型。
@@ -84,5 +89,9 @@ type (
 		LatestTopicId  string `json:"latestTopicId"`
 		Preview        string `json:"preview"`
 		Version        int64  `json:"version"`
+		// 会话绑定的编排来源（只回 id，名字/头像由客户端按 agents / teams 查）
+		AgentId string `json:"agentId"`
+		RoleId  string `json:"roleId"`
+		TeamId  string `json:"teamId"`
 	}
 )

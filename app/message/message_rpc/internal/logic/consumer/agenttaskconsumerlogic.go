@@ -29,6 +29,7 @@ import (
 
 	message_models "beaver/app/message/message_models/chat"
 	"beaver/app/message/message_rpc/internal/svc"
+	"beaver/common/const/agenttopicconst"
 	"beaver/common/const/mqwsconst"
 	"beaver/common/models/ctype"
 	"beaver/core/corerocketmq"
@@ -103,8 +104,9 @@ func (l *AgentTaskConsumerLogic) StartConsumer() error {
 			return nil
 		}
 
-		// 拼最近聊天记录上下文。
-		historyCtx := l.buildHistoryContext(ctx, conversationID, userID, digitalID)
+		// 拼最近聊天记录上下文。用数字伙伴的 IM 工号识别「自己发的」消息（消息 sender 存的是工号），
+		// 不能用 digitalId（那是平台 UUID，与 sender 不同域）。
+		historyCtx := l.buildHistoryContext(ctx, conversationID, cfgRes.DigitalUserId)
 
 		// 组装 parts JSON：单个 text part；若有历史则拼到 content 前。
 		finalContent := content
@@ -118,20 +120,34 @@ func (l *AgentTaskConsumerLogic) StartConsumer() error {
 			return nil
 		}
 
+		// 会话下可以有多个话题，每个话题是独立的 AI 上下文边界。
+		// 缓存当前话题 ID：有值就续该话题，空值（用户点了「新话题」被清掉）就让
+		// AI 侧新建话题。客户端不持有 topicId——它是服务端编排状态。
+		topicKey := agenttopicconst.Key(conversationID)
+		topicID, _ := l.svcCtx.Redis.Get(topicKey).Result()
+
 		// 经 agent_api S2S 调 Python agent SendMessage（fire-and-forget：只取成败，不等终稿）。
 		// 信封 code!=0 由 ajax 统一转成 error，这里只看 err。
-		_, err = agent.SendMessageApi(ctx, nil, &agenttype.SendMessageReq{
+		res, err := agent.SendMessageApi(ctx, nil, &agenttype.SendMessageReq{
 			UserId:         userID,
 			ConversationId: conversationID,
+			TopicId:        topicID,
 			ModelId:        "",
 			PartsJson:      string(partsJSON),
 			AgentId:        agentID,
-			DigitalId:      digitalID,
-			ClientMsgId:    messageID,
+			// DigitalId 在 Python 侧是「IM 工号」语义（senderId 兜底 + agent_done 路由回投），
+			// 终稿落库拿它当 SendMsg.UserId，所以这里必须传工号而非平台 UUID。
+			DigitalId:   cfgRes.DigitalUserId,
+			ClientMsgId: messageID,
 		})
 		if err != nil {
 			l.logger.Error(model.LogMsg{Text: "AgentRpc.SendMessage 调用失败", Data: map[string]any{"digitalId": digitalID, "messageId": messageID, "err": err.Error()}})
 			return nil
+		}
+		if res != nil && res.TopicId != "" {
+			if err := l.svcCtx.Redis.Set(topicKey, res.TopicId, agenttopicconst.AgentTopicTTL).Err(); err != nil {
+				l.logger.Error(model.LogMsg{Text: "缓存会话当前话题失败", Data: map[string]any{"conversationId": conversationID, "topicId": res.TopicId, "err": err.Error()}})
+			}
 		}
 
 		l.logger.Info(model.LogMsg{Text: "agent_task 投递 agent 成功", Data: map[string]any{"digitalId": digitalID, "messageId": messageID}})
@@ -155,7 +171,8 @@ func (l *AgentTaskConsumerLogic) StartConsumer() error {
 }
 
 // buildHistoryContext 拉最近 20 条消息（升序）拼成 "角色: 文本" 上下文。
-func (l *AgentTaskConsumerLogic) buildHistoryContext(ctx context.Context, conversationID, userID, digitalID string) string {
+// digitalUserID 是数字伙伴的 IM 工号（user_id 列），用于把「自己发的」消息标成 assistant。
+func (l *AgentTaskConsumerLogic) buildHistoryContext(ctx context.Context, conversationID, digitalUserID string) string {
 	var msgs []message_models.ChatMessage
 	if err := l.svcCtx.DB.Where("conversation_id = ?", conversationID).
 		Order("id DESC").Limit(20).Find(&msgs).Error; err != nil {
@@ -171,7 +188,7 @@ func (l *AgentTaskConsumerLogic) buildHistoryContext(ctx context.Context, conver
 	for i := len(msgs) - 1; i >= 0; i-- {
 		m := msgs[i]
 		role := "user"
-		if m.SendUserID != nil && *m.SendUserID == digitalID {
+		if m.SendUserID != nil && *m.SendUserID == digitalUserID {
 			role = "assistant"
 		}
 		text := extractHistoryText(m.Msg)

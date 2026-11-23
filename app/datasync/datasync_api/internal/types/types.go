@@ -31,6 +31,9 @@ type AgentConversationVersionItem struct {
 	Preview        string `json:"preview"`        // 最新消息预览
 	Module         string `json:"module"`         // 入口模块
 	WorkspaceID    string `json:"workspaceId"`    // 本机空间 id；空=云端轻会话
+	AgentID        string `json:"agentId"`        // 会话绑定的 Agent（专家）id；空=未指定
+	RoleID         string `json:"roleId"`         // 会话绑定的角色预设 id
+	TeamID         string `json:"teamId"`         // 会话绑定的专家团 id
 }
 
 type ChatConversationVersionItem struct {

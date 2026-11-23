@@ -27,9 +27,9 @@ import (
 	"beaver/utils/jwts"
 )
 
-// verifyOpenTicket 验开放平台开发者票：密钥取 AuthOpen.AccessSecret，
+// verifyOpenTicket 验开放平台开发者票：密钥取 Auth.AuthOpen.AccessSecret，
 // 受众必须是 beaver:developer，签发行是 beaver-open 的 developer 登录。
 // 该票只能进门户面（/beaver-open/...）。
 func (p Proxy) verifyOpenTicket(r *http.Request) (*jwts.CustomClaims, error) {
-	return verifyTicket(r, p.Config.AuthOpen.AccessSecret, jwts.AudienceDeveloper, "网关未配置开放平台票密钥")
+	return verifyTicket(r, p.Config.Auth.AuthOpen.AccessSecret, jwts.AudienceDeveloper, "网关未配置开放平台票密钥")
 }

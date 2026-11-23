@@ -14,10 +14,7 @@ Log:
 Etcd: 127.0.0.1:2379
 # 入站 S2S 机器票：本团队业务面共用一套凭据，票据受众统一 core:api。
 S2S:
-  Secret: beaver-s2s-01-core
-Auth:
-  AccessSecret: f81d1b2d8f69a503d848a2ad0b9908186bc435d36cf5a885c33491b51613240f38ff672700d60ffdf19466cc9a687620
-  AccessExpire: 3600
+  Secret: beaver-s2s-core-b0db00321ca84fc783a2ba81505e82b1
 FriendRpc:
   NonBlock: true
   Etcd:
@@ -65,11 +62,11 @@ NotificationRpc:
 RemoteProxy:
   Agent:
     BaseURL: http://127.0.0.1:22300
-    Auth: internal_token
-    InternalToken: ""
+    ClientID: beaver-server
+    ClientSecret: beaver-s2s-ai-server-4a19e36992084ffb826d7bb8d3f56717
   # S2S 出站：社交服务（beaver-social），client_credentials 换票后调其同步接口。
   # BaseURL 指向社交服务的标准 .api 地址，须与该服务自身的 S2S Secret/Clients 配置成对。
   Social:
     BaseURL: http://127.0.0.1:22100
     ClientID: beaver-server
-    ClientSecret: beaver-s2s-03-social-server
+    ClientSecret: beaver-s2s-social-server-d336db23e7bc49b5a89f4c587384cd16

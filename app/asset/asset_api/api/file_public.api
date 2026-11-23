@@ -6,5 +6,5 @@ syntax = "v1"
 service asset {
 	@doc "文件预览"
 	@handler Preview
-	get /beaver/api/asset/preview/v1/get (PreviewReq) returns (PreviewRes)
+	get /beaver/api/asset/preview_public/v1/get (PreviewReq) returns (PreviewRes)
 }

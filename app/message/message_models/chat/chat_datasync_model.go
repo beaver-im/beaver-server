@@ -34,7 +34,7 @@ import (
 type ChatConversationMeta struct {
 	models.Model
 	ConversationID string `gorm:"size:128;uniqueIndex" json:"conversationId"` // 唯一会话ID（私聊/群聊/系统）
-	Type           int    `gorm:"not" json:"type"`                            // 1=私聊 2=群聊 3=系统会话
+	Type           int    `gorm:"not" json:"type"`                            // 会话类型，见 chattypeconst：1=私聊 2=群聊 3=圈子 4=数字伙伴 5=机器人
 	MaxSeq         int64  `gorm:"not;default:0" json:"maxSeq"`                // 会话全局最新消息序号
 	LastMessage    string `gorm:"size:256" json:"lastMessage"`                // 会话最后一条消息预览（全局唯一）
 	Version        int64  `gorm:"not;default:0;index" json:"version"`         // 会话元信息版本，用于同步（基于ConversationID递增，从1开始）

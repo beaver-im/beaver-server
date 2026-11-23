@@ -114,7 +114,7 @@ type ConversationInfoRes struct {
 	UpdatedAt      string `json:"updatedAt"`      //消息时间
 	IsTop          bool   `json:"isTop"`          //是否置顶
 	ConversationID string `json:"conversationId"` //会话id
-	ChatType       int    `json:"chatType"`       //会话类型 1:好友 2:群聊 3:AI机器人
+	ChatType       int    `json:"chatType"`       //会话类型 1:普通私聊 2:群聊 3:圈子 4:数字伙伴 5:机器人
 	Notice         string `json:"notice"`         //备注
 }
 
@@ -637,6 +637,17 @@ type UpdateReadSeqReq struct {
 
 type UpdateReadSeqRes struct {
 	Success bool `json:"success"` // 是否成功
+}
+
+// NewChatTopicReq 开启新话题请求
+type NewChatTopicReq struct {
+	UserID         string `header:"Beaver-User-Id"`
+	ConversationID string `json:"conversationId"`
+}
+
+// NewChatTopicRes 开启新话题响应；话题实际由下一条消息在 AI 侧创建
+type NewChatTopicRes struct {
+	TopicID string `json:"topicId"`
 }
 
 type UserConversationSettingById struct {

@@ -1,0 +1,22 @@
+services:
+  asset_rpc:
+    image: wsrh8888/asset_rpc:1.0.0
+    container_name: asset_rpc
+    network_mode: "host"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./asset_rpc.yaml:/etc/config.yaml:ro
+    restart: "no"
+    pull_policy: always
+
+  asset_api:
+    image: wsrh8888/asset_api:1.0.0
+    container_name: asset_api
+    network_mode: "host"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./asset_api.yaml:/etc/config.yaml:ro
+    restart: "no"
+    pull_policy: always
+    depends_on:
+      - asset_rpc

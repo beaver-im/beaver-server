@@ -30,6 +30,7 @@ import (
 	"beaver/app/message/message_api/internal/svc"
 	"beaver/app/message/message_api/internal/types"
 	message_models "beaver/app/message/message_models/chat"
+	"beaver/common/const/chattypeconst"
 	mqwsconst "beaver/common/const/mqwsconst"
 	"beaver/common/wsEnum/wsCommandConst"
 	"beaver/common/wsEnum/wsTypeConst"
@@ -272,10 +273,22 @@ func (l *UpdateReadSeqLogic) notifyPeerReadSeq(readerID, conversationID string, 
 }
 
 func (l *UpdateReadSeqLogic) getConversationPeerIDs(currentUserID, conversationID string) []string {
-	convType, userIDs := conversation.ParseConversationWithType(conversationID)
-	if convType == 1 {
+	// 会话类型以会话元数据为准，不从会话ID前缀推断
+	convType, typeErr := message_models.LoadConversationType(l.svcCtx.DB, conversationID)
+	if typeErr != nil {
+		l.logger.Error(model.LogMsg{
+			Text: "查询会话类型失败",
+			Data: map[string]any{
+				"conversationId": conversationID,
+				"err":            typeErr.Error(),
+			},
+		})
+		return nil
+	}
+
+	if chattypeconst.IsP2P(convType) {
 		var peers []string
-		for _, uid := range userIDs {
+		for _, uid := range conversation.ParseConversationIDs(convType, conversationID) {
 			if uid != currentUserID {
 				peers = append(peers, uid)
 			}

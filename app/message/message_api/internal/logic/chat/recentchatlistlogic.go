@@ -23,12 +23,12 @@ package logic
 
 import (
 	"context"
-	"strings"
 
 	"beaver/app/message/message_api/internal/svc"
 	"beaver/app/message/message_api/internal/types"
 	message_models "beaver/app/message/message_models/chat"
 	relationtypes "beaver/app/relation/relation_rpc/pb"
+	"beaver/common/const/chattypeconst"
 	beaverlog "beaver/utils/beaverlog"
 	"beaver/utils/beaverlog/model"
 	"beaver/utils/conversation"
@@ -85,24 +85,36 @@ func (l *RecentChatListLogic) RecentChatList(req *types.RecentChatListReq) (resp
 		return nil, err
 	}
 
+	// 会话类型（chatType）的唯一来源：ChatConversationMeta.Type
+	conversationMetaMap := make(map[string]message_models.ChatConversationMeta, len(conversationMetas))
+	for _, meta := range conversationMetas {
+		conversationMetaMap[meta.ConversationID] = meta
+	}
+
 	var privateChatIds []string
 	var groupChatIds []string
 
-	// 获取会话Ids并根据命名规则区分私聊、群聊、圈子
+	// 按会话元数据里的 chatType 区分两人会话 / 群聊
 	for _, convo := range userConversations {
-		conversationType := conversation.GetConversationType(convo.ConversationID)
-		if conversationType == 1 { // 私聊
+		meta, exists := conversationMetaMap[convo.ConversationID]
+		if !exists {
+			l.logger.Error(model.LogMsg{
+				Text: "会话元数据缺失，跳过该会话",
+				Data: map[string]any{"userId": req.UserID, "conversationId": convo.ConversationID},
+			})
+			continue
+		}
+		if chattypeconst.IsP2P(meta.Type) {
 			privateChatIds = append(privateChatIds, convo.ConversationID)
-		} else if conversationType == 2 { // 群聊
+		} else if meta.Type == chattypeconst.Group {
 			groupChatIds = append(groupChatIds, convo.ConversationID)
 		}
 	}
 
-	// 从私聊Id中提取用户Id进行去重
+	// 从两人会话Id中提取用户Id进行去重
 	userIdMap := make(map[string]struct{})
 	for _, chatID := range privateChatIds {
-		_, userIds := conversation.ParseConversationWithType(chatID)
-		for _, userId := range userIds {
+		for _, userId := range conversation.ParseConversationIDs(conversationMetaMap[chatID].Type, chatID) {
 			if userId != req.UserID {
 				userIdMap[userId] = struct{}{}
 			}
@@ -138,9 +150,9 @@ func (l *RecentChatListLogic) RecentChatList(req *types.RecentChatListReq) (resp
 		// 从群聊会话ID中提取实际的群组ID（去掉group_前缀）
 		var actualGroupIds []string
 		for _, groupChatId := range groupChatIds {
-			_, userIds := conversation.ParseConversationWithType(groupChatId)
-			if len(userIds) > 0 {
-				actualGroupIds = append(actualGroupIds, userIds[0])
+			ids := conversation.ParseConversationIDs(chattypeconst.Group, groupChatId)
+			if len(ids) > 0 {
+				actualGroupIds = append(actualGroupIds, ids[0])
 			}
 		}
 
@@ -173,34 +185,31 @@ func (l *RecentChatListLogic) RecentChatList(req *types.RecentChatListReq) (resp
 		friendDetailMap[friendDetail.UserId] = friendDetail
 	}
 
-	conversationMetaMap := make(map[string]message_models.ChatConversationMeta)
-	for _, meta := range conversationMetas {
-		conversationMetaMap[meta.ConversationID] = meta
-	}
-
 	var respList []types.ConversationInfoRes
 	for _, convo := range userConversations {
-		var chatInfo types.ConversationInfoRes
-
-		// 从会话元数据中获取最后消息
-		if meta, exists := conversationMetaMap[convo.ConversationID]; exists {
-			chatInfo.MsgPreview = meta.LastMessage
-		} else {
-			chatInfo.MsgPreview = ""
+		meta, exists := conversationMetaMap[convo.ConversationID]
+		if !exists {
+			continue
 		}
 
+		var chatInfo types.ConversationInfoRes
+		chatInfo.MsgPreview = meta.LastMessage
 		chatInfo.IsTop = convo.IsPinned
 		chatInfo.ConversationID = convo.ConversationID
 		chatInfo.UpdatedAt = convo.UpdatedAt.String()
-		convType := conversation.GetConversationType(convo.ConversationID)
-		if convType == 1 { // 私聊
-			ids := strings.Split(convo.ConversationID, "_")
-			// ids格式: ["private", "A", "B"]
+		// 会话类型直接下发：1普通私聊 2群聊 3圈子 4数字伙伴 5机器人
+		chatInfo.ChatType = meta.Type
+
+		if chattypeconst.IsP2P(meta.Type) { // 两人会话（普通私聊/数字伙伴/机器人）
 			var opponentID string
-			if ids[1] == req.UserID {
-				opponentID = ids[2]
-			} else {
-				opponentID = ids[1]
+			if ids := conversation.ParseConversationIDs(meta.Type, convo.ConversationID); len(ids) == 2 {
+				if ids[0] == req.UserID {
+					opponentID = ids[1]
+				} else {
+					opponentID = ids[0]
+				}
+			} else if len(ids) == 1 {
+				opponentID = ids[0]
 			}
 
 			// 从好友详细信息中获取用户信息和备注
@@ -213,9 +222,7 @@ func (l *RecentChatListLogic) RecentChatList(req *types.RecentChatListReq) (resp
 				chatInfo.Avatar = ""
 				chatInfo.Notice = ""
 			}
-			chatInfo.ChatType = 1
-		} else if convType == 3 { // 圈子（名称/头像由客户端用圈子详情补齐）
-			chatInfo.ChatType = 3
+		} else if meta.Type == chattypeconst.Circle { // 圈子（名称/头像由客户端用圈子详情补齐）
 			chatInfo.NickName = "圈子"
 			chatInfo.Avatar = ""
 			chatInfo.Notice = ""
@@ -228,7 +235,6 @@ func (l *RecentChatListLogic) RecentChatList(req *types.RecentChatListReq) (resp
 				chatInfo.NickName = "未知群聊"
 				chatInfo.Avatar = ""
 			}
-			chatInfo.ChatType = 2
 			chatInfo.Notice = "" // 群聊暂时没有备注功能
 		}
 

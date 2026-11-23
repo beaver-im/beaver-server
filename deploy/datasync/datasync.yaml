@@ -1,0 +1,70 @@
+Name: datasync_api
+Host: 0.0.0.0
+Port: 21700
+Mysql:
+  DataSource: root:123456@tcp(127.0.0.1:3306)/beaver_datasync?charset=utf8mb4&parseTime=True&loc=Local
+Redis:
+  Addr: 127.0.0.1:6379
+  Password: '123456'
+  DB: 0
+Log:
+  Encoding: json
+  TimeFormat: 2006-01-02T15:04:05
+  Stat: false
+Etcd: 127.0.0.1:2379
+# 入站 S2S 机器票：本团队业务面共用一套凭据，票据受众统一 core:api。
+S2S:
+  Secret: beaver-s2s-core-b0db00321ca84fc783a2ba81505e82b1
+FriendRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: relationrpc.rpc
+  Timeout: 10000 # 10秒超时，单位毫秒
+GroupRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: relationrpc.rpc
+  Timeout: 10000 # 10秒超时，单位毫秒
+UserRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: accountrpc.rpc
+  Timeout: 10000 # 10秒超时，单位毫秒
+ChatRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: messagerpc.rpc
+  Timeout: 10000 # 10秒超时，单位毫秒
+EmojiRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: assetrpc.rpc
+  Timeout: 10000 # 10秒超时，单位毫秒
+NotificationRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: notificationrpc.rpc
+  Timeout: 10000 # 10秒超时，单位毫秒
+# 出站 S2S 端点注册表：只登记其它团队（circle / agent）的入口。
+# 本面只做 getSync* 增量同步，不承接 A 主体业务能力，也不提供业务门面。
+RemoteProxy:
+  Agent:
+    BaseURL: http://127.0.0.1:22300
+    ClientID: beaver-server
+    ClientSecret: beaver-s2s-ai-server-4a19e36992084ffb826d7bb8d3f56717
+  Social:
+    BaseURL: http://127.0.0.1:22100
+    ClientID: beaver-server
+    ClientSecret: beaver-s2s-social-server-d336db23e7bc49b5a89f4c587384cd16

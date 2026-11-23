@@ -81,34 +81,6 @@ AssetRpc:
     Hosts:
     - 127.0.0.1:2379
     Key: assetrpc.rpc
-
-# 用户 JWT 签名密钥：本服务独立签发并校验用户票，不信任外部塞的 Beaver-User-Id。
-Auth:
-  AccessSecret: f81d1b2d8f69a503d848a2ad0b9908186bc435d36cf5a885c33491b51613240f38ff672700d60ffdf19466cc9a687620
-  AccessExpire: 3600
 # 入站 S2S 机器票：本团队业务面共用一套凭据，票据受众统一 core:api。
-# 换票端点：POST /beaver/api/account/auth_token/v1/issue（client_credentials）。
 S2S:
-  Secret: beaver-s2s-01-core
-  Clients:
-    beaver-backend:
-      ClientID: beaver-backend
-      ClientSecret: beaver-s2s-01-core-backend
-      Scopes: []
-      Enabled: true
-    beaver-open:
-      ClientID: beaver-open
-      ClientSecret: beaver-s2s-01-core-open
-      Scopes: []
-      Enabled: true
-    beaver-social:
-      ClientID: beaver-social
-      ClientSecret: beaver-s2s-01-core-social
-      Scopes: []
-      Enabled: true
-    beaver-call:
-      ClientID: beaver-call
-      ClientSecret: beaver-s2s-01-core-call
-      Scopes: []
-      Enabled: true
-
+  Secret: beaver-s2s-core-b0db00321ca84fc783a2ba81505e82b1

@@ -26,10 +26,13 @@ import (
 	"errors"
 	"fmt"
 
+	accttypes "beaver/app/account/account_rpc/pb"
 	message_models "beaver/app/message/message_models/chat"
 	"beaver/app/message/message_rpc/internal/svc"
 	chat_rpc "beaver/app/message/message_rpc/pb"
+	"beaver/common/const/chattypeconst"
 	mqwsconst "beaver/common/const/mqwsconst"
+	"beaver/common/const/usertypeconst"
 	"beaver/common/wsEnum/wsCommandConst"
 	"beaver/common/wsEnum/wsTypeConst"
 	beaverlog "beaver/utils/beaverlog"
@@ -64,8 +67,14 @@ func (l *InitializeConversationLogic) InitializeConversation(in *chat_rpc.Initia
 	if len(in.UserIds) == 0 {
 		return nil, errors.New("用户列表不能为空")
 	}
-	if in.Type < 1 || in.Type > 4 {
+	conversationType := int(in.Type)
+	if !chattypeconst.IsValid(conversationType) {
 		return nil, errors.New("无效的会话类型")
+	}
+	// 两人会话：对端是数字伙伴/机器人时，会话类型跟着对端走。
+	// 调用方一律传 Private，不需要自己判断对端到底是什么。
+	if conversationType == chattypeconst.Private {
+		conversationType = l.resolveP2PConversationType(in.UserIds)
 	}
 
 	conversationVersion := int64(1)
@@ -76,10 +85,21 @@ func (l *InitializeConversationLogic) InitializeConversation(in *chat_rpc.Initia
 		if conversationVersion <= 0 {
 			conversationVersion = 1
 		}
+		if existingConversation.Type != conversationType {
+			// 类型纠正：历史上被建成普通私聊的数字伙伴/机器人会话在这里自愈
+			if uErr := l.svcCtx.DB.Model(&existingConversation).Update("type", conversationType).Error; uErr != nil {
+				l.logger.Error(model.LogMsg{Text: "更新会话类型失败", Data: map[string]any{"conversationId": in.ConversationId, "err": uErr.Error()}})
+				return nil, errors.New("更新会话类型失败")
+			}
+			l.logger.Info(model.LogMsg{
+				Text: "会话类型已纠正",
+				Data: map[string]any{"conversationId": in.ConversationId, "from": existingConversation.Type, "to": conversationType},
+			})
+		}
 	} else if errors.Is(err, gorm.ErrRecordNotFound) {
 		conversationMeta := message_models.ChatConversationMeta{
 			ConversationID: in.ConversationId,
-			Type:           int(in.Type),
+			Type:           conversationType,
 			MaxSeq:         0,
 			Version:        1,
 		}
@@ -136,12 +156,47 @@ func (l *InitializeConversationLogic) InitializeConversation(in *chat_rpc.Initia
 
 	l.logger.Info(model.LogMsg{
 		Text: "初始化会话成功",
-		Data: map[string]interface{}{"conversationId": in.ConversationId, "type": in.Type, "userIds": in.UserIds},
+		Data: map[string]interface{}{"conversationId": in.ConversationId, "type": conversationType, "userIds": in.UserIds},
 	})
 
 	return &chat_rpc.InitializeConversationRes{
 		ConversationId: in.ConversationId,
 	}, nil
+}
+
+// resolveP2PConversationType 计算两人会话的会话类型。
+//
+// 账号类型以 account 服务的 user_type 为准：对端是数字伙伴 → 4，机器人 → 5，其余 → 1（普通私聊）。
+// 查询失败时按普通私聊处理，不阻断会话初始化。
+func (l *InitializeConversationLogic) resolveP2PConversationType(userIDs []string) int {
+	res, err := l.svcCtx.UserRpc.UserListInfo(l.ctx, &accttypes.UserListInfoReq{UserIdList: userIDs})
+	if err != nil {
+		l.logger.Warn(model.LogMsg{Text: "查询会话参与者 user_type 失败，按普通私聊处理", Data: map[string]any{"err": err.Error()}})
+		return chattypeconst.Private
+	}
+
+	hasDigital, hasBot := false, false
+	for _, id := range userIDs {
+		info := res.UserInfo[id]
+		if info == nil {
+			continue
+		}
+		switch int8(info.UserType) {
+		case usertypeconst.UserTypeDigital:
+			hasDigital = true
+		case usertypeconst.UserTypeBot:
+			hasBot = true
+		}
+	}
+
+	switch {
+	case hasDigital:
+		return chattypeconst.Digital
+	case hasBot:
+		return chattypeconst.Bot
+	default:
+		return chattypeconst.Private
+	}
 }
 
 func (l *InitializeConversationLogic) notifyConversationInitialized(

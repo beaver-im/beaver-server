@@ -1,0 +1,22 @@
+services:
+  account_rpc:
+    image: wsrh8888/account_rpc:1.0.0
+    container_name: account_rpc
+    network_mode: "host"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./account_rpc.yaml:/etc/config.yaml:ro
+    restart: "no"
+    pull_policy: always
+
+  account_api:
+    image: wsrh8888/account_api:1.0.0
+    container_name: account_api
+    network_mode: "host"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./account_api.yaml:/etc/config.yaml:ro
+    restart: "no"
+    pull_policy: always
+    depends_on:
+      - account_rpc

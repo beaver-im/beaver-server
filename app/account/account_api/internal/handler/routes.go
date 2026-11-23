@@ -171,10 +171,10 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: auth_public.ResetPasswordHandler(serverCtx),
 			},
 			{
-				// S2S 机器票换发（client_credentials，靠 client_secret 自身鉴权，不走身份闸门）
+				// auth 秘钥签发（client_credentials，靠 client_secret 自身鉴权，不走身份闸门）
 				Method:  http.MethodPost,
-				Path:    "/beaver/api/account/auth_token/v1/issue",
-				Handler: auth_public.S2sTokenHandler(serverCtx),
+				Path:    "/beaver/api/account/auth_public/v1/issue",
+				Handler: auth_public.AuthTokenHandler(serverCtx),
 			},
 		},
 	)

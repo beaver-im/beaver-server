@@ -25,14 +25,12 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	org_models "beaver/app/platform/platform_models/org"
 	user_models "beaver/app/account/account_models/user"
 
 	"github.com/google/uuid"
-	"gopkg.in/yaml.v3"
 	"gorm.io/gorm"
 )
 
@@ -45,32 +43,6 @@ const (
 type Org struct {
 	OrgID   string
 	OrgName string
-}
-
-// ReadOrgName 读取平台配置里的组织名。文件不存在或未配置时用缺省名。
-func ReadOrgName(path string) (string, error) {
-	data, readErr := os.ReadFile(path)
-	if readErr != nil {
-		if os.IsNotExist(readErr) {
-			log.Printf("未找到部署配置 %s，组织名使用缺省「%s」", path, defaultOrgName)
-			return defaultOrgName, nil
-		}
-		return "", fmt.Errorf("读取部署配置失败: %w", readErr)
-	}
-
-	var file struct {
-		Deploy struct {
-			OrgName string `yaml:"OrgName"`
-		} `yaml:"Deploy"`
-	}
-	if err := yaml.Unmarshal(data, &file); err != nil {
-		return "", fmt.Errorf("解析部署配置失败: %w", err)
-	}
-	name := strings.TrimSpace(file.Deploy.OrgName)
-	if name == "" {
-		name = defaultOrgName
-	}
-	return name, nil
 }
 
 // Init 在用户种子之后执行。还没有组织时写入一个组织、一个根部门和拥有者。已有组织则跳过。

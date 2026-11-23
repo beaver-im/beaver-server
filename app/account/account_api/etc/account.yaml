@@ -5,7 +5,7 @@ RemoteProxy:
   Open:
     BaseURL: http://127.0.0.1:21900
     ClientID: beaver-server
-    ClientSecret: beaver-s2s-02-open-server
+    ClientSecret: beaver-s2s-open-server-256bf11a40d14dfda744da14969a5a1a
 Name: account
 Host: 0.0.0.0
 Port: 20100
@@ -17,13 +17,9 @@ Log:
   KeepDays: 7
   Level: info
   Stat: false
-Prometheus:
-  Host: 0.0.0.0
-  Port: 27100
-  Path: /metrics
 Etcd: 127.0.0.1:2379
 Auth:
-  AccessSecret: f81d1b2d8f69a503d848a2ad0b9908186bc435d36cf5a885c33491b51613240f38ff672700d60ffdf19466cc9a687620
+  AccessSecret: beaver-jwt-user-5a99dd68227b4aa4bca260349995d485
   AccessExpire: 3600
 Mysql:
   DataSource: root:123456@tcp(127.0.0.1:3306)/beaver_account?charset=utf8mb4&parseTime=True&loc=Local
@@ -33,7 +29,7 @@ Redis:
   DB: 0
 WhiteList:
   - /beaver/api/account/auth_public/.*
-  - /beaver/api/asset/preview/v1/get
+  - /beaver/api/asset/preview_public/v1/get
 Email:
   QQ:
     Host: smtp.qq.com
@@ -69,33 +65,32 @@ RocketMQ:
   Addr: 127.0.0.1:9876
 
 # 入站 S2S 机器票：本团队业务面共用一套凭据，票据受众统一 core:api。
-# 换票端点在本服务：POST /beaver/api/account/auth_token/v1/issue（client_credentials）。
+# auth 秘钥签发端点在本服务：POST /beaver/api/account/auth_public/v1/issue（client_credentials）。
 S2S:
-  Secret: beaver-s2s-01-core
+  Secret: beaver-s2s-core-b0db00321ca84fc783a2ba81505e82b1
   Clients:
     beaver-backend:
       ClientID: beaver-backend
-      ClientSecret: beaver-s2s-01-core-backend
+      ClientSecret: beaver-s2s-core-backend-4014803bd8424192ba406a7b2e2fa84b
       Scopes: []
       Enabled: true
     beaver-open:
       ClientID: beaver-open
-      ClientSecret: beaver-s2s-01-core-open
+      ClientSecret: beaver-s2s-core-open-d20742355d8840ba925d26e055246d96
       Scopes: []
       Enabled: true
     beaver-social:
       ClientID: beaver-social
-      ClientSecret: beaver-s2s-01-core-social
+      ClientSecret: beaver-s2s-core-social-f76f5e27e9fc4846979416fa7da3c5a9
       Scopes: []
       Enabled: true
     beaver-call:
       ClientID: beaver-call
-      ClientSecret: beaver-s2s-01-core-call
+      ClientSecret: beaver-s2s-core-call-ff365be3367a4029b2345ef8dad54ee1
       Scopes: []
       Enabled: true
     beaver-agent:
       ClientID: beaver-agent
-      ClientSecret: beaver-s2s-01-core-agent
+      ClientSecret: beaver-s2s-core-agent-931a68bae0ea4eeeba4059dbda5b359b
       Scopes: []
       Enabled: true
-
