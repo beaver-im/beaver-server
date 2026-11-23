@@ -32,17 +32,17 @@ import (
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
-// S2sTokenHandler S2S 机器票换发（client_credentials）。
-func S2sTokenHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+// AuthTokenHandler auth 秘钥签发（client_credentials）。
+func AuthTokenHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.S2STokenReq
+		var req types.AuthTokenReq
 		if err := httpx.Parse(r, &req); err != nil {
 			response.Response(r, w, nil, err)
 			return
 		}
 
-		l := logic.NewS2sTokenLogic(r.Context(), svcCtx)
-		resp, err := l.S2sToken(&req)
+		l := logic.NewAuthTokenLogic(r.Context(), svcCtx)
+		resp, err := l.AuthToken(&req)
 		response.Response(r, w, resp, err)
 	}
 }

@@ -45,44 +45,14 @@ Auth:
   AuthAdmin:
     # 后台管理员票，签发方 beaver-backend 的 auth_public 登录。
     AccessSecret: beaver-jwt-admin-b2135d16210e40058bc10319272bb994
-# 网关注入到下游的机器票：网关验完外部票后签一张机器票覆盖 Authorization，
-# 下游只挂 JwtS2s 验这张票并采信网关注入的身份头。服务间主动调用（出站 s2s）不经过网关，
-# 各服务拿 client_credentials 直连目标换票。本段只管入站注入这一条链路。
-# 一把密钥 = 一个目标团队，查表键与下方 Audiences 一致（team/surface → team → Default）。
-Machine:
-  Secrets:
-    beaver: beaver-s2s-core-b0db00321ca84fc783a2ba81505e82b1
-    beaver-admin/api: beaver-s2s-admin-2a8e5c1d7f4b6039a2c8e5d1f7b40639
-    beaver-open: beaver-s2s-open-a1c9e7d3405b4f268e5a1d7c9b3f6402
-    beaver-social: beaver-s2s-social-73d1e5b9a2c846f0b3e7d9a1c5f28064
-    beaver-doc: beaver-s2s-doc-8c4f1a6e2b9d5037a1e6f4c8d2b97053
-    beaver-call: beaver-s2s-call-1e6b4d9a7c2f8053b6e1a9d4c7f28305
-    beaver-ai: beaver-s2s-ai-c5e8a1d4b7f20396a1c5e8d4b7f20369
-  DefaultSecret: beaver-s2s-core-b0db00321ca84fc783a2ba81505e82b1
-  DefaultAudience: core:api
-  # 各 team 业务空壳写死的 S2S audience，网关注入机器票必须按目标团队选对，否则 401。
-  # 查表键口径见 core/auth.go teamAndSurface：team/surface → team → Default。
-  Audiences:
-    beaver: core:api
-    beaver-open: open:internal
-    beaver-social: social:internal
-    beaver-doc: doc:internal
-    beaver-call: call:internal
-    beaver-ai: ai:internal
-    beaver-admin/api: admin:internal
-  ClientID: gateway
-  Issuer: beaver-gateway
 # 公开端点唯一规范：group 段以 _public 结尾的整组公开，命中即不验外部票。
 # 所有公开端点必须按此命名，禁止 action 级特例。换票端点不经网关（内部直连），无需放行。
 PublicPatterns:
   - ^/[^/]+/(?:api|admin)/[^/]+/[^/]+_public/v1/
-# 鉴权平面规则：按 team 前缀分派外部票；未命中默认 beaver（主站用户票）。
-# team = /beaver/(用户票) /beaver-open/(开发者票) /beaver-admin/(管理员票)。
-# oauth 面是 IM 客户端自用的 C 端用户票，挂在 beaver-open 下但必须用用户票，
-# 故这条精确规则须排在 ^/beaver-open/ 之前压过 open 组（业务硬约束，非偷懒特例）。
+# 鉴权平面规则：三条 team 前缀平级，给出该路径外部票的首选平面；未命中默认 beaver。
+# 首选只决定验签顺序，票的真实平面由票自身密钥与受众判定（core/auth.go verifyExternalTicket），
+# 故"路径在 beaver-open 下却是 C 端用户票"的 oauth 面无需 action 级特例。
 AuthRules:
-  - Pattern: ^/beaver-open/api/open/oauth/v1/
-    Ticket: beaver
   - Pattern: ^/beaver/
     Ticket: beaver
   - Pattern: ^/beaver-open/

@@ -204,7 +204,7 @@ import "api/user.api"
 
 **关于 s2s：不再单开 `xxx_s2s.api`**。C 端与队间机器面都挂 `JwtS2s`（同一身份闸门），没有拆文件的理由——合并进 `xxx.api` 的**同一个 `@server`/`service` 块**。两者的区分不靠文件，而靠 URL 的 group 段：`xxx.api` 里 C 端用业务 group（`auth`/`chat`/`push`…），机器面用 `xxx_s2s`（如 `/beaver/api/account/auth_s2s/v1/verify_password`）。group 段本身就是契约上的鉴权/调用方边界。
 
-**换票端点（如 `/beaver/api/account/auth_token/v1/issue`）归属**：它不走身份闸门（否则换不到票），靠 `client_secret` 自身鉴权，鉴权级别与公开端点相同——写进 `xxx_public.api` 的 `@server` 块里，**不单开 `xxx_token.api`、不多加一个 `@server` 块**。URL 的 group 段保留 `auth_token` 等业务语义即可，与文件后缀不必一致。
+**auth 秘钥签发端点（如 `/beaver/api/account/auth_public/v1/issue`）归属**：它不走身份闸门（否则取不到秘钥），靠 `client_secret` 自身鉴权，鉴权级别与公开端点相同——写进 `xxx_public.api` 的 `@server` 块里，**不单开 `xxx_token.api`、不多加一个 `@server` 块**。URL 的 group 段必须是 `auth_public`（或任意 `*_public`），与 `.api` 文件后缀一致，才能命中网关公开白名单。
 
 硬性：
 - 禁止在一个 `.api` 里写多个 `@server` 块；**只有鉴权不同的接口才拆到不同文件**（当前仅"JwtS2s"与"无鉴权"两类，故只有 `xxx.api` 与 `xxx_public.api`）。

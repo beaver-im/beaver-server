@@ -33,30 +33,30 @@ import (
 	"beaver/utils/s2s"
 )
 
-// S2sTokenLogic 队间换票：client_credentials → 受众 core:api 的机器票。
+// AuthTokenLogic auth 秘钥签发：client_credentials → 受众 core:api 的访问凭据。
 //
-// 这是本团队唯一的换票入口。原先由 datasync 承担（顺带挂了 74 条 RPC→HTTP 转发），
+// 这是本团队唯一的 auth 秘钥签发入口。原先由 datasync 承担（顺带挂了 74 条 RPC→HTTP 转发），
 // 现在只留这一条小路由，能力本身回到各业务面自己的 /api 契约上。
-type S2sTokenLogic struct {
+type AuthTokenLogic struct {
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 	logger *beaverlog.Logger
 }
 
-// NewS2sTokenLogic 构造换票 logic。
-func NewS2sTokenLogic(ctx context.Context, svcCtx *svc.ServiceContext) *S2sTokenLogic {
-	return &S2sTokenLogic{
+// NewAuthTokenLogic 构造 auth 秘钥签发 logic。
+func NewAuthTokenLogic(ctx context.Context, svcCtx *svc.ServiceContext) *AuthTokenLogic {
+	return &AuthTokenLogic{
 		ctx:    ctx,
 		svcCtx: svcCtx,
-		logger: beaverlog.New("s2s_token", ctx),
+		logger: beaverlog.New("auth_token", ctx),
 	}
 }
 
-// S2sToken 校验调用方凭据并签发机器票。
+// AuthToken 校验调用方凭据并签发访问秘钥。
 //
 // fail-closed：注册表里没有该 client、Enabled 为假、口令不一致，一律拒绝；
 // 口令比对走 s2s.AuthenticateClient 的常量时间实现，不做长度/前缀短路。
-func (l *S2sTokenLogic) S2sToken(req *types.S2STokenReq) (resp *types.S2STokenRes, err error) {
+func (l *AuthTokenLogic) AuthToken(req *types.AuthTokenReq) (resp *types.AuthTokenRes, err error) {
 	if req.GrantType != "" && req.GrantType != commonconfig.AuthClientCredentials {
 		return nil, errors.New("不支持的授权方式")
 	}
@@ -64,7 +64,7 @@ func (l *S2sTokenLogic) S2sToken(req *types.S2STokenReq) (resp *types.S2STokenRe
 	scopes, ok := s2s.AuthenticateClient(l.svcCtx.Config.S2S.Clients, req.ClientID, req.ClientSecret)
 	if !ok {
 		l.logger.Error(model.LogMsg{
-			Text: "换票被拒",
+			Text: "秘钥签发被拒",
 			Data: map[string]any{"clientID": req.ClientID},
 		})
 		return nil, errors.New("invalid_client")
@@ -80,13 +80,13 @@ func (l *S2sTokenLogic) S2sToken(req *types.S2STokenReq) (resp *types.S2STokenRe
 	)
 	if err != nil {
 		l.logger.Error(model.LogMsg{
-			Text: "签发机器票失败",
+			Text: "签发访问秘钥失败",
 			Data: map[string]any{"clientID": req.ClientID, "err": err.Error()},
 		})
 		return nil, err
 	}
 
-	return &types.S2STokenRes{
+	return &types.AuthTokenRes{
 		AccessToken: signed,
 		TokenType:   "Bearer",
 		ExpiresIn:   int64(s2s.S2STTL.Seconds()),

@@ -133,17 +133,17 @@ type (
 	}
 )
 
-// ==================== 队间换票（client_credentials → core:api 机器票）====================
+// ==================== auth 秘钥签发（client_credentials → core:api 访问凭据）====================
 // 与其余公开端点同属「无网关身份鉴权」：不走身份闸门，靠 client_secret 常量时间比对。
-// 一个团队一套票：本团队全部业务面（account/message/relation/asset/notification/platform）
-// 共用同一受众，收费仓换一次票即可打所有面，省掉每服务各换一次的往返。
+// 一个团队一套凭据：本团队全部业务面（account/message/relation/asset/notification/platform）
+// 共用同一受众，调用方取一次秘钥即可打所有面，省掉每服务各取一次的往返。
 type (
-	S2STokenReq {
+	AuthTokenReq {
 		GrantType    string `json:"grant_type,optional"`
 		ClientID     string `json:"client_id"`
 		ClientSecret string `json:"client_secret"`
 	}
-	S2STokenRes {
+	AuthTokenRes {
 		AccessToken string `json:"access_token"`
 		TokenType   string `json:"token_type"`
 		ExpiresIn   int64  `json:"expires_in"`
@@ -202,7 +202,7 @@ service account {
 	@handler qrcodeStatus
 	get /beaver/api/account/auth_public/v1/qrcode_status (QrcodeStatusReq) returns (QrcodeStatusRes)
 
-	@doc "S2S 机器票换发（client_credentials，靠 client_secret 自身鉴权，不走身份闸门）"
-	@handler s2sToken
-	post /beaver/api/account/auth_token/v1/issue (S2STokenReq) returns (S2STokenRes)
+	@doc "auth 秘钥签发（client_credentials，靠 client_secret 自身鉴权，不走身份闸门）"
+	@handler authToken
+	post /beaver/api/account/auth_public/v1/issue (AuthTokenReq) returns (AuthTokenRes)
 }

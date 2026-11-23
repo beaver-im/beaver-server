@@ -246,13 +246,13 @@ type ResetUserPasswordRes struct {
 	Success bool `json:"success,optional"`
 }
 
-type S2STokenReq struct {
+type AuthTokenReq struct {
 	GrantType    string `json:"grant_type,optional"`
 	ClientID     string `json:"client_id"`
 	ClientSecret string `json:"client_secret"`
 }
 
-type S2STokenRes struct {
+type AuthTokenRes struct {
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
 	ExpiresIn   int64  `json:"expires_in"`

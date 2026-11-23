@@ -139,39 +139,63 @@ func (p Proxy) routeAuthKind(path string) ticketKind {
 // 验票分两条口：
 //  1. 机器票优先：团队间调用带的是 S2S 票，受众就是目标团队，验过即放行，不再要求外部票。
 //     机器面（machine/v1 等）本该如此，否则内部调用全被外部票闸门拦死。
-//  2. 外部票：按路由平面分派到 jwtBeaver / jwtOpen / jwtAdmin 各自的验签实现。
+//  2. 外部票：AuthRules 按路径给出首选平面，票自身密钥与受众决定真实平面（见 verifyExternalTicket）。
 //
 // admin 平面写 Beaver-Admin-Id，其余平面写 Beaver-User-Id，让下游字段名与语义对齐。
 // public 路由不验票，但同样先剥头，杜绝客户端自带身份头透传到下游。
 // 返回 isMachine：true 表示请求携带的是内部机器票，此时不再注入网关票（保留原调用方身份）。
 func (p Proxy) authenticate(r *http.Request) (bool, error) {
 	stripIdentityHeaders(r)
-	kind := p.routeAuthKind(r.URL.Path)
-	if kind == ticketPublic {
+	preferred := p.routeAuthKind(r.URL.Path)
+	if preferred == ticketPublic {
 		return false, nil
 	}
 	// 1) 机器票（服务间调用）：票面本身就是内部凭据，不再叠加外部票要求。
 	if p.verifyMachineTicket(r) {
 		return true, nil
 	}
-	// 2) 外部票：各平面各验各的密钥与受众。
-	var (
-		claims *jwts.CustomClaims
-		err    error
-	)
-	switch kind {
-	case ticketOpen:
-		claims, err = p.verifyOpenTicket(r)
-	case ticketAdmin:
-		claims, err = p.verifyAdminTicket(r)
-	default:
-		claims, err = p.verifyBeaverTicket(r)
-	}
+	// 2) 外部票：平面由票自身决定，路径只给首选尝试顺序。
+	kind, claims, err := p.verifyExternalTicket(r, preferred)
 	if err != nil {
 		return false, err
 	}
 	r.Header.Set(identityHeader(kind), claims.UserID)
 	return false, nil
+}
+
+// verifyExternalTicket 验外部票并返回票的真实平面。
+//
+// 三把外部票的密钥与受众两两独立（beaver:user / beaver:developer / beaver:admin），
+// 一张票有且仅有一个平面能验过。AuthRules 给出的首选平面先验，常规请求一次命中。
+//
+// 唯一的兼容是单向的：开放平台面额外接受主站用户票——IM 客户端自用的 oauth 面挂在
+// /beaver-open/ 下却必须用 C 端用户票（UserID 来自 Beaver-User-Id，空即报未登录）。
+// 这是平面级规则，落在代码里而非配置里的 action 级特例；反向（用户面收开发者票、
+// 管理面收其它票）一律拒绝，避免跨平面越权。
+func (p Proxy) verifyExternalTicket(r *http.Request, preferred ticketKind) (ticketKind, *jwts.CustomClaims, error) {
+	claims, err := p.verifyExternalByKind(r, preferred)
+	if err == nil {
+		return preferred, claims, nil
+	}
+	// 开放平台面额外接受主站用户票（oauth 面）。仅此一个方向，不反向放宽。
+	if preferred == ticketOpen {
+		if userClaims, userErr := p.verifyExternalByKind(r, ticketBeaver); userErr == nil {
+			return ticketBeaver, userClaims, nil
+		}
+	}
+	return preferred, nil, err
+}
+
+// verifyExternalByKind 按平面分派到 jwtBeaver / jwtOpen / jwtAdmin 各自的验签实现。
+func (p Proxy) verifyExternalByKind(r *http.Request, kind ticketKind) (*jwts.CustomClaims, error) {
+	switch kind {
+	case ticketOpen:
+		return p.verifyOpenTicket(r)
+	case ticketAdmin:
+		return p.verifyAdminTicket(r)
+	default:
+		return p.verifyBeaverTicket(r)
+	}
 }
 
 // verifyTicket 三个平面共用的验签口径：取票 → 验签 → 校验非空与受众。
@@ -242,19 +266,15 @@ func (p Proxy) injectMachineTicket(r *http.Request) error {
 	return nil
 }
 
-// machineAudience 按 team/surface/service 选机器票受众：
-// /beaver-admin/api/... → admin:internal，/beaver-open/api/... → open:internal，
-// 主站 /beaver/api/... → core:api。
-// 查表顺序：team/surface/service 精确键 → team/surface → team → 默认。
-// 三段键用于"路径 team 归主站、实现却在其它团队服务"的跨界端点（如 oauth 面）：
-// 其机器票受众必须按目标服务选，否则下游 JwtS2s 验不过。
+// machineAudience 按 team/surface 选机器票受众：
+// /beaver-admin/api/... -> admin:internal，/beaver-open/api/... -> open:internal，
+// 主站 /beaver/api/... -> core:api。
+// 先查 team/surface 精确键，再回退 team，最后回退默认。
 func (p Proxy) machineAudience(path string) string {
 	m := p.Config.Machine
 	aud := m.DefaultAudience
-	team, surface, service := pathKey(path)
-	if configured, ok := m.Audiences[team+"/"+surface+"/"+service]; ok {
-		aud = configured
-	} else if configured, ok := m.Audiences[team+"/"+surface]; ok {
+	team, surface := teamAndSurface(path)
+	if configured, ok := m.Audiences[team+"/"+surface]; ok {
 		aud = configured
 	} else if configured, ok := m.Audiences[team]; ok {
 		aud = configured
@@ -262,15 +282,12 @@ func (p Proxy) machineAudience(path string) string {
 	return aud
 }
 
-// machineSecret 选机器票密钥，查表口径与 machineAudience 完全一致：
-// team/surface/service → team/surface → team → DefaultSecret / 旧 Secret。
-// 密钥与受众用同一套路径映射，保证「发给目标服务的票」签发与校验用同一把密钥。
+// machineSecret 按 team/surface 选机器票密钥，查表口径与 machineAudience 完全一致：
+// 先查 team/surface 精确键，再回退 team，最后回退 DefaultSecret / 旧 Secret。
+// 密钥与受众用同一套路径映射，保证「发给 team-X 的票」只用 team-X 的密钥签发与校验。
 func (p Proxy) machineSecret(path string) string {
 	m := p.Config.Machine
-	team, surface, service := pathKey(path)
-	if configured, ok := m.Secrets[team+"/"+surface+"/"+service]; ok {
-		return configured
-	}
+	team, surface := teamAndSurface(path)
 	if configured, ok := m.Secrets[team+"/"+surface]; ok {
 		return configured
 	}
@@ -283,21 +300,17 @@ func (p Proxy) machineSecret(path string) string {
 	return m.Secret
 }
 
-// pathKey 取六段路径的前三段（team/surface/service），用于机器票密钥与受众查表。
+// teamAndSurface 取六段路径的前两段（team/surface），用于选择机器票受众。
 // 后台管理面 /beaver-admin/api/... 与 C 端 /beaver/api/... 分属不同 team。
-func pathKey(path string) (string, string, string) {
+func teamAndSurface(path string) (string, string) {
 	parts := strings.Split(strings.TrimPrefix(path, "/"), "/")
-	var team, surface, service string
-	if len(parts) > 0 {
-		team = parts[0]
+	if len(parts) == 0 {
+		return "", ""
 	}
-	if len(parts) > 1 {
-		surface = parts[1]
+	if len(parts) == 1 {
+		return parts[0], ""
 	}
-	if len(parts) > 2 {
-		service = parts[2]
-	}
-	return team, surface, service
+	return parts[0], parts[1]
 }
 
 // bearerToken 只取 Authorization: Bearer 的裸票，用于机器票判定（机器票不走 Token 头 / query）。
