@@ -3,6 +3,8 @@
   "documents": [
     "AGENTS.md",
     "docs/README.md",
+    "docs/directory.md",
+    "docs/glossary.md",
     "docs/architecture.md",
     "docs/standards/01-layout.md",
     "docs/standards/02-contracts-codegen.md",
@@ -17,6 +19,7 @@
     "docs/modules/integration.md",
     "docs/decisions/README.md",
     "docs/decisions/0001-contract-first.md",
+    "docs/decisions/0002-auth-planes.md",
     "docs/decisions/template.md",
     "docs/tasks/README.md",
     "docs/tasks/template.md",
@@ -63,7 +66,7 @@
     "utils/secret/secret_test.go",
     "main.go",
     "build/build.sh",
-    "build/check.sh",
+    "build/all.sh",
     "Dockerfile",
     "remote/doc/content.go",
     "remote/doc/remote.go",
@@ -159,7 +162,7 @@
     {
       "source": "skills/beaver-dev/references/go-zero-server.md",
       "snapshot": "docs/appendices/source-material/go-zero-server.md",
-      "sha256": "4197E60E5A125D2FA2BF2A8766CE58B0CD516161060F3269B767BE78802EE225"
+      "sha256": "40BB069C6BD39AB1266CADD6462BCBB7F4FC850CFD74115B76FF14734BF61F08"
     },
     {
       "source": "skills/beaver-dev/references/python-agent.md",

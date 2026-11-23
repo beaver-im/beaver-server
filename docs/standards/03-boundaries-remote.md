@@ -11,7 +11,7 @@
 | 主仓 ↔ 独立仓 | remote/S2S，即业务 HTTP + Bearer 机器票 | 跨仓 etcd RPC、导入对方业务包、不必要 `/internal/*` 门面 |
 | 独立仓内部 | 依本仓真实契约与边界 | 将别仓模型/凭据编入本仓 |
 
-各业务域数据库不共享且假设分布在不同服务器物理隔离（如 `app/account` 独立库、`app/asset` 独立库）：任何服务都不得配置或持有其他服务的 DSN、不得直接连接别人数据库或做跨库 SQL/JOIN/事务，也不得因本地开发机偶然共用同一 MySQL 实例而绕过服务接口。
+各业务域数据库独占、按不同服务器物理隔离部署；跨库直连与他服务 DSN 的禁令见[第 6 章](05-data-sync.md)，本地开发机共机不构成共享前提。
 
 当前实例：[UserInfoLogic](../../app/account/account_api/internal/logic/user/userinfologic.go) 直接查询本域独占表；
 [ServiceContext](../../app/account/account_api/internal/svc/servicecontext.go) 装配跨域 RPC 和 open remote；

@@ -2,11 +2,8 @@
 
 [返回目录](../README.md) · [消息与实时链路](realtime.md)
 
-这是一张定位地图，不逐文件复述。共同约束只维护在第 2—6 章。
-每域拥有**物理隔离的独立数据库**（如 `account` 对应独立库 `beaver_account`、`asset` 对应独立库 `beaver_asset`；域内 `_api` 与 `_rpc` 共属本域库，跨服务绝不连他库、不持他库 DSN、不共享别域 models）。
+这是一张定位地图，不逐文件复述。共同约束只维护在第 2—6 章：**每域独占物理隔离的数据库、跨服务走接口**（[第 6 章](../standards/05-data-sync.md)）；`.api` 分类与公开面命名见[第 3 章](../standards/02-contracts-codegen.md)；remote 类型组见[第 4 章](../standards/03-boundaries-remote.md)。
 每域先打开入口 import，搜动作的 `@handler`，再读对应 logic/模型及调用者，不默认读完整目录。
-分类按业务可继续扩展多份 `.api`，不是下表列出的名字或两种鉴权面就限制总文件数：目标 `<业务>.api` 为登录/S2S 保护面，`<业务>_publish.api` 为公开面，统一入口生成；现存 `_public` 文件名只是现状证据，细则以[第 3 章](../standards/02-contracts-codegen.md)为准。
-调用子服务/第三方走 remote；每接口 XxxApi 与 types/remote 独立 XxxReq/XxxRes 的主规范见[第 4 章](../standards/03-boundaries-remote.md)。
 
 | 域 / 职责 | 真实入口与关键路径 | 依赖/关键词 | 变更时验证什么 |
 |---|---|---|---|

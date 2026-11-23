@@ -16,22 +16,23 @@
 2. HTTP 业务接口先改 `.api`，校验后用本仓 `template/` 生成；RPC 先改 `.proto`。
    禁止绕过契约手写等价 handler/routes/types；logic、svc/config 是允许的业务扩展点。
    精确命令、生成物归属、网关例外见 [第 3 章](docs/standards/02-contracts-codegen.md)。
-3. **各服务数据库不共享且按不同服务器物理隔离部署**（如 `app/account` 独立数据库、`app/asset` 独立数据库）：禁止连接别人数据库直接调用、禁止跨库 SQL/JOIN/事务、禁止共享他域 ORM model 或持有他服务 DSN；跨服务数据必须走对方接口（仓内走 RPC，跨独立仓走 remote/S2S HTTP）。`main.go -db` 仅是本地开发初始化工具，不是生产共库依据。
-   接口与跨仓规范见[第 4 章](docs/standards/03-boundaries-remote.md)，数据库独占与物理隔离见[第 6 章](docs/standards/05-data-sync.md)。
+3. **各服务数据库不共享且按不同服务器物理隔离部署**：禁止连他库、跨库 SQL/JOIN/事务、共享他域 model 或持有他服务 DSN；跨服务只能走对方接口。完整规范见[第 6 章](docs/standards/05-data-sync.md)，调用方式见[第 4 章](docs/standards/03-boundaries-remote.md)。
 4. 先说明目标、计划改动文件和检查。无明确修改授权时等确认；明确“直接改”或已授权范围内继续不重复索要。
 5. 不擅自构建、生成、启动、部署、装依赖、改库或执行压测；这些操作有写入/环境成本，按任务授权执行。
    不读取/输出 `.env`、密钥、证书或真实配置凭据。不暂存、提交、推送、还原他人修改，除非明确授权。
 6. 修改前看暂存、未暂存和未跟踪状态；发现并发修改先对照，不能覆盖。保留完整版权头。
 7. 路由段数、网关鉴权的旧规范存在冲突，**不要执行旧 skill 的“五段、网关不鉴权”简写**；
-   以 [附录 A 的处理结论](docs/appendices/migration.md) 和实际契约为准；未决处明确列出。
-8. remote 是本仓调用别人接口的出站层；每个业务方法精确以 `Api` 结尾，在 `types/remote/<peer>` 为每接口定义独立 `type (...)`，内含 `XxxReq` / `XxxRes`（不加桌面 I 前缀）。类型、JSON 与错误边界见[第 4 章](docs/standards/03-boundaries-remote.md)。
-9. `.api` 可按任意业务类别扩展，不是每服务只有两个文件：`<业务>.api` 放登录/S2S 保护面，`<业务>_publish.api` 放公开面（后缀就是 publish）；统一入口 import 后生成。公开不等于免业务安全校验，详见[第 3 章](docs/standards/02-contracts-codegen.md)。
+   路由以六段与实际契约为准，鉴权以[第 5 章](docs/standards/04-runtime-security.md)和 [ADR 0002](docs/decisions/0002-auth-planes.md) 为准（三条平级前缀、`_public` 唯一公开规范、机器票按 team/surface、oauth 单向兼容）；
+   迁移台账见[附录 A](docs/appendices/migration.md)，未决处明确列出。
+8. remote 是本仓调用别人接口的出站层；业务方法精确 `Api` 结尾、每接口独立 Req/Res 类型组。类型、JSON 与错误边界见[第 4 章](docs/standards/03-boundaries-remote.md)。
+9. `.api` 按任意业务类别扩展：`<业务>.api` 保护面、`<业务>_publish.api` 公开面，统一入口 import 后生成；公开不等于免业务安全校验。详见[第 3 章](docs/standards/02-contracts-codegen.md)。
 10. 文档按需维护；未经请求不制造任务报告。新知识放主章节，任务状态放交接，不复制多套规则。
 
 ## 任务入口
 
 | 任务 | 先读 |
 |---|---|
+| 不知道文件/目录在哪、这文件能不能改 | [工程目录大全](docs/directory.md) |
 | 新增/修改 HTTP、RPC | [第 3 章与操作步骤](docs/standards/02-contracts-codegen.md) |
 | 改数据库、版本、同步 | [第 6 章](docs/standards/05-data-sync.md) |
 | 消息、WS、MQ | [第 10 章](docs/modules/realtime.md) |

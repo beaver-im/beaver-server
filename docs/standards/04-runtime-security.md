@@ -2,21 +2,54 @@
 
 [返回目录](../README.md) · [数据库与同步](05-data-sync.md)
 
-## 5.1 身份：知道谁写的头，才知道能不能信
+## 5.1 身份：网关验外部票，业务只验机器票
 
-**当前事实**：[网关 auth.go](../../app/gateway/gateway_api/core/auth.go) 区分 user/open/admin 外部票平面，剥离身份头、验票、按平面重建身份，再注入机器票。
-[主仓 JwtS2s](../../middleware/jwt/jwtS2s.go) 只接受 Bearer 机器票，验证受众/过期等，重建 X-Client-Id 并放入 context；缺密钥或验签失败真实 401。
-这不是旧材料所说的“网关无鉴权”。各服务包装中间件见服务自己的 internal/middleware。
+本节是 2026-11-23 核对 [网关配置](../../app/gateway/gateway_api/gateway.yaml)、[core/auth.go](../../app/gateway/gateway_api/core/auth.go) 与 [JwtS2s](../../middleware/jwt/jwtS2s.go) 后的可执行规范；旧材料的“网关只转发不鉴权”已作废。决定依据见 [ADR 0002](../decisions/0002-auth-planes.md)。配置里只有密钥**变量名**，手册不收录密钥值。
 
-**统一要求**：
-- 需要登录的接口必须在 `.api` 声明中间件，不能把“读到 Beaver-User-Id”当成校验通过；header 仅能在受信传输/已认证链路上采信。
-- 机器身份不等于用户身份；资源归属、群成员、管理员/租户权限在 logic 显式核验。请求 body/query 中的 userId 不能覆盖认证主体。
-- 公开面（目标 `<业务>_publish.api`，现有 `_public.api`）只表示不挂统一身份闸门，短信码、client_secret、签名回调仍需专属校验。不要日志输出这些值。
-- 不把认证失败伪装 HTTP 200。如需统一或调整业务错误 HTTP 状态码协议，直接改齐响应层与所有客户端/消费方，不留双协议兼容层（仅本次文档任务未改动源码）。
+### 5.1.1 三类外部票与三条平级路径前缀
 
-反例：用 req.UserID 任意读用户隐私，未核实是否为当前主体/是否有机器授权。
-正向检查：无票→401；伪造身份头不能提权；有效机器票无用户权限仍拒绝用户私有操作；公开入口的专属凭据也必须失败关闭。
-本次没有做穿透测试，不能据这段说明宣称部署安全。
+| 平面 | 首选路径前缀 | 网关验签段 | 票面受众 | 写入下游身份头 |
+|---|---|---|---|---|
+| 主站 C 端用户 | `/beaver/` | `Auth.AuthBeaver` | `beaver:user` | `Beaver-User-Id` |
+| 开放平台开发者 | `/beaver-open/` | `Auth.AuthOpen` | `beaver:developer` | `Beaver-User-Id` |
+| 后台管理员 | `/beaver-admin/` | `Auth.AuthAdmin` | `beaver:admin` | `Beaver-Admin-Id` |
+
+- 三票**密钥各不相同、受众各不相同**，一张票只可能被一个平面验过；这是“票自描述平面”的前提。验签实现分在 `core/jwtBeaver.go`、`jwtOpen.go`、`jwtAdmin.go`，`auth.go` 只留流水线。
+- `AuthRules` 就是三条平级前缀规则；未命中路径默认按 `beaver` 处理。**首选平面只决定验签顺序**，`verifyExternalTicket` 以票自身的密钥与受众为准判定真实平面；不得改成“无差别回退所有平面”——那会让开发者票也能打主站用户面。
+- 网关写头口径：**头名按平面分，字段名按域分**（下游 `.api` 仍是 `UserID` / `AdminID`），不要为每个团队另造 `DeveloperID` 之类的新字段名。
+
+### 5.1.2 单次请求的强制顺序
+
+`core/auth.go` 的 `authenticate` 顺序即规范，改鉴权先读它：
+
+1. **剥离**客户端自带的 `Beaver-User-Id`、`Beaver-Admin-Id`、`X-User-Id`、`X-Partner-Id`、`X-Service-Name`；公开路由也一样剥，杜绝伪造头透传。
+2. 判公开：`PublicPatterns` 命中即不验票、不注入，直接转发（仍需业务自身校验）。
+3. **机器票优先**：`Authorization: Bearer` 能用目标团队的机器密钥与受众验过，即视为内部调用放行；此时不覆盖原票、保留 `X-Client-Id`，因此 `machine/v1` 一类内部面无需进 `PublicPatterns`。
+4. 验外部票：先验路径首选平面，失败后按 5.1.3 的唯一单向兼容再试；失败返回真实 401，不能伪装 200。
+5. 写可信身份头（admin 平面写 `Beaver-Admin-Id`，其余写 `Beaver-User-Id`）。
+6. 网关注入一张 S2S 机器票**覆盖** `Authorization`，下游业务只挂 `JwtS2s` 验这张票；业务不得直接采信外部票或客户端头。缺机器密钥是开发态降级，生产必须配置。
+
+### 5.1.3 唯一的跨界兼容：开放平台面接受主站用户票
+
+`/beaver-open/api/open/oauth/v1/` 下 `h5_authcode`、`qrcode_scan`、`qrcode_confirm`、`qrcode_cancel` 这 4 个端点是 IM 客户端自用的 C 端能力，`UserID` 取自网关注入的 `Beaver-User-Id`，空即报未登录。
+
+- 兼容写在 **`verifyExternalTicket` 的代码层**：`preferred == open` 且开发者票验不过时，再试 `beaver` 用户票；**只有这一个方向**。反向（主站用户面收开发者票、管理面收其它票）一律拒绝。
+- `AuthRules` 与 `PublicPatterns` **不写任何 action 级特例**。曾否决“迁路径到 `/beaver/` + 三段机器键”和“配置里写特例”两案：规范在配置可见层保持三条平级、零特例，业务硬约束留在代码层。
+- 改动此兼容前先确认新端点是否真属 C 端；不能因为有兼容就把它当成通用开放平台规则。
+
+### 5.1.4 公开端点与机器票的归属
+
+- **公开端点唯一规范**：六段路由的 group 段（URL 第 4 段）以 `_public` 结尾，由 `PublicPatterns` 一条通用正则放行；**禁止 action 级特例**。换票端点内部直连、不经网关，无需放行。注意 `_publish` 只是 `.api` **文件名**后缀（见[第 3 章](02-contracts-codegen.md)），文件名不会让网关放行。
+- **机器票归属按 team/surface 两段**：`teamAndSurface` 取路径前两段，`machineSecret` / `machineAudience` 的查表顺序都是 `team/surface → team → Default`。机器票只用于网关注入；**出站 S2S 不经过网关**，各服务拿 client_credentials 直连目标换票（见[第 4 章](03-boundaries-remote.md)）。一把机器密钥对应一个目标团队，不可混用。
+
+### 5.1.5 统一要求与验收
+
+- 需要登录的接口必须在 `.api` 声明中间件，不能把“读到身份头”当成校验通过；身份头仅能在已认证链路上采信。
+- 机器身份不等于用户身份；资源归属、群成员、管理员/租户权限在 logic 显式核验。请求 body/query 中的 `userId` 不能覆盖认证主体。
+- 公开面只表示不挂统一身份闸门；短信码、`client_secret`、签名回调仍需专属校验，秘密不入日志。
+- 不把认证失败伪装 HTTP 200。调整对外错误码协议要改齐响应层与全部消费方，不留双协议兼容层。
+
+验收至少覆盖：无票→401；伪造身份头不能提权；开发者票打用户面被拒；用户票打 oauth 面可用、反向不可；有效机器票也不能直接操作用户私有资源；公开入口专属凭据失败关闭；机器票验过时原 `X-Client-Id` 不被吞。本次没有做穿透测试，不能据本节宣称部署已安全。
 
 ## 5.2 校验：解析成功不等于业务合法
 

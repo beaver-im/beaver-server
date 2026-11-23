@@ -2,8 +2,7 @@
 
 [返回目录](../README.md) · [原文迁移台账](../appendices/migration.md)
 
-本章保留旧全栈技能的有效联调约定，不接管其它仓的主手册。未重新审查的客户端版本/脚本只保留在冻结材料中，不作当前安装要求。
-Go 端最新 remote 类型组与业务分类/`_publish` 命名以[第 3 章](../standards/02-contracts-codegen.md)、[第 4 章](../standards/03-boundaries-remote.md)为准；不要把 Python `_api` 命名或旧冻结文档的 `_public` / 仅按鉴权分文件规则反套到 Go。
+本章只保留旧全栈技能的联调约定，不接管其它仓主手册；未复核的客户端版本/脚本只在冻结材料中。Go 侧规则以[第 3 章](../standards/02-contracts-codegen.md)、[第 4 章](../standards/03-boundaries-remote.md)为准，不要把 Python `_api` 或旧冻结文档的 `_public` 命名反套到 Go。
 
 ## 12.1 Python Agent：不是另一个 Go 服务
 

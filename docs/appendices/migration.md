@@ -118,7 +118,9 @@
 ## A.6 冲突、失效信息与外部引用
 
 已据源码处理：工具 goctl 拼写；六段而非五段；网关当前鉴权；common/convert 仍在；实际子仓名/服务目录；backend/call 注释模板深度不正确。
-仍需以后决定或专项核验：goctl 与插件版本锁定；machine 与 xxx_s2s 路由命名统一；WS 共享类型/导入注释与规范差异；根 main 与 database 双迁表入口整合；模板无响应分支/版权头；各子仓旧结构迁移范围。
+2026-11-23 追加核对：网关鉴权已从“有鉴权”细化到可执行规范——三条平级 team 前缀、三票独立密钥/受众、`_public` 唯一公开规范、机器票按 team/surface 归属、oauth 面单向兼容，活动规范集中在[第 5 章](../standards/04-runtime-security.md)，取舍记录见 [ADR 0002](../decisions/0002-auth-planes.md)；旧材料中与此处冲突的简写不再有效。同时澄清 `.api` 文件名 `_publish` 与 URL group `_public` 分属两层（[第 3 章](../standards/02-contracts-codegen.md)）。
+校验清单同步两处历史遗留（2026-11-23）：`build/check.sh` 已随部署目录重整删除，清单改登记 `build/all.sh`（检查器只验路径存在，不执行构建）；Go 冻结快照在提交 `9b01bc0c` 中有一次有意修改（`auth_public` 归属口径），`knowledge-checks.json` 的 SHA256 按当前快照重新基线，原文差异仍可由 Git 历史复查，不声称快照从未变过。
+仍需以后决定或专项核验：goctl 与插件版本锁定；`machine` 与 `xxx_s2s` 路由命名统一（主仓 `user_s2s`/`file_s2s` 等与子仓 `machine` 并存，已核对为事实差异，未擅自改名）；WS 共享类型/导入注释与规范差异；根 main 与 database 双迁表入口整合；模板无响应分支/版权头；各子仓旧结构迁移范围。
 这些不是本次改业务的授权，本次不通过生成/重构“顺手修完”。
 
 本仓可控的旧路径引用改为手册/冻结证据；WorkBuddy 历史记忆只替换失效路径，不改历史结论。

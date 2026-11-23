@@ -57,9 +57,7 @@ account_api/
     device.api             设备业务：保护面，可继续扩展其它类别
 ```
 
-**当前事实与目标不要混写**：[account_api.api](../../app/account/account_api/account_api.api) 现在实际 import `auth_public.api`、`auth.api`、`user.api`；
-本次窄查主仓发现现有公开分类使用 `_public.api`，没有 `_publish.api`。用户这次明确要求的目标后缀是 `_publish`，文档据此更新，**源码本次未改名**。
-后续契约任务直接重命名文件、更新 import 并生成，清掉旧路径，不保留两套后缀做兼容。
+**当前事实与目标不要混写**：[account_api.api](../../app/account/account_api/account_api.api) 现在实际 import `auth_public.api`、`auth.api`、`user.api`，源码后缀未改名；`_publish`（文件名）与 `_public`（URL group）的分工、整改方向见本章 3.4 与[第 5 章](04-runtime-security.md)。
 文件后缀是源码维护约定，不由 go-zero 自动决定鉴权；**必须核对实际 `@server` 中间件声明**。
 本仓典型保护链路为网关校验用户身份并注入机器票，下游 JwtS2s 验机器 Bearer；不要误认为 JwtS2s 直接校验用户登录 JWT。
 S2S（服务间调用）属于调用/认证方式，不是“对外公开”的同义词；换票不走已有身份闸门，但仍校验自身凭据。
@@ -88,6 +86,8 @@ team 如 beaver；surface 是 api/admin；service 用合并域 account/relation/
 group 用业务、xxx_public、xxx_s2s 或当前契约已有 machine；action 用 snake_case。
 禁止新建 `:id` 路径参数，也不要把 `/v1/qrcode_status` 再拆成 `/v1/qrcode/status`。
 旧域 auth/user→account、friend/group→relation、file/emoji→asset、chat→message、org/workbench→platform。
+
+**两个 `_public` / `_publish` 不在同一层，必须分清**：[网关 gateway.yaml](../../app/gateway/gateway_api/gateway.yaml) 的 `PublicPatterns` 只匹配 **URL 的 group 段以 `_public` 结尾**（如 `.../auth_public/v1/...`），命中才免外部票；第 3.3 节的 `_publish.api` 只是 `.api` **源文件名**后缀，文件名不会改变网关行为。新增公开接口要两件事同时做对：契约放进公开面文件，URL group 按 `_public` 命名；只做其中一件都不生效。具体鉴权顺序与唯一跨界例外见[第 5 章](04-runtime-security.md)。
 
 旧 Cursor 入口却说“五段消灭六段”，与旧详细规范和当前路由相反，已记录为被事实纠正的旧句。
 旧详细规范要求机器面 `xxx_s2s`，当前部分契约用 `machine`。因本项目无历史包袱、无需兼容旧版线上路径：一旦选定统一命名，直接改契约、重生成并同步所有调用方（本仓/子仓 `remote` 与校验），删除旧路由，**绝不同时保留 `machine` 和 `xxx_s2s` 两套兼容路由**。

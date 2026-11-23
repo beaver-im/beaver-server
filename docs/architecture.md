@@ -24,7 +24,7 @@
  datasync_api：按领域 RPC / remote 聚合增量结果，不跨域直连表
 ```
 
-**数据库独占与物理隔离前提**：每个业务服务拥有独立数据库，按不在同一台服务器物理隔离部署设计（例如 `app/account` 拥有独立库 `beaver_account`，`app/asset` 拥有独立库 `beaver_asset`）。同一业务域内的 `_api` 与 `_rpc`（如 `account_api` 与 `account_rpc`）同属该域并访问本域独占库；**不同服务之间禁止连接对方数据库、禁止跨库 SQL/JOIN/事务、禁止持有他服务 DSN**，跨服务只走 RPC 或 `remote`/S2S。不得把开发机偶然共用同一个 MySQL 实例当成数据库共享。
+**数据库独占与物理隔离前提**：每个业务服务拥有独立数据库、按不同服务器物理隔离部署；跨服务只走 RPC 或 `remote`/S2S，不得把开发机共机 MySQL 当成生产共库依据。完整边界与正/反例见[第 6 章](standards/05-data-sync.md)。
 
 **重要纠偏**：旧材料称“网关只转发、不鉴权”，但当前
 [网关 auth.go](../app/gateway/gateway_api/core/auth.go) 有票据验证、身份头剥离/重建、机器票注入；
@@ -48,9 +48,7 @@
 
 ## 1.4 独立仓不是本仓的子目录模块
 
-[六个子服务包索引](modules/subservices.md) 指向同一工作区的独立仓。
-不直接 import 对端 Go module 的业务模型，不共享数据库连接，不让 etcd RPC 跨仓。
-核心仓、子服务、客户端的契约变更必须列出生产者和消费者；本次只在本仓建文档，没有改那些仓库。
+[六个子服务包索引](modules/subservices.md) 指向同一工作区的独立仓：不直接 import 对端业务模型、不共享库、不让 etcd RPC 跨仓；契约变更要列出生产者与消费者。细节见[第 4 章](standards/03-boundaries-remote.md)与[第 11 章](modules/subservices.md)。
 
 发现层次混杂、失效入口或废弃结构时按第 2—4 章直接重构并删除旧路径，不加兼容包装或临时转发壳。
 
