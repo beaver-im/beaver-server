@@ -1,13 +1,13 @@
 # Documentation-only validator. Uses PowerShell 5.1+ and .NET; no installs/network/codegen.
 [CmdletBinding()]
-param([switch]$BeforeLegacyRemoval)
+param()
 $ErrorActionPreference = 'Stop'
 $root = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $utf8 = New-Object Text.UTF8Encoding($false)
 $manifest = [IO.File]::ReadAllText((Join-Path $root 'docs/knowledge-checks.json'),$utf8) | ConvertFrom-Json
 $errors = New-Object 'Collections.Generic.List[string]'
 $warnings = New-Object 'Collections.Generic.List[string]'
-$counts = @{links=0;paths=0;commands=0;sources=0;documents=0}
+$counts = @{links=0;paths=0;commands=0;documents=0}
 function Fail([string]$message) { $errors.Add($message) }
 function Resolve-Local([string]$base,[string]$relative) {
     [IO.Path]::GetFullPath((Join-Path $base ([Uri]::UnescapeDataString($relative))))
@@ -33,7 +33,6 @@ foreach ($relative in $manifest.documents) {
     if (-not (Test-Path -LiteralPath $file -PathType Leaf)) {Fail "Missing document: $relative";continue}
     $counts.documents++
     $text=[IO.File]::ReadAllText($file,$utf8)
-    if($relative -like 'docs/appendices/source-material/*'){$text=Strip-Fences $text}
     if ($text -match '(?m)^(<<<<<<< |=======\s*$|>>>>>>> )') {Fail "Conflict marker: $relative"}
     if ($text -match '(?m)[\t ]+\r?$') {Fail "Trailing whitespace: $relative"}
     if ($text -match '\]\([^\r\n]*\\') {Fail "Use slash in Markdown destination: $relative"}
@@ -59,7 +58,7 @@ foreach ($relative in $manifest.documents) {
             if ($fragment -notin $anchors -and $destText -notmatch ('id=["'']'+[regex]::Escape($fragment)+'["'']')) {Fail "Missing heading in ${relative}: $target"}
         }
     }
-    if($relative -notlike 'docs/appendices/*' -and $active -match 'skills/beaver-dev') {Fail "Stale active legacy path: $relative"}
+    if($active -match 'skills/beaver-dev') {Fail "Stale active legacy path: $relative"}
 }
 foreach($path in $manifest.paths){
     $counts.paths++
@@ -76,37 +75,11 @@ foreach($c in $manifest.commands){
     }
     if(-not(Get-Command $c.executable -ErrorAction SilentlyContinue)){$warnings.Add("Tool not on PATH (not installed by validator): $($c.executable)")}
 }
-$begin="<!-- source-text-begin -->`n````````text`n"
-$end="`n`````````n<!-- source-text-end -->"
-foreach($s in $manifest.migration){
-    $counts.sources++
-    $file=Resolve-Local $root $s.snapshot
-    if(-not(Test-Path -LiteralPath $file)){Fail "Missing frozen source: $($s.source)";continue}
-    $text=[IO.File]::ReadAllText($file,$utf8)
-    $a=$text.IndexOf($begin,[StringComparison]::Ordinal)
-    $b=$text.IndexOf($end,[StringComparison]::Ordinal)
-    if($a -lt 0 -or $b -lt $a){Fail "Bad frozen-source delimiters: $($s.snapshot)";continue}
-    $raw=$text.Substring($a+$begin.Length,$b-($a+$begin.Length))
-    $sha=[Security.Cryptography.SHA256]::Create()
-    try{$hash=([BitConverter]::ToString($sha.ComputeHash($utf8.GetBytes($raw)))).Replace('-','')}finally{$sha.Dispose()}
-    if($hash -ne $s.sha256){Fail "Frozen source hash mismatch: $($s.source)"}
-    $old=Resolve-Local $root $s.source
-    if($BeforeLegacyRemoval){
-        if(-not(Test-Path -LiteralPath $old)){Fail "Source disappeared before removal: $($s.source)"}
-        elseif((Get-FileHash -LiteralPath $old -Algorithm SHA256).Hash -ne $s.sha256){Fail "Concurrent legacy edit: $($s.source)"}
-    }elseif(Test-Path -LiteralPath $old){Fail "Legacy source still present: $($s.source)"}
-}
-if(@($manifest.migration).Count -ne 7){Fail 'Expected all seven legacy source files'}
 $owned=@($manifest.documents)+@('scripts/check-knowledge.ps1','docs/knowledge-checks.json')
 foreach($relative in $owned){
     $text=[IO.File]::ReadAllText((Resolve-Local $root $relative),$utf8)
-    if($relative -like 'docs/appendices/source-material/*'){$text=Strip-Fences $text}
     if($text -match '(?m)^(<<<<<<< |=======\s*$|>>>>>>> )'){Fail "Conflict marker: $relative"}
     if($text -match '(?m)[\t ]+\r?$'){Fail "Trailing whitespace: $relative"}
-}
-$ledger=[IO.File]::ReadAllText((Join-Path $root 'docs/appendices/migration.md'),$utf8)
-foreach($id in $manifest.migrationTopics){
-    if($ledger -notmatch ('\| '+[regex]::Escape($id)+' ')){Fail "Missing migration topic: $id"}
 }
 foreach($dir in $manifest.managedDocDirectories){
     foreach($f in Get-ChildItem -LiteralPath (Resolve-Local $root $dir) -Recurse -File -Filter '*.md'){
@@ -116,6 +89,6 @@ foreach($dir in $manifest.managedDocDirectories){
 }
 foreach($w in $warnings){Write-Output "WARN $w"}
 foreach($e in $errors){Write-Output "ERROR $e"}
-Write-Output ("Documents={0} Links={1} Paths={2} Commands={3} LegacySources={4} Errors={5}" -f $counts.documents,$counts.links,$counts.paths,$counts.commands,$counts.sources,$errors.Count)
+Write-Output ("Documents={0} Links={1} Paths={2} Commands={3} Errors={4}" -f $counts.documents,$counts.links,$counts.paths,$counts.commands,$errors.Count)
 if($errors.Count){exit 1}
 Write-Output 'PASS documentation checks only; business tests/codegen/security not executed.'

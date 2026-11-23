@@ -1,82 +1,126 @@
 # Beaver 服务端工程手册
 
-这是一本给人顺着读、给 AI 按任务查、给评审逐项用的手册，不是要求每次全部读入的提示词。
+给人顺着读、给 AI 按任务查；不是每次全部读入的提示词。
 
-**项目定位：Go / go-zero 即时通信后端；`.api` / `.proto` 是接口事实源，goctl 负责生成接线。**
+**定位**：Go / go-zero 即时通信后端；`.api` / `.proto` 是接口事实源，goctl 生成接线。
 
-核对基线：2026-11-22（Asia/Shanghai），2026-11-23 增补鉴权平面终态与工程目录大全。核对了主仓契约入口、模板、代表性业务链路、7 份旧技能材料和 6 个子服务目录/入口；没有逐行审计全部业务、安全或测试。
-2026-11-23 增补：第 5 章补齐网关验票顺序、三条平级平面、公开端点与机器票归属；对应 [ADR 0002](decisions/0002-auth-planes.md)。
-## 最高工程原则：无历史包袱，不留兼容代码
+## 文档结构标准（固定）
 
-本项目开源且不作商业托管：**不考虑兼容代码、不考虑实现成本、哪里有问题改哪里**（完整表述、授权边界见 [AGENTS.md](../AGENTS.md)）。契约、目录、接口与数据模型可直接破坏性调整，但须同步改齐调用方与生成物；`.api`/`.proto` → `goctl` 生成、错误处理、权限安全与测试照常执行。
+1. **一个目录 = 一章**，目录名带序号：`01-architecture/`、`02-layout/` …
+2. **章入口固定为 `README.md`（章首）**：只写编号、一句话说明、小节目录；**不要把小节正文堆进 README**。
+3. **小节 = 章目录下的正文文件**：`01-主题.md` 对应 `1.1`，文件内标题写 `# 1.1 主题`。
+4. **再往下拆 = 再开子目录**：对应 `1.1.1`；子目录同样有入口 `README.md`。
+5. **编号规则**：章 `1` → 小节 `1.1` → 子节 `1.1.1`。标题与目录名序号一致，便于查找。
+6. **不要提前拆**：只有写长了或确有独立主题，才把小节升级成子目录。
+7. **全书目录**：本页「目录」必须列出全部章与小节链接；增删小节时同步改本页与章首。
 
-文中统一区分：**当前事实**（已核查现状）、**统一工程规范**（全仓唯一目标）、**未整改差异/待核实**（现状尚未修完，不代表允许留兼容）。规则正文只在唯一主章节维护，其它章节只留本地摘要与链接——**不要在多处复制同一条规则**。
+参考页（不算章）：[directory.md](directory.md) 工程目录、[glossary.md](glossary.md) 术语。
 
-## 从哪里开始读
+变更策略见 [AGENTS.md](../AGENTS.md)。产品需求 / 流水账不进 `docs/`。
 
-- **不知道东西在哪**：先查[工程目录大全](directory.md)（每个目录/文件的用途、哪些是生成物、改什么去哪）。
-- 第一次接触：先看[术语表](glossary.md)，再按第 1 → 2 → 3 → 4 → 8 章读，最后进入负责的模块。
-- 新增 HTTP：第 3 章“新增 HTTP 的七步”，支持任意业务类别 `.api` / `_publish.api`，不是每服务仅两个文件。
-- 调用外部接口：第 4 章“remote 的类型组与实作样例”，逐接口 `XxxApi` + `XxxReq` / `XxxRes`，再按第 8 章评审。
-- 新增 RPC：第 3 章“新增 RPC”，不要照搬 HTTP types。
-- 跨服务与数据库隔离：第 1 章与第 6 章 6.1；每个服务数据库独立且按不同服务器物理隔离（如 `app/account` 与 `app/asset` 各自独立库），禁止直连别库，必须走 RPC / remote。
-- 改用户/关系/文件/平台：第 9 章定位；消息/WS/同步看第 10 章。
-- 联调 ai/backend/call/online/open/social：第 11 章；Python 不套 Go 生成流程。
-- 追查旧 skill 的某条规则：附录 A；完整原文在附录 A 链接的冻结材料中。
+## 怎么读
 
-## 全书目录
+- 找文件 → [工程目录](directory.md)
+- 第一次 → [术语](glossary.md) → `1`–`4`、`8` → 负责模块
+- 加 HTTP/RPC → `3`；调外部 → `4`；库隔离 → `1`、`6`
 
-### 先读
-- [工程目录大全](directory.md)：全仓目录与文件用途的现状地图，含"我要改 X 去哪"速查。
-- [术语表](glossary.md)：跨章高频且易混淆的名词，只在这里定义一次。
+## 目录
 
-### 第一篇　先看懂工程
-1. [第 1 章　系统、层次与数据流](architecture.md)
-2. [第 2 章　目录、命名与代码归属](standards/01-layout.md)
+### 参考
+- [工程目录](directory.md)
+- [术语](glossary.md)
 
-### 第二篇　写代码时照着做
-3. [第 3 章　契约优先：HTTP / RPC 与 goctl 生成](standards/02-contracts-codegen.md)
-4. [第 4 章　模块边界、跨仓 S2S 与显式类型映射](standards/03-boundaries-remote.md)
-5. [第 5 章　身份、校验、错误、日志与资源寿命](standards/04-runtime-security.md)
-6. [第 6 章　数据库、事务、升级与增量同步](standards/05-data-sync.md)
-7. [第 7 章　配置与部署边界](standards/06-deployment.md)
-8. [第 8 章　实施、验证、评审和交接](workflow.md)
+### 章与小节
 
-### 第三篇　按业务查入口
-9. [第 9 章　账号、关系、资产、通知与平台](modules/domains.md)
-10. [第 10 章　消息、队列、WebSocket 和同步](modules/realtime.md)
-11. [第 11 章　六个独立子服务包](modules/subservices.md)
-12. [第 12 章　Python Agent 与客户端联调约定](modules/integration.md)
+1. [架构](01-architecture/)
+   - [1.1 项目与工具链](01-architecture/01-项目与工具链.md)
+   - [1.2 运行结构](01-architecture/02-运行结构.md)
+   - [1.3 进程与基础设施](01-architecture/03-进程与基础设施.md)
+   - [1.4 独立仓边界](01-architecture/04-独立仓边界.md)
+   - [1.5 本章范围](01-architecture/05-本章范围.md)
 
-### 第四篇　维护这本书
-13. [第 13 章　决策记录：索引与模板](decisions/README.md)
-14. [第 14 章　任务交接：模板与归档](tasks/README.md)
-15. [附录 A　旧技能逐项迁移与冲突台账](appendices/migration.md)
+2. [目录与命名](02-layout/)
+   - [2.1 业务域形状](02-layout/01-业务域形状.md)
+   - [2.2 改动落点](02-layout/02-改动落点.md)
+   - [2.3 命名与版权](02-layout/03-命名与版权.md)
+   - [2.4 正反例](02-layout/04-正反例.md)
 
-## 目录与事实源
+3. [契约与生成](03-contracts/)
+   - [3.1 原则](03-contracts/01-原则.md)
+   - [3.2 文件归属](03-contracts/02-文件归属.md)
+   - [3.3 HTTP 契约](03-contracts/03-HTTP-契约.md)
+   - [3.4 路由规则](03-contracts/04-路由规则.md)
+   - [3.5 新增 HTTP](03-contracts/05-新增-HTTP.md)
+   - [3.6 新增 RPC](03-contracts/06-新增-RPC.md)
+   - [3.7 生成与发布脚本](03-contracts/07-生成与发布脚本.md)
+
+4. [边界与远程调用](04-boundaries/)
+   - [4.1 调用方向](04-boundaries/01-调用方向.md)
+   - [4.2 remote](04-boundaries/02-remote.md)
+   - [4.3 Req / Res](04-boundaries/03-Req-Res.md)
+   - [4.4 API 与 RPC 映射](04-boundaries/04-API-与-RPC-映射.md)
+
+5. [身份与运行时](05-runtime/)
+   - [5.1 身份](05-runtime/01-身份.md)
+   - [5.2 校验](05-runtime/02-校验.md)
+   - [5.3 context 与超时](05-runtime/03-context-与超时.md)
+   - [5.4 错误与日志](05-runtime/04-错误与日志.md)
+   - [5.5 资源清理](05-runtime/05-资源清理.md)
+
+6. [数据与同步](06-data/)
+   - [6.1 库归属](06-data/01-库归属.md)
+   - [6.2 事务](06-data/02-事务.md)
+   - [6.3 升级](06-data/03-升级.md)
+   - [6.4 同步与版本](06-data/04-同步与版本.md)
+
+7. [配置与部署](07-deploy/)
+   - [7.1 配置](07-deploy/01-配置.md)
+   - [7.2 部署](07-deploy/02-部署.md)
+   - [7.3 独立仓发布](07-deploy/03-独立仓发布.md)
+
+8. [实施与验证](08-workflow/)
+   - [8.1 任务顺序](08-workflow/01-任务顺序.md)
+   - [8.2 验证矩阵](08-workflow/02-验证矩阵.md)
+   - [8.3 评审清单](08-workflow/03-评审清单.md)
+   - [8.4 文档维护](08-workflow/04-文档维护.md)
+
+9. [业务域](09-domains/)
+   - [9.1 域一览](09-domains/01-域一览.md)
+   - [9.2 纵切面示例](09-domains/02-纵切面示例.md)
+   - [9.3 新增能力](09-domains/03-新增能力.md)
+
+10. [消息与实时](10-realtime/)
+   - [10.1 message](10-realtime/01-message.md)
+   - [10.2 MQ](10-realtime/02-MQ.md)
+   - [10.3 ws](10-realtime/03-ws.md)
+   - [10.4 datasync](10-realtime/04-datasync.md)
+   - [10.5 验收](10-realtime/05-验收.md)
+
+11. [独立子服务](11-subservices/)
+   - [11.1 工作区](11-subservices/01-工作区.md)
+   - [11.2 契约与生成](11-subservices/02-契约与生成.md)
+   - [11.3 跨仓检查](11-subservices/03-跨仓检查.md)
+
+12. [联调约定](12-integration/)
+   - [12.1 Python Agent](12-integration/01-Python-Agent.md)
+   - [12.2 Agent 边界](12-integration/02-Agent-边界.md)
+   - [12.3 客户端](12-integration/03-客户端.md)
+
+13. [决策记录](13-decisions/)
+   - [0001　契约优先的生成边界](13-decisions/0001-contract-first.md)
+   - [0002　鉴权平面、公开端点与机器票归属](13-decisions/0002-auth-planes.md)
+
+## 仓库布局
 
 ```text
-AGENTS.md                         薄入口，不复制整书
-scripts/check-knowledge.ps1        无需安装依赖的文档检查
- docs/
-  README.md                       本目录
-  directory.md                    工程目录大全（现状地图，文件用途）
-  glossary.md                     术语表（单一定义点）
-  architecture.md                 系统图
-  standards/                      第 2—7 章，具体约束
-  workflow.md                     第 8 章，验收矩阵
-  modules/                        第 9—12 章，任务定位
-  decisions/                      ADR（架构决策记录），只记录有依据的决定
-  tasks/                          进行中/归档的交接约定
-  appendices/                     迁移台账、冻结原材料（不是活动规范）
-  knowledge-checks.json            路径、命令和迁移校验清单
+docs/
+  README.md                 全书入口：结构标准 + 完整目录（章与小节）
+  directory.md / glossary.md  参考（无序号）
+  01-architecture/
+    README.md               章首
+    01-….md                 小节正文（1.1）
+  …
+  knowledge-checks.json
 ```
 
-文档校验（仓根 PowerShell）：`powershell -NoProfile -File scripts/check-knowledge.ps1`。
-仅验证手册链接、登记路径/命令证据、原文迁移完整性和格式；**不证明业务正确、安全合规或生成幂等**。
-改契约/目录/命令/跨仓边界时，同一任务更新对应章节与清单；每次真正动代码仍需核实局部源码。
-
-## 既有专题资料与仓库旧文档说明
-
-仓库根 `README.md` / `CONTRIBUTING.md` 中的部分版本和旧目录示例已滞后，请以当前源码、`go.mod` 及本手册核验说明为准。
-此前工作区曾存在的若干草案专题文档（部署归属、字段审查、媒体智能、OpenClaw、Webhook 重构、待办）已从当前工作树移除，本目录不再保留无效链接，相关实现直接对照当前代码与契约。
+校验：`powershell -NoProfile -File scripts/check-knowledge.ps1`

@@ -1,267 +1,211 @@
 {
-  "schemaVersion": 1,
-  "documents": [
-    "AGENTS.md",
-    "docs/README.md",
-    "docs/directory.md",
-    "docs/glossary.md",
-    "docs/architecture.md",
-    "docs/standards/01-layout.md",
-    "docs/standards/02-contracts-codegen.md",
-    "docs/standards/03-boundaries-remote.md",
-    "docs/standards/04-runtime-security.md",
-    "docs/standards/05-data-sync.md",
-    "docs/standards/06-deployment.md",
-    "docs/workflow.md",
-    "docs/modules/domains.md",
-    "docs/modules/realtime.md",
-    "docs/modules/subservices.md",
-    "docs/modules/integration.md",
-    "docs/decisions/README.md",
-    "docs/decisions/0001-contract-first.md",
-    "docs/decisions/0002-auth-planes.md",
-    "docs/decisions/template.md",
-    "docs/tasks/README.md",
-    "docs/tasks/template.md",
-    "docs/appendices/migration.md",
-    "docs/appendices/source-material/navigation.md",
-    "docs/appendices/source-material/cursor-entry.md",
-    "docs/appendices/source-material/go-zero-server.md",
-    "docs/appendices/source-material/python-agent.md",
-    "docs/appendices/source-material/electron-desktop.md",
-    "docs/appendices/source-material/flutter-mobile.md",
-    "docs/appendices/source-material/vue-admin.md"
-  ],
-  "paths": [
-    "go.mod",
-    "go.sum",
-    "template/api/handler.tpl",
-    "template/api/logic.tpl",
-    "template/api/context.tpl",
-    "template/api/routes.tpl",
-    "template/api/types.tpl",
-    "template/rpc/logic.tpl",
-    "template/rpc/logic-func.tpl",
-    "app/account/account_api/account_api.api",
-    "app/account/account_api/api/user.api",
-    "app/account/account_api/internal/logic/user/userinfologic.go",
-    "app/account/account_api/internal/svc/servicecontext.go",
-    "app/account/account_rpc/account.proto",
-    "app/account/account_rpc/accountrpc.go",
-    "app/message/message_rpc/chat_rpc.proto",
-    "app/message/message_rpc/internal/logic/message/sendmsglogic.go",
-    "app/message/message_rpc/internal/logic/consumer",
-    "app/ws/ws_api/api/socket.api",
-    "app/ws/ws_api/api/types.api",
-    "app/ws/ws_api/internal/logic/websocket/enter.go",
-    "app/ws/ws_api/internal/logic/websocket/heartbeat/manager.go",
-    "app/datasync/datasync_api/internal/logic/sync/getsyncchatmessageslogic.go",
-    "app/gateway/gateway_api/core/auth.go",
-    "app/gateway/gateway_api/core/proxy.go",
-    "middleware/jwt/jwtS2s.go",
-    "common/response/enter.go",
-    "utils/ajax/ajax.go",
-    "utils/beaverlog/logger.go",
-    "common/convert/convert_test.go",
-    "utils/secret/secret_test.go",
-    "main.go",
-    "build/build.sh",
-    "build/all.sh",
-    "Dockerfile",
-    "remote/doc/content.go",
-    "remote/doc/remote.go",
-    "types/remote/doc/doc.go",
-    "types/remote/token.go",
-    "app/account/account_api/api/auth_public.api",
-    "app/account/account_api/internal/config/config.go",
-    "app/asset/asset_api/internal/config/config.go",
-    "app/datasync/datasync_api/internal/svc/servicecontext.go"
-  ],
-  "commands": [
-    {
-      "id": "account-api-generate",
-      "cwd": "app/account/account_api",
-      "executable": "goctl",
-      "command": "goctl api go --api account_api.api --dir . --home ../../../template",
-      "requiredPaths": [
-        "account_api.api",
-        "../../../template/api/handler.tpl"
-      ],
-      "evidence": [
-        {
-          "file": "app/account/account_api/account_api.api",
-          "contains": "goctl api go -api account_api.api -dir . --home ../../../template"
-        }
-      ]
-    },
-    {
-      "id": "account-api-validate",
-      "cwd": "app/account/account_api",
-      "executable": "goctl",
-      "command": "goctl api validate --api account_api.api",
-      "requiredPaths": [
-        "account_api.api"
-      ],
-      "evidence": [
-        {
-          "file": "docs/standards/02-contracts-codegen.md",
-          "contains": "goctl api validate --api account_api.api"
-        }
-      ]
-    },
-    {
-      "id": "account-rpc-generate",
-      "cwd": "app/account/account_rpc",
-      "executable": "goctl",
-      "command": "goctl rpc protoc account.proto --go_out=. --go-grpc_out=. -m --zrpc_out=. --home ../../../template",
-      "requiredPaths": [
-        "account.proto",
-        "../../../template/rpc/logic.tpl"
-      ],
-      "evidence": [
-        {
-          "file": "app/account/account_rpc/account.proto",
-          "contains": "option go_package = \"./pb\";"
-        }
-      ]
-    },
-    {
-      "id": "existing-tests",
-      "cwd": ".",
-      "executable": "go",
-      "command": "go test ./common/convert ./utils/secret",
-      "requiredPaths": [
-        "common/convert/convert_test.go",
-        "utils/secret/secret_test.go"
-      ],
-      "evidence": []
-    },
-    {
-      "id": "knowledge",
-      "cwd": ".",
-      "executable": "powershell",
-      "command": "powershell -NoProfile -File scripts/check-knowledge.ps1",
-      "requiredPaths": [
-        "scripts/check-knowledge.ps1",
-        "docs/knowledge-checks.json"
-      ],
-      "evidence": []
-    }
-  ],
-  "migration": [
-    {
-      "source": "skills/beaver-dev/SKILL.md",
-      "snapshot": "docs/appendices/source-material/navigation.md",
-      "sha256": "3B1B52AEDE38F2B808C40DAE3B5E2DC88BAD82565879F4F3F2D0C55FBBFA060E"
-    },
-    {
-      "source": "skills/beaver-dev/cursor/beaver-dev.mdc",
-      "snapshot": "docs/appendices/source-material/cursor-entry.md",
-      "sha256": "F3EB83967C72E5885DF3F32AD7001A9EB5BCC74F283413A597C66CB138A38F25"
-    },
-    {
-      "source": "skills/beaver-dev/references/go-zero-server.md",
-      "snapshot": "docs/appendices/source-material/go-zero-server.md",
-      "sha256": "40BB069C6BD39AB1266CADD6462BCBB7F4FC850CFD74115B76FF14734BF61F08"
-    },
-    {
-      "source": "skills/beaver-dev/references/python-agent.md",
-      "snapshot": "docs/appendices/source-material/python-agent.md",
-      "sha256": "74C5C2078B086B11028AA7264459DA9E31FB0E12287127F31031FFB87D6C98D6"
-    },
-    {
-      "source": "skills/beaver-dev/references/electron-desktop.md",
-      "snapshot": "docs/appendices/source-material/electron-desktop.md",
-      "sha256": "94884A6F919B0F85E9AF5F8E498D21EFA1E59AD9256F7489B93EC555ADDF9CD0"
-    },
-    {
-      "source": "skills/beaver-dev/references/flutter-mobile.md",
-      "snapshot": "docs/appendices/source-material/flutter-mobile.md",
-      "sha256": "DD70D2A2F59B71F3E3486787B26FD26AF1B6BCACDF305D2904E8DA7B9C5BFCE2"
-    },
-    {
-      "source": "skills/beaver-dev/references/vue-admin.md",
-      "snapshot": "docs/appendices/source-material/vue-admin.md",
-      "sha256": "351E52F2AB5CC2338B2A21C26821AD8BD4F11D3EEF4B4E264FF77339A835F7A0"
-    }
-  ],
-  "validationBoundary": "Documentation links/path/evidence and frozen-source hashes only. Does not run business commands or prove code compliance.",
-  "migrationTopics": [
-    "G01",
-    "G02",
-    "G03",
-    "G04",
-    "G05",
-    "G06",
-    "G07",
-    "G08",
-    "G09",
-    "G10",
-    "G11",
-    "G12",
-    "G13",
-    "G14",
-    "G15",
-    "G16",
-    "G17",
-    "G18",
-    "G19",
-    "G20",
-    "G21",
-    "G22",
-    "G23",
-    "G24",
-    "G25",
-    "G26",
-    "G27",
-    "G28",
-    "G29",
-    "G30",
-    "G31",
-    "G32",
-    "G33",
-    "G34",
-    "G35",
-    "G36",
-    "G37",
-    "G38",
-    "G39",
-    "G40",
-    "N01",
-    "N02",
-    "N03",
-    "N04",
-    "N05",
-    "N06",
-    "P01",
-    "P02",
-    "P03",
-    "P04",
-    "P05",
-    "P06",
-    "P07",
-    "P08",
-    "P09",
-    "P10",
-    "P11",
-    "E01",
-    "E02",
-    "E03",
-    "F01",
-    "F02",
-    "V01",
-    "V02",
-    "U01",
-    "U02",
-    "U03",
-    "U04",
-    "U05"
-  ],
-  "managedDocDirectories": [
-    "docs/standards",
-    "docs/modules",
-    "docs/decisions",
-    "docs/tasks",
-    "docs/appendices"
-  ]
+    "schemaVersion":  1,
+    "documents":  [
+                      "AGENTS.md",
+                      "docs/README.md",
+                      "docs/directory.md",
+                      "docs/glossary.md",
+                      "docs/01-architecture/README.md",
+                      "docs/01-architecture/01-项目与工具链.md",
+                      "docs/01-architecture/02-运行结构.md",
+                      "docs/01-architecture/03-进程与基础设施.md",
+                      "docs/01-architecture/04-独立仓边界.md",
+                      "docs/01-architecture/05-本章范围.md",
+                      "docs/02-layout/README.md",
+                      "docs/02-layout/01-业务域形状.md",
+                      "docs/02-layout/02-改动落点.md",
+                      "docs/02-layout/03-命名与版权.md",
+                      "docs/02-layout/04-正反例.md",
+                      "docs/03-contracts/README.md",
+                      "docs/03-contracts/01-原则.md",
+                      "docs/03-contracts/02-文件归属.md",
+                      "docs/03-contracts/03-HTTP-契约.md",
+                      "docs/03-contracts/04-路由规则.md",
+                      "docs/03-contracts/05-新增-HTTP.md",
+                      "docs/03-contracts/06-新增-RPC.md",
+                      "docs/03-contracts/07-生成与发布脚本.md",
+                      "docs/04-boundaries/README.md",
+                      "docs/04-boundaries/01-调用方向.md",
+                      "docs/04-boundaries/02-remote.md",
+                      "docs/04-boundaries/03-Req-Res.md",
+                      "docs/04-boundaries/04-API-与-RPC-映射.md",
+                      "docs/05-runtime/README.md",
+                      "docs/05-runtime/01-身份.md",
+                      "docs/05-runtime/02-校验.md",
+                      "docs/05-runtime/03-context-与超时.md",
+                      "docs/05-runtime/04-错误与日志.md",
+                      "docs/05-runtime/05-资源清理.md",
+                      "docs/06-data/README.md",
+                      "docs/06-data/01-库归属.md",
+                      "docs/06-data/02-事务.md",
+                      "docs/06-data/03-升级.md",
+                      "docs/06-data/04-同步与版本.md",
+                      "docs/07-deploy/README.md",
+                      "docs/07-deploy/01-配置.md",
+                      "docs/07-deploy/02-部署.md",
+                      "docs/07-deploy/03-独立仓发布.md",
+                      "docs/08-workflow/README.md",
+                      "docs/08-workflow/01-任务顺序.md",
+                      "docs/08-workflow/02-验证矩阵.md",
+                      "docs/08-workflow/03-评审清单.md",
+                      "docs/08-workflow/04-文档维护.md",
+                      "docs/09-domains/README.md",
+                      "docs/09-domains/01-域一览.md",
+                      "docs/09-domains/02-纵切面示例.md",
+                      "docs/09-domains/03-新增能力.md",
+                      "docs/10-realtime/README.md",
+                      "docs/10-realtime/01-message.md",
+                      "docs/10-realtime/02-MQ.md",
+                      "docs/10-realtime/03-ws.md",
+                      "docs/10-realtime/04-datasync.md",
+                      "docs/10-realtime/05-验收.md",
+                      "docs/11-subservices/README.md",
+                      "docs/11-subservices/01-工作区.md",
+                      "docs/11-subservices/02-契约与生成.md",
+                      "docs/11-subservices/03-跨仓检查.md",
+                      "docs/12-integration/README.md",
+                      "docs/12-integration/01-Python-Agent.md",
+                      "docs/12-integration/02-Agent-边界.md",
+                      "docs/12-integration/03-客户端.md",
+                      "docs/13-decisions/README.md",
+                      "docs/13-decisions/0001-contract-first.md",
+                      "docs/13-decisions/0002-auth-planes.md",
+                      "docs/13-decisions/template.md"
+                  ],
+    "paths":  [
+                  "go.mod",
+                  "go.sum",
+                  "template/api/handler.tpl",
+                  "template/api/logic.tpl",
+                  "template/api/context.tpl",
+                  "template/api/routes.tpl",
+                  "template/api/types.tpl",
+                  "template/rpc/logic.tpl",
+                  "template/rpc/logic-func.tpl",
+                  "app/account/account_api/account_api.api",
+                  "app/account/account_api/api/user.api",
+                  "app/account/account_api/internal/logic/user/userinfologic.go",
+                  "app/account/account_api/internal/svc/servicecontext.go",
+                  "app/account/account_rpc/account.proto",
+                  "app/account/account_rpc/accountrpc.go",
+                  "app/message/message_rpc/chat_rpc.proto",
+                  "app/message/message_rpc/internal/logic/message/sendmsglogic.go",
+                  "app/message/message_rpc/internal/logic/consumer",
+                  "app/ws/ws_api/api/socket.api",
+                  "app/ws/ws_api/api/types.api",
+                  "app/ws/ws_api/internal/logic/websocket/enter.go",
+                  "app/ws/ws_api/internal/logic/websocket/heartbeat/manager.go",
+                  "app/datasync/datasync_api/internal/logic/sync/getsyncchatmessageslogic.go",
+                  "app/gateway/gateway_api/core/auth.go",
+                  "app/gateway/gateway_api/core/proxy.go",
+                  "middleware/jwt/jwtS2s.go",
+                  "common/response/enter.go",
+                  "utils/ajax/ajax.go",
+                  "utils/beaverlog/logger.go",
+                  "common/convert/convert_test.go",
+                  "utils/secret/secret_test.go",
+                  "main.go",
+                  "build/build.sh",
+                  "build/all.sh",
+                  "Dockerfile",
+                  "remote/doc/content.go",
+                  "remote/doc/remote.go",
+                  "types/remote/doc/doc.go",
+                  "types/remote/token.go",
+                  "app/account/account_api/api/auth_public.api",
+                  "app/account/account_api/internal/config/config.go",
+                  "app/asset/asset_api/internal/config/config.go",
+                  "app/datasync/datasync_api/internal/svc/servicecontext.go"
+              ],
+    "commands":  [
+                     {
+                         "id":  "account-api-generate",
+                         "cwd":  "app/account/account_api",
+                         "executable":  "goctl",
+                         "command":  "goctl api go --api account_api.api --dir . --home ../../../template",
+                         "requiredPaths":  [
+                                               "account_api.api",
+                                               "../../../template/api/handler.tpl"
+                                           ],
+                         "evidence":  [
+                                          {
+                                              "file":  "app/account/account_api/account_api.api",
+                                              "contains":  "goctl api go -api account_api.api -dir . --home ../../../template"
+                                          }
+                                      ]
+                     },
+                     {
+                         "id":  "account-api-validate",
+                         "cwd":  "app/account/account_api",
+                         "executable":  "goctl",
+                         "command":  "goctl api validate --api account_api.api",
+                         "requiredPaths":  [
+                                               "account_api.api"
+                                           ],
+                         "evidence":  [
+                                          {
+                                              "file":  "docs/03-contracts/05-新增-HTTP.md",
+                                              "contains":  "goctl api validate --api account_api.api"
+                                          }
+                                      ]
+                     },
+                     {
+                         "id":  "account-rpc-generate",
+                         "cwd":  "app/account/account_rpc",
+                         "executable":  "goctl",
+                         "command":  "goctl rpc protoc account.proto --go_out=. --go-grpc_out=. -m --zrpc_out=. --home ../../../template",
+                         "requiredPaths":  [
+                                               "account.proto",
+                                               "../../../template/rpc/logic.tpl"
+                                           ],
+                         "evidence":  [
+                                          {
+                                              "file":  "app/account/account_rpc/account.proto",
+                                              "contains":  "option go_package = \"./pb\";"
+                                          }
+                                      ]
+                     },
+                     {
+                         "id":  "existing-tests",
+                         "cwd":  ".",
+                         "executable":  "go",
+                         "command":  "go test ./common/convert ./utils/secret",
+                         "requiredPaths":  [
+                                               "common/convert/convert_test.go",
+                                               "utils/secret/secret_test.go"
+                                           ],
+                         "evidence":  [
+
+                                      ]
+                     },
+                     {
+                         "id":  "knowledge",
+                         "cwd":  ".",
+                         "executable":  "powershell",
+                         "command":  "powershell -NoProfile -File scripts/check-knowledge.ps1",
+                         "requiredPaths":  [
+                                               "scripts/check-knowledge.ps1",
+                                               "docs/knowledge-checks.json"
+                                           ],
+                         "evidence":  [
+
+                                      ]
+                     }
+                 ],
+    "validationBoundary":  "Documentation links/path/evidence only. Does not run business commands or prove code compliance.",
+    "managedDocDirectories":  [
+                                  "docs/01-architecture",
+                                  "docs/02-layout",
+                                  "docs/03-contracts",
+                                  "docs/04-boundaries",
+                                  "docs/05-runtime",
+                                  "docs/06-data",
+                                  "docs/07-deploy",
+                                  "docs/08-workflow",
+                                  "docs/09-domains",
+                                  "docs/10-realtime",
+                                  "docs/11-subservices",
+                                  "docs/12-integration",
+                                  "docs/13-decisions"
+                              ]
 }

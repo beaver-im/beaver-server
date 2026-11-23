@@ -1,10 +1,10 @@
-# 工程目录大全
+# 工程目录
 
-[返回目录](README.md) · [第 1 章　系统与数据流](architecture.md) · [第 2 章　目录规则](standards/01-layout.md)
+[返回目录](README.md) · [1 架构](01-architecture/) · [2 目录与命名](02-layout/)
 
 **这份文件回答三个问题：东西在哪、这个文件是干什么的、我能不能改它。**
 
-它是**现状地图**，不是规范。为什么必须放在这里、新代码该放哪、怎么命名，一律以[第 2 章](standards/01-layout.md)为准；本章只描述当前真实存在的目录与文件用途，出现冲突时以源码为准并回来修正本表。
+它是**现状地图**，不是规范。为什么必须放在这里、新代码该放哪、怎么命名，一律以[第 2 章](02-layout/)为准；本章只描述当前真实存在的目录与文件用途，出现冲突时以源码为准并回来修正本表。
 
 标注约定（全表通用）：
 
@@ -17,9 +17,20 @@
 
 核对基线：2026-11-23，逐目录 `ls` 与入口文件实读。目录会变，**新增/删除一级目录时同步改本表**。
 
----
+## 小节
 
-## 1. 工作区：10 个顶层目录
+- 1 工作区
+- 2 主仓根目录
+- 3 app 业务域
+- 4 支撑层
+- 5 契约与生成
+- 6 数据与运维
+- 7 docs 地图
+- 8 速查
+- 9 遗留项
+
+
+## 1 工作区
 
 工作区根 `F:\code\mine\github` 不是 git 仓，下面 8 个是独立仓，2 个是聚合目录。
 
@@ -45,11 +56,11 @@
 **容易踩错**：`beaver-server-open` 是**服务端**开放平台，`beaver-open` 是**控制台前端**，两个不同仓，别按名字混。
 `beaver-server-package` 与 `beaver-desktop-package` 只是容器目录，没有 `.git`。
 
-各拆仓的内部形状与主仓一致（`app/ common/ core/ deploy/ build/`），差异只有业务域和是否带 `remote/`。跨仓协作规则见[第 11 章](modules/subservices.md)。
+各拆仓的内部形状与主仓一致（`app/ common/ core/ deploy/ build/`），差异只有业务域和是否带 `remote/`。跨仓协作规则见[第 11 章](11-subservices/)。
 
 ---
 
-## 2. 主仓根目录：每一项是什么
+## 2 主仓根目录
 
 | 路径 | 类型 | 用途 |
 |---|---|---|
@@ -78,7 +89,7 @@
 | `build/` | 脚本 | 构建/发布/本机启动脚本，见第 6 节 |
 | `scripts/` | 脚本 | 文档校验、压测、版权头工具 |
 | `static/` | 资源 | 默认头像/表情/安装包等静态资源，`.gitignore` 忽略内容 |
-| `docs/` | 文档 | 本手册，见第 7 节 |
+| `docs/` | 文档 | 工程手册（不含产品需求），见第 7 节 |
 | `server.md` | `遗留` | 服务端口表（内容仍有参考价值，但位置应当并入 docs） |
 | `update.md` | `遗留` | 2024 年的手工更新日志，已被 `CHANGELOG.md` 取代 |
 | `go-zero规范符合性审查.md` | `遗留` | 一次性审查报告，不属于活动规范 |
@@ -89,7 +100,7 @@
 
 ---
 
-## 3. `app/`：业务域
+## 3 app 业务域
 
 ### 3.1 九个域一览
 
@@ -105,7 +116,7 @@
 | `ws` | 只有 api | WebSocket 长连接、心跳、消息上下行 | `ws_api/api/socket.api`、`proxy.api`、`types.api` |
 | `gateway` | 只有 api（自定义代理） | 唯一对外入口：按路径第二段做服务发现、验票、注入身份头、转发 | 无 `.api`，`gateway.yaml` + `core/` |
 
-域内组合（哪些域有 rpc、哪些没有）由能力决定，不为了对称硬造空服务——规则见[第 2 章](standards/01-layout.md)。
+域内组合（哪些域有 rpc、哪些没有）由能力决定，不为了对称硬造空服务——规则见[第 2 章](02-layout/)。
 
 ### 3.2 一个 `<domain>_api/` 内部
 
@@ -177,7 +188,7 @@ app/account/account_models/
 | `core/proxy.go` | 上游发现（etcd）、转发、响应回写 |
 | `types/config.go` | 配置结构 |
 
-鉴权顺序与平面定义只在[第 5 章](standards/04-runtime-security.md)与 [ADR 0002](decisions/0002-auth-planes.md) 写一次，这里只标文件职责。
+鉴权顺序与平面定义只在[第 5 章](05-runtime/)与 [ADR 0002](13-decisions/0002-auth-planes.md) 写一次，这里只标文件职责。
 
 **`ws`**（单 API、额外自造类型）：
 
@@ -193,7 +204,7 @@ app/account/account_models/
 
 ---
 
-## 4. 支撑层：不在 `app/` 里的代码
+## 4 支撑层
 
 ### 4.1 `common/`（跨域共用，无业务语义）
 
@@ -241,7 +252,7 @@ types/remote/<peer>/
 types/remote/token.go     换票请求/响应
 ```
 
-当前 6 个 peer：`agent`、`ai`、`circle`、`doc`、`moment`、`open`，各自对应一个拆仓。类型组规则只在[第 4 章](standards/03-boundaries-remote.md)写一次。
+当前 6 个 peer：`agent`、`ai`、`circle`、`doc`、`moment`、`open`，各自对应一个拆仓。类型组规则只在[第 4 章](04-boundaries/)写一次。
 
 ### 4.4 `utils/`（无状态工具）
 
@@ -260,7 +271,7 @@ types/remote/token.go     换票请求/响应
 
 ---
 
-## 5. 契约与生成
+## 5 契约与生成
 
 ### 5.1 `.api` 文件分布（当前 39 份，含 9 份汇总入口）
 
@@ -276,7 +287,7 @@ app/datasync/datasync_api/api/     agent  chat  circle  emoji  friend  group  no
 app/ws/ws_api/api/                 proxy.api  socket.api  types.api
 ```
 
-各域顶层的 `<domain>_api.api` 只做 import 汇总，**不写路由**。文件名后缀 `_public` 是现状、`_publish` 是目标态，两者都必须同时满足"文件名 + URL group"才算公开面——判定规则见[第 3 章](standards/02-contracts-codegen.md)。
+各域顶层的 `<domain>_api.api` 只做 import 汇总，**不写路由**。文件名后缀 `_public` 是现状、`_publish` 是目标态，两者都必须同时满足"文件名 + URL group"才算公开面——判定规则见[第 3 章](03-contracts/)。
 
 ### 5.2 `.proto` 文件分布（6 份）
 
@@ -295,11 +306,11 @@ app/ws/ws_api/api/                 proxy.api  socket.api  types.api
 | `kube/` | deployment / job |
 | `gateway/` | 网关 etc 与 main |
 
-生成命令、cwd 与生成物边界见[第 3 章](standards/02-contracts-codegen.md)；`template/` 是**生成行为的唯一来源**，改模板优先于批量手修生成物。
+生成命令、cwd 与生成物边界见[第 3 章](03-contracts/)；`template/` 是**生成行为的唯一来源**，改模板优先于批量手修生成物。
 
 ---
 
-## 6. 数据与运维
+## 6 数据与运维
 
 ### 6.1 `database/`（建库种子，不是 SQL）
 
@@ -310,7 +321,7 @@ app/ws/ws_api/api/                 proxy.api  socket.api  types.api
 | `platform/init.go` | 平台基础数据 |
 | `user/seed.go` | 默认账号与凭据 |
 
-以上由 `main.go -db` 与 `platform_api` 启动时调用。**没有版本化 SQL 迁移**，表结构靠 AutoMigrate + 人工升级——风险与规范见[第 6 章](standards/05-data-sync.md)。
+以上由 `main.go -db` 与 `platform_api` 启动时调用。**没有版本化 SQL 迁移**，表结构靠 AutoMigrate + 人工升级——风险与规范见[第 6 章](06-data/)。
 
 ### 6.2 `deploy/`
 
@@ -321,14 +332,14 @@ deploy/<域>/                account asset datasync gateway message notification
 deploy/dist/                启动产物目录：start.sh stop.sh update.sh config.yaml + 各域
 ```
 
-部署目录按**业务域名**命名，镜像/容器/二进制仍是 `*_api`。配置项与密钥边界见[第 7 章](standards/06-deployment.md)。
+部署目录按**业务域名**命名，镜像/容器/二进制仍是 `*_api`。配置项与密钥边界见[第 7 章](07-deploy/)。
 
 ### 6.3 脚本
 
 | 脚本 | 用途 | 危险度 |
 |---|---|---|
 | `build/all.sh` | 全量构建 + 打 tag + 推送镜像 | **高**（会 push） |
-| `build/build.sh` | 单服务镜像构建 | 中 |
+| `build/build.sh` | 单服务镜像构建 + 打 tag + 推送镜像 | **高**（会 push） |
 | `build/initMysql.bat` | 调 `go run main.go -db` 建库 | **高**（建表/灌数据） |
 | `build/start_api.bat` / `start_rpc.bat` | 本机批量起服务 | 中 |
 | `scripts/check-knowledge.ps1` | 文档链接/路径/哈希校验 | 无 |
@@ -345,29 +356,21 @@ deploy/dist/                启动产物目录：start.sh stop.sh update.sh conf
 
 ---
 
-## 7. `docs/` 自身的地图
+## 7 docs 地图
+
+本目录是**工程手册**，不收产品需求 / 功能规格 / 路线图。
 
 | 路径 | 内容 |
 |---|---|
-| `README.md` | 全书目录、阅读路线、事实源约定 |
-| `directory.md` | 本文件：工程目录大全 |
-| `glossary.md` | 术语单一定义点 |
-| `architecture.md` | 第 1 章：系统、层次、数据流 |
-| `standards/01`—`06` | 第 2—7 章：目录、契约、边界、运行时安全、数据、部署 |
-| `workflow.md` | 第 8 章：实施、验证、评审、交接 |
-| `modules/domains.md` | 第 9 章：账号/关系/资产/通知/平台 |
-| `modules/realtime.md` | 第 10 章：消息、MQ、WS、同步 |
-| `modules/subservices.md` | 第 11 章：6 个独立子服务包 |
-| `modules/integration.md` | 第 12 章：Python Agent 与客户端联调 |
-| `decisions/` | ADR：索引、模板、0001 契约优先、0002 鉴权平面 |
-| `tasks/` | 任务交接约定与模板 |
-| `appendices/migration.md` | 旧技能材料逐项迁移台账 |
-| `appendices/source-material/` | **冻结原文**（7 份），只作证据，不是活动规范 |
-| `knowledge-checks.json` | 文档清单：必存在路径、可复现命令、冻结原文哈希 |
+| `README.md` | 全书入口 + 结构标准 |
+| `directory.md` | 本文件：工程目录（参考） |
+| `glossary.md` | 术语（参考） |
+| `01-architecture/` … `13-decisions/` | 一章一目录；入口 `README.md`；编号 `1` / `1.1` / `1.1.1` |
+| `knowledge-checks.json` | 校验登记 |
 
 ---
 
-## 8. 速查：我要改 X，去哪
+## 8 速查
 
 | 我要…… | 先去 | 再看 |
 |---|---|---|
@@ -385,16 +388,16 @@ deploy/dist/                启动产物目录：start.sh stop.sh update.sh conf
 | 改部署编排 | `deploy/<域>/` | 第 7 章 |
 | 改生成模板 | `template/<类>/` | 第 3 章 |
 | 建库建表跑本地 | `main.go -db` / `build/initMysql.bat` | 第 6 章 |
-| 补文档 / 查某规则出处 | `docs/README.md` → 对应章 | 附录 A |
+| 补文档 / 查某规则出处 | `docs/README.md` → 对应章 | — |
 | 改其它仓（social/call/open/ai…） | `beaver-server-package` 下对应仓 | 第 11 章 |
 
 **通用检索路径**：契约动作 → `@handler` → `internal/logic` → 必要调用者。不要默认扫全仓（AGENTS.md 末段）。
 
 ---
 
-## 9. 已知遗留与陷阱
+## 9 遗留项
 
-这些是**现状问题**，不构成模板；修的时候按"无历史包袱"原则直接清掉，不留兼容。
+这些是**现状问题**，不构成模板；在对应代码任务中直接清掉，不扩散。
 
 | 项 | 问题 | 建议 |
 |---|---|---|
