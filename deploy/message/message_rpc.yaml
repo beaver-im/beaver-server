@@ -10,7 +10,7 @@ RemoteProxy:
     BaseURL: http://127.0.0.1:22300
     ClientID: beaver-server
     ClientSecret: beaver-s2s-ai-server-4a19e36992084ffb826d7bb8d3f56717
-  # Agent beaver-agent(py) S2S 出站：跨仓禁 gRPC，走 /beaver-ai/api/agent/chat/v1/* 标准机器视图。
+  # Agent beaver-agent(py) S2S 出站：跨仓禁 gRPC，走 /beaver-ai/api/agent/chat/v1/* 默认鉴权端点。
   Agent:
     BaseURL: http://127.0.0.1:22300
     ClientID: beaver-server

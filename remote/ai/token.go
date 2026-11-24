@@ -25,25 +25,35 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 
 	"beaver/commonconfig"
-	remotetype "beaver/types/remote"
 	"beaver/utils/ajax"
 )
 
-// GetToken 用 client_credentials 换一次出站令牌，返回 accessToken 与有效期（秒，0 表示对端没给）。
+// tokenResp 是 beaver-ai Python 换票端点的裸 JSON 回包（非 go-zero 信封）。
+type tokenResp struct {
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+	ExpiresIn   int    `json:"expires_in"`
+}
+
+// GetTokenApi 用 client_credentials 换一次出站令牌，返回 access_token 与有效期（秒，0 表示对端没给）。
 //
-// 换票是 beaver-ai / ai 的独立机器视图接口，地址与请求体都在这里，调用方只管拿票。
+// beaver-ai 的 token 端点是 Python 实现：snake_case form + 裸 JSON，
+// 与 go-zero 机器面（lowerCamel JSON + {code,msg,result} 信封）不同，不能套 types/remote.TokenResponse。
 func GetTokenApi(ctx context.Context, clientID, clientSecret string) (string, int, error) {
-	out, err := ajax.Post[remotetype.TokenResponse](ctx, commonconfig.AiUrl, "/beaver-ai/api/ai/machine/v1/token", nil, remotetype.TokenRequest{
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
-	})
+	form := url.Values{}
+	form.Set("grant_type", "client_credentials")
+	form.Set("client_id", clientID)
+	form.Set("client_secret", clientSecret)
+
+	out, err := ajax.PostForm[tokenResp](ctx, commonconfig.AiUrl+"/beaver-ai/api/ai/machine/v1/token", nil, form)
 	if err != nil {
 		return "", 0, fmt.Errorf("换票失败: %w", err)
 	}
 	if out.AccessToken == "" {
-		return "", 0, errors.New("换票响应缺少 accessToken")
+		return "", 0, errors.New("换票响应缺少 access_token")
 	}
 	return out.AccessToken, out.ExpiresIn, nil
 }

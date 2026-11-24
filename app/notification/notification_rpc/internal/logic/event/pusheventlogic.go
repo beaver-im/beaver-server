@@ -172,7 +172,7 @@ func (l *PushEventLogic) PushEvent(in *pb.PushEventReq) (*pb.PushEventRes, error
 				},
 				"conversationId": "",
 			}
-			l.svcCtx.RocketMQ.SendMessage(context.Background(), mqwsconst.MqTopicWs, payload)
+			l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload)
 		}
 	}(l.svcCtx.Config.Etcd.Hosts[0], in.ToUserIds, eventID, eventVersion)
 

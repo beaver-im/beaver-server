@@ -110,7 +110,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	platformRpc := platform.NewPlatform(zrpc.MustNewClient(c.PlatformRpc, rpcOpt))
 
 	// 装配各跨仓对端的 S2S 出站客户端（域名与凭据来自本服务 yaml）：
-	// open=beaver-open 独立仓，ai=beaver-ai 独立仓，agent=beaver-agent(py，静态 X-Internal-Token)。
+	// open=beaver-open 独立仓，ai=beaver-ai 独立仓，agent=beaver-ai(py，S2S Bearer 换票)。
 	commonconfig.Load(c.RemoteProxy)
 	opencli.Init(c.RemoteProxy.Open.ClientID, c.RemoteProxy.Open.ClientSecret)
 	aicli.Init(c.RemoteProxy.Ai.ClientID, c.RemoteProxy.Ai.ClientSecret)

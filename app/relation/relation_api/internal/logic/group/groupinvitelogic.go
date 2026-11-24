@@ -157,7 +157,7 @@ func (l *GroupInviteLogic) GroupInvite(req *types.GroupInviteReq) (resp *types.G
 	// 异步通知相关成员
 	go func() {
 		// 创建新的context，避免使用请求的context
-		ctx := context.Background()
+		ctx := l.ctx
 
 		// 获取群成员列表，用于推送通知
 		response, err := l.svcCtx.GroupRpc.GetGroupMembers(ctx, &relationtypes.GetGroupMembersReq{

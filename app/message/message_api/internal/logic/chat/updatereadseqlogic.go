@@ -258,7 +258,7 @@ func (l *UpdateReadSeqLogic) notifyPeerReadSeq(readerID, conversationID string, 
 			},
 			"conversationId": conversationID,
 		}
-		if err := l.svcCtx.RocketMQ.SendMessage(context.Background(), mqwsconst.MqTopicWs, payload); err != nil {
+		if err := l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload); err != nil {
 			l.logger.Error(model.LogMsg{
 				Text: "推送对端已读通知失败",
 				Data: map[string]any{

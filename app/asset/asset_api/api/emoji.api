@@ -564,29 +564,29 @@ service asset {
 	@handler GetEmojiPackageContentsByRelationIds
 	post /beaver/api/asset/emoji/v1/package_contents_by_relation_ids (GetEmojiPackageContentsByRelationIdsReq) returns (GetEmojiPackageContentsByRelationIdsRes)
 
-@doc "队间：分页查询表情"
+	@doc "队间：分页查询表情"
 	@handler EmojiList
-	post /beaver/api/asset/emoji_s2s/v1/list_emojis (ListEmojisReq) returns (ListEmojisRes)
+	post /beaver/api/asset/emoji/v1/list_emojis (ListEmojisReq) returns (ListEmojisRes)
 
 	@doc "队间：分页查询表情包"
 	@handler EmojiPackageList
-	post /beaver/api/asset/emoji_s2s/v1/list_packages (ListEmojiPackagesReq) returns (ListEmojiPackagesRes)
+	post /beaver/api/asset/emoji/v1/list_packages (ListEmojiPackagesReq) returns (ListEmojiPackagesRes)
 
 	@doc "队间：分页查询用户收藏的表情"
 	@handler EmojiCollectList
-	post /beaver/api/asset/emoji_s2s/v1/list_collects (ListEmojiCollectsReq) returns (ListEmojiCollectsRes)
+	post /beaver/api/asset/emoji/v1/list_collects (ListEmojiCollectsReq) returns (ListEmojiCollectsRes)
 
 	@doc "队间：新建/增量更新表情"
 	@handler EmojiSave
-	post /beaver/api/asset/emoji_s2s/v1/save (SaveEmojiReq) returns (SaveEmojiRes)
+	post /beaver/api/asset/emoji/v1/save (SaveEmojiReq) returns (SaveEmojiRes)
 
 	@doc "队间：新建/增量更新表情包"
 	@handler EmojiPackageSave
-	post /beaver/api/asset/emoji_s2s/v1/save_package (SaveEmojiPackageReq) returns (SaveEmojiPackageRes)
+	post /beaver/api/asset/emoji/v1/save_package (SaveEmojiPackageReq) returns (SaveEmojiPackageRes)
 
 	@doc "队间：增删表情包内容"
 	@handler EmojiPackageContentUpdate
-	post /beaver/api/asset/emoji_s2s/v1/update_package_content (UpdateEmojiPackageContentReq) returns (UpdateEmojiPackageContentRes)
+	post /beaver/api/asset/emoji/v1/update_package_content (UpdateEmojiPackageContentReq) returns (UpdateEmojiPackageContentRes)
 
 
 

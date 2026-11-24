@@ -62,9 +62,9 @@ func (l *GetUserConversationSettingsListByIdsLogic) GetUserConversationSettingsL
 		return nil, err
 	}
 
-	conversationSettings := make([]types.UserConversationSettingById, 0, len(userConversations))
+	conversationSettings := make([]types.UserConversationSettingByID, 0, len(userConversations))
 	for _, uc := range userConversations {
-		conversationSettings = append(conversationSettings, types.UserConversationSettingById{
+		conversationSettings = append(conversationSettings, types.UserConversationSettingByID{
 			UserID:         uc.UserID,
 			ConversationID: uc.ConversationID,
 			IsHidden:       uc.IsHidden,

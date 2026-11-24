@@ -94,7 +94,7 @@ func (l *DeleteFriendLogic) DeleteFriend(req *types.DeleteFriendReq) (resp *type
 			"body":           map[string]interface{}{"tableUpdates": tableUpdates},
 			"conversationId": "",
 		}
-		l.svcCtx.RocketMQ.SendMessage(context.Background(), mqwsconst.MqTopicWs, payload1)
+		l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload1)
 
 		payload2 := map[string]interface{}{
 			"command":        wsCommandConst.FRIEND_OPERATION,
@@ -104,7 +104,7 @@ func (l *DeleteFriendLogic) DeleteFriend(req *types.DeleteFriendReq) (resp *type
 			"body":           map[string]interface{}{"tableUpdates": tableUpdates},
 			"conversationId": "",
 		}
-		l.svcCtx.RocketMQ.SendMessage(context.Background(), mqwsconst.MqTopicWs, payload2)
+		l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload2)
 	}()
 
 	go func() {
@@ -113,7 +113,7 @@ func (l *DeleteFriendLogic) DeleteFriend(req *types.DeleteFriendReq) (resp *type
 				l.logger.Error(model.LogMsg{Text: "数字伙伴取关事件投递panic", Data: map[string]interface{}{"panic": r}})
 			}
 		}()
-		ctx := context.Background()
+		ctx := l.ctx
 		res, err := open.GetDigitalByUserIDApi(ctx, nil, &opentype.GetDigitalByUserIDReq{DigitalUserId: req.FriendID})
 		if err == nil && res != nil && res.Found {
 			if pushErr := openevent.Push(ctx, l.svcCtx.RocketMQ, req.FriendID,

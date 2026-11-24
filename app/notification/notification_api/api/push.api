@@ -38,8 +38,8 @@ service notification {
 	@handler registerPushToken
 	post /beaver/api/notification/push/v1/register_push_token (RegisterPushTokenReq) returns (RegisterPushTokenRes)
 
-@doc "队间：投递通知事件"
+	@doc "队间：投递通知事件"
 	@handler pushEvent
-	post /beaver/api/notification/push_s2s/v1/push_event (PushEventReq) returns (PushEventRes)
+	post /beaver/api/notification/push/v1/push_event (PushEventReq) returns (PushEventRes)
 
 }

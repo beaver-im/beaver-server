@@ -127,7 +127,7 @@ func (l *MuteChatLogic) notifyMutedUpdate(conversationId, userId string, version
 		},
 		"conversationId": conversationId,
 	}
-	if err := l.svcCtx.RocketMQ.SendMessage(context.Background(), mqwsconst.MqTopicWs, payload); err != nil {
+	if err := l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload); err != nil {
 		l.logger.Error(model.LogMsg{
 			Text: "推送免打扰通知失败",
 			Data: map[string]any{

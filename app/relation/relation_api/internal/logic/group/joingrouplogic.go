@@ -163,7 +163,7 @@ func (l *JoinGroupLogic) JoinGroup(req *types.GroupJoinReq) (resp *types.GroupJo
 
 			// 异步投递通知给群主/管理员
 			go func() {
-				ctx := context.Background()
+				ctx := l.ctx
 
 				var admins []group_models.GroupMemberModel
 				if err := l.svcCtx.DB.WithContext(ctx).
@@ -265,7 +265,7 @@ func (l *JoinGroupLogic) JoinGroup(req *types.GroupJoinReq) (resp *types.GroupJo
 
 	// 异步通知群成员
 	go func() {
-		ctx := context.Background()
+		ctx := l.ctx
 		conversationID := "group_" + req.GroupID
 
 		// 群聊内系统通知：xxx 加入了群聊（全员可见）

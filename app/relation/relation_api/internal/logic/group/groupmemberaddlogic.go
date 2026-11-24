@@ -158,7 +158,7 @@ func (l *GroupMemberAddLogic) GroupMemberAdd(req *types.GroupMemberAddReq) (resp
 	// 异步通知群成员
 	go func() {
 		// 创建新的context，避免使用请求的context
-		ctx := context.Background()
+		ctx := l.ctx
 		conversationID := "group_" + req.GroupID
 
 		// 群聊内系统通知：每位新成员各一条「xxx 加入了群聊」

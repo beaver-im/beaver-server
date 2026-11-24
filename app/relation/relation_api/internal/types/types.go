@@ -160,7 +160,7 @@ type FriendValidStatusRes struct {
 	Version int64 `json:"version"` // 处理后的好友版本号
 }
 
-type FriendVerifyById struct {
+type FriendVerifyByID struct {
 	VerifyID   string `json:"verifyId"`   // 验证记录ID
 	SendUserID string `json:"sendUserId"` // 发送者用户ID
 	RevUserID  string `json:"revUserId"`  // 接收者用户ID
@@ -198,7 +198,7 @@ type GetFriendVerifiesListByIdsReq struct {
 }
 
 type GetFriendVerifiesListByIdsRes struct {
-	FriendVerifies []FriendVerifyById `json:"friendVerifies"` // 好友验证列表
+	FriendVerifies []FriendVerifyByID `json:"friendVerifies"` // 好友验证列表
 }
 
 type GetFriendsListByUuidsReq struct {
@@ -215,7 +215,7 @@ type GetGroupsListByIdsReq struct {
 }
 
 type GetGroupsListByIdsRes struct {
-	Groups []GroupListById `json:"groups,optional"` // 群组列表
+	Groups []GroupListByID `json:"groups,optional"` // 群组列表
 }
 
 type GetUserGroupIDsReq struct {
@@ -364,7 +364,7 @@ type GroupJoinRes struct {
 	GroupID string `json:"groupId,optional"` // 群组ID
 }
 
-type GroupListById struct {
+type GroupListByID struct {
 	GroupID     string `json:"groupID,optional"`     // 群组ID
 	Name        string `json:"name,optional"`        // 群组名称
 	Avatar      string `json:"avatar,optional"`      // 群组头像

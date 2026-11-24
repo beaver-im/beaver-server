@@ -227,7 +227,7 @@ func (l *SendNotificationMessageLogic) notifyNotificationUpdateGrouped(conversat
 			},
 			"conversationId": conversationId,
 		}
-		if err := l.svcCtx.RocketMQ.SendMessage(context.Background(), mqwsconst.MqTopicWs, payload); err != nil {
+		if err := l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload); err != nil {
 			l.logger.Error(model.LogMsg{Text: "MQ推送失败", Data: map[string]any{"recipient": recipientId, "conversation": conversationId, "err": err.Error()}})
 			continue
 		}

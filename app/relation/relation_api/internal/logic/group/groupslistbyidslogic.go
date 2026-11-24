@@ -52,9 +52,9 @@ func (l *GroupsListByIdsLogic) GroupsListByIds(req *types.GetGroupsListByIdsReq)
 	if err != nil {
 		return nil, err
 	}
-	tmp2 := make([]types.GroupListById, 0, len(rpcRes.Groups))
+	tmp2 := make([]types.GroupListByID, 0, len(rpcRes.Groups))
 	for _, it1 := range rpcRes.Groups {
-		tmp2 = append(tmp2, types.GroupListById{GroupID: it1.GroupID, Name: it1.Name, Avatar: it1.Avatar, Description: it1.Description, Version: it1.Version, CreatedAt: it1.CreatedAt, UpdatedAt: it1.UpdatedAt})
+		tmp2 = append(tmp2, types.GroupListByID{GroupID: it1.GroupID, Name: it1.Name, Avatar: it1.Avatar, Description: it1.Description, Version: it1.Version, CreatedAt: it1.CreatedAt, UpdatedAt: it1.UpdatedAt})
 	}
 	return &types.GetGroupsListByIdsRes{Groups: tmp2}, nil
 }

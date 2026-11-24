@@ -589,6 +589,11 @@ type PreviewReq struct {
 }
 
 type PreviewRes struct {
+	Source       string `json:"source"`                // 文件来源：qiniu/local/minio
+	RedirectURL  string `json:"redirectUrl,optional"`  // 签名 URL，非空时 handler 302 跳转
+	LocalPath    string `json:"localPath,optional"`    // 本地绝对路径，仅 handler 内部读取
+	ContentType  string `json:"contentType,optional"`  // 本地文件的 Content-Type
+	OriginalName string `json:"originalName,optional"` // 原始文件名，用于 Content-Disposition
 }
 
 type SaveEmojiPackageReq struct {

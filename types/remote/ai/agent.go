@@ -19,10 +19,12 @@
  * beaver-server-header-v1
  */
 
-// Package ai AI 服务（beaver-ai）S2S 出入参类型，与对端 ai_rpc proto JSON 逐字段对齐。
+// Package ai AI 服务（beaver-ai）S2S 出入参类型，逐字段对齐对端 FastAPI handler 的 JSON。
 //
 // 放这里而非 remote/ai 内部，便于调用方只依赖类型、不依赖客户端实现。
 package ai
+
+import "encoding/json"
 
 // GetAgentApi 取 Agent 编排配置：Req + Res + 本接口专属子类型。
 type (
@@ -38,13 +40,17 @@ type (
 	}
 
 	// GetAgentAgentItem Agent 编排配置项（agents 表一行，渠道无关）。
+	// 人设/工作流只在 config_detail 里，内部键 snake_case，原样透传。
 	GetAgentAgentItem struct {
-		AgentID      string `json:"agent_id"`
-		Name         string `json:"name"`
-		Description  string `json:"description"`
-		Source       string `json:"source"`
-		Runtime      string `json:"runtime"`
-		SystemPrompt string `json:"system_prompt"`
-		LlmModelID   string `json:"llm_model_id"`
+		AgentID      string          `json:"agent_id"`
+		Name         string          `json:"name"`
+		Description  string          `json:"description"`
+		Source       string          `json:"source"`
+		Avatar       string          `json:"avatar"`
+		Config       int             `json:"config"`
+		ConfigDetail json.RawMessage `json:"config_detail,omitempty"`
+		KnowledgeIDs string          `json:"knowledge_ids"`
+		Status       int32           `json:"status"`
+		Sort         int32           `json:"sort"`
 	}
 )

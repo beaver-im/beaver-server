@@ -50,7 +50,7 @@ func NewGetFriendVerifiesListByIdsLogic(ctx context.Context, svcCtx *svc.Service
 func (l *GetFriendVerifiesListByIdsLogic) GetFriendVerifiesListByIds(req *types.GetFriendVerifiesListByIdsReq) (resp *types.GetFriendVerifiesListByIdsRes, err error) {
 	if len(req.VerifyIDs) == 0 {
 		return &types.GetFriendVerifiesListByIdsRes{
-			FriendVerifies: []types.FriendVerifyById{},
+			FriendVerifies: []types.FriendVerifyByID{},
 		}, nil
 	}
 
@@ -65,9 +65,9 @@ func (l *GetFriendVerifiesListByIdsLogic) GetFriendVerifiesListByIds(req *types.
 	l.logger.Info(model.LogMsg{Text: "批量查询好友验证信息", Data: map[string]interface{}{"count": len(friendVerifies)}})
 
 	// 转换为响应格式
-	var friendVerifiesList []types.FriendVerifyById
+	var friendVerifiesList []types.FriendVerifyByID
 	for _, verify := range friendVerifies {
-		friendVerifiesList = append(friendVerifiesList, types.FriendVerifyById{
+		friendVerifiesList = append(friendVerifiesList, types.FriendVerifyByID{
 			VerifyID:   verify.VerifyID,
 			SendUserID: verify.SendUserID,
 			RevUserID:  verify.RevUserID,

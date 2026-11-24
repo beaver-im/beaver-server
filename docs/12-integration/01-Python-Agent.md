@@ -15,5 +15,5 @@
 - 本域不建 agent_rpc，不为它再生 pb 桩。旧 pyproject 描述仍提“对内 gRPC”，不据旧文案恢复第二进程。
 - Python remote 在仓根，按 peer 分包；remote.py 只做 Post/Get/Delete/换票，业务函数 `<biz>.py`；本仓 types/remote 自持类型，不 import 对端业务类型。
 - Python 出站采用 snake_case **`_api`** 后缀（get_doc_api/get_token_api），通道工具不加；不用 Go 的字面大小写 Api 硬套 Python。
-- 不跨仓 RPC、不造 internal 门面；通道不重试/聚合/缓存业务，只缓存票；统一优先 Bearer，不再需要的静态 X-Internal-Token 对端直接切换并删除旧兜底。
+- 不跨仓 RPC、不造 internal 门面；通道不重试/聚合/缓存业务，只缓存票；统一走 S2S Bearer，不保留静态令牌兜底。
 - 仅本进程读模型/跑图不套 remote；对外部产品才建 peer。对端 URL 和信封仍需对契约，不照抄历史 token 路径。

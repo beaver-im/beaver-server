@@ -437,7 +437,7 @@ GetUserGroupIDsRes {
 )
 
 type (
-GroupListById {
+GroupListByID {
 		GroupID     string `json:"groupID,optional"` // 群组ID
 		Name        string `json:"name,optional"` // 群组名称
 		Avatar      string `json:"avatar,optional"` // 群组头像
@@ -453,7 +453,7 @@ GetGroupsListByIdsReq {
 	}
 
 GetGroupsListByIdsRes {
-		Groups []GroupListById `json:"groups,optional"` // 群组列表
+		Groups []GroupListByID `json:"groups,optional"` // 群组列表
 	}
 )
 
@@ -563,14 +563,6 @@ UpdateGroupReq {
 UpdateGroupRes {}
 )
 
-type (
-
-)
-
-type (
-
-)
-
 @server (
 	group: group
 	middleware: JwtS2s
@@ -664,37 +656,37 @@ service relation {
 	@handler muteAllGroup
 	post /beaver/api/relation/group/v1/mute_all (MuteAllGroupReq) returns (MuteAllGroupRes)
 
-@doc "队间：取用户加入的群组ID列表"
+	@doc "队间：取用户加入的群组ID列表"
 	@handler userGroupIds
-	post /beaver/api/relation/group_s2s/v1/ids (GetUserGroupIDsReq) returns (GetUserGroupIDsRes)
+	post /beaver/api/relation/group/v1/ids (GetUserGroupIDsReq) returns (GetUserGroupIDsRes)
 
 	@doc "队间：按ID批量取群组（支持增量）"
 	@handler groupsListByIds
-	post /beaver/api/relation/group_s2s/v1/list_by_ids (GetGroupsListByIdsReq) returns (GetGroupsListByIdsRes)
+	post /beaver/api/relation/group/v1/list_by_ids (GetGroupsListByIdsReq) returns (GetGroupsListByIdsRes)
 
 	@doc "队间：添加群成员"
 	@handler addGroupMember
-	post /beaver/api/relation/group_s2s/v1/add_member (AddGroupMemberReq) returns (AddGroupMemberRes)
+	post /beaver/api/relation/group/v1/add_member (AddGroupMemberReq) returns (AddGroupMemberRes)
 
 	@doc "队间：移除群成员"
 	@handler removeGroupMember
-	post /beaver/api/relation/group_s2s/v1/remove_member (RemoveGroupMemberReq) returns (RemoveGroupMemberRes)
+	post /beaver/api/relation/group/v1/remove_member (RemoveGroupMemberReq) returns (RemoveGroupMemberRes)
 
 	@doc "队间：分页查询群组"
 	@handler listGroups
-	post /beaver/api/relation/group_s2s/v1/list (ListGroupsReq) returns (ListGroupsRes)
+	post /beaver/api/relation/group/v1/list (ListGroupsReq) returns (ListGroupsRes)
 
 	@doc "队间：分页查询群成员"
 	@handler listGroupMembers
-	post /beaver/api/relation/group_s2s/v1/member_list (ListGroupMembersReq) returns (ListGroupMembersRes)
+	post /beaver/api/relation/group/v1/member_list (ListGroupMembersReq) returns (ListGroupMembersRes)
 
 	@doc "队间：更新群成员角色/禁言"
 	@handler updateGroupMember
-	post /beaver/api/relation/group_s2s/v1/update_member (UpdateGroupMemberReq) returns (UpdateGroupMemberRes)
+	post /beaver/api/relation/group/v1/update_member (UpdateGroupMemberReq) returns (UpdateGroupMemberRes)
 
 	@doc "队间：更新群组信息"
 	@handler updateGroup
-	post /beaver/api/relation/group_s2s/v1/modify (UpdateGroupReq) returns (UpdateGroupRes)
+	post /beaver/api/relation/group/v1/modify (UpdateGroupReq) returns (UpdateGroupRes)
 
 
 

@@ -126,7 +126,7 @@ func (l *UserValidStatusLogic) UserValidStatus(req *types.FriendValidStatusReq) 
 		conversationId := fmt.Sprintf("private_%s_%s", userIds[0], userIds[1])
 
 		// 调用Chat服务初始化私聊会话
-		initResp, err := l.svcCtx.ChatRpc.InitializeConversation(context.Background(), &chat_rpc.InitializeConversationReq{
+		initResp, err := l.svcCtx.ChatRpc.InitializeConversation(l.ctx, &chat_rpc.InitializeConversationReq{
 			ConversationId: conversationId,
 			Type:           1, // 私聊
 			UserIds:        []string{friendVerify.SendUserID, friendVerify.RevUserID},
@@ -146,7 +146,7 @@ func (l *UserValidStatusLogic) UserValidStatus(req *types.FriendValidStatusReq) 
 			}()
 
 			// 调用Chat服务的通知消息发送接口
-			_, err := l.svcCtx.ChatRpc.SendNotificationMessage(context.Background(), &chat_rpc.SendNotificationMessageReq{
+			_, err := l.svcCtx.ChatRpc.SendNotificationMessage(l.ctx, &chat_rpc.SendNotificationMessageReq{
 				ConversationId: conversationID,
 				MessageType:    1, // 好友添加成功欢迎消息
 				Content:        "我们已经是好友了，开始聊天吧",
@@ -166,7 +166,7 @@ func (l *UserValidStatusLogic) UserValidStatus(req *types.FriendValidStatusReq) 
 					l.logger.Error(model.LogMsg{Text: "数字伙伴关注事件投递panic", Data: map[string]interface{}{"panic": r}})
 				}
 			}()
-			ctx := context.Background()
+			ctx := l.ctx
 			res, err := open.GetDigitalByUserIDApi(ctx, nil, &opentype.GetDigitalByUserIDReq{DigitalUserId: friendVerify.RevUserID})
 			if err == nil && res != nil && res.Found {
 				if pushErr := openevent.Push(ctx, l.svcCtx.RocketMQ, friendVerify.RevUserID,
@@ -265,7 +265,7 @@ func (l *UserValidStatusLogic) UserValidStatus(req *types.FriendValidStatusReq) 
 			})
 
 			for _, uid := range []string{friendVerify.SendUserID, friendVerify.RevUserID} {
-				info, uErr := l.svcCtx.UserRpc.UserInfo(context.Background(), &accttypes.UserInfoReq{UserID: uid})
+				info, uErr := l.svcCtx.UserRpc.UserInfo(l.ctx, &accttypes.UserInfoReq{UserID: uid})
 				if uErr != nil || info == nil || info.UserInfo == nil {
 					l.logger.Error(model.LogMsg{Text: "同意好友后查询用户资料失败，跳过该用户的 users 更新", Data: map[string]interface{}{"userId": uid, "err": fmt.Sprint(uErr)}})
 					continue
@@ -289,7 +289,7 @@ func (l *UserValidStatusLogic) UserValidStatus(req *types.FriendValidStatusReq) 
 			},
 			"conversationId": conversationID,
 		}
-		l.svcCtx.RocketMQ.SendMessage(context.Background(), mqwsconst.MqTopicWs, payload1)
+		l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload1)
 		payload2 := map[string]interface{}{
 			"command":  wsCommandConst.FRIEND_OPERATION,
 			"type":     wsTypeConst.FriendVerifyReceive,
@@ -300,7 +300,7 @@ func (l *UserValidStatusLogic) UserValidStatus(req *types.FriendValidStatusReq) 
 			},
 			"conversationId": conversationID,
 		}
-		l.svcCtx.RocketMQ.SendMessage(context.Background(), mqwsconst.MqTopicWs, payload2)
+		l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload2)
 
 		l.logger.Info(model.LogMsg{Text: "异步发送WebSocket通知完成", Data: map[string]interface{}{"verifyId": req.VerifyID, "status": friendVerify.RevStatus}})
 	}()

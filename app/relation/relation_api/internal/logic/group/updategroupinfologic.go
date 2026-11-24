@@ -100,7 +100,7 @@ func (l *UpdateGroupInfoLogic) UpdateGroupInfo(req *types.UpdateGroupInfoReq) (r
 	if newVersion > 0 {
 		go func() {
 			// 创建新的context，避免使用请求的context
-			ctx := context.Background()
+			ctx := l.ctx
 
 			// 获取群成员列表
 			response, err := l.svcCtx.GroupRpc.GetGroupMembers(ctx, &relationtypes.GetGroupMembersReq{

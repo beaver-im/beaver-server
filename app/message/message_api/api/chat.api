@@ -226,10 +226,10 @@ GetConversationsListByIdsReq {
 	}
 
 GetConversationsListByIdsRes {
-		Conversations []ConversationById `json:"conversations"` // 会话列表
+		Conversations []ConversationByID `json:"conversations"` // 会话列表
 	}
 
-ConversationById {
+ConversationByID {
 		ConversationID string `json:"conversationId"` // 会话ID
 		Type           int    `json:"type"` // 会话类型 1=私聊 2=群聊 3=系统会话
 		MaxSeq         int64  `json:"maxSeq"` // 会话消息的最大Seq
@@ -247,10 +247,10 @@ GetUserConversationSettingsListByIdsReq {
 	}
 
 GetUserConversationSettingsListByIdsRes {
-		UserConversationSettings []UserConversationSettingById `json:"userConversationSettings"` // 用户会话设置列表
+		UserConversationSettings []UserConversationSettingByID `json:"userConversationSettings"` // 用户会话设置列表
 	}
 
-UserConversationSettingById {
+UserConversationSettingByID {
 		UserID         string `json:"userId"` // 用户ID
 		ConversationID string `json:"conversationId"` // 会话ID
 		IsHidden       bool   `json:"isHidden"` // 是否隐藏
@@ -847,41 +847,41 @@ service message {
 	@handler getForwardDetails
 	get /beaver/api/message/chat/v1/get_forward_details (GetForwardDetailsReq) returns (GetForwardDetailsRes)
 
-@doc "发送消息"
+	@doc "队间：发送消息（指定收发方身份）"
 	@handler peerSendMsg
-	post /beaver/api/message/chat_s2s/v1/send (PeerSendMsgReq) returns (PeerSendMsgRes)
+	post /beaver/api/message/chat/v1/send (PeerSendMsgReq) returns (PeerSendMsgRes)
 
 	@doc "初始化会话"
 	@handler peerInitializeConversation
-	post /beaver/api/message/chat_s2s/v1/initialize_conversation (PeerInitializeConversationReq) returns (PeerInitializeConversationRes)
+	post /beaver/api/message/chat/v1/initialize_conversation (PeerInitializeConversationReq) returns (PeerInitializeConversationRes)
 
 	@doc "发送系统通知消息"
 	@handler peerSendNotificationMessage
-	post /beaver/api/message/chat_s2s/v1/send_notification_message (PeerSendNotificationMessageReq) returns (PeerSendNotificationMessageRes)
+	post /beaver/api/message/chat/v1/send_notification_message (PeerSendNotificationMessageReq) returns (PeerSendNotificationMessageRes)
 
 	@doc "按会话+消息 ID 取单条消息"
 	@handler peerGetChatMessage
-	post /beaver/api/message/chat_s2s/v1/get_message (PeerGetChatMessageReq) returns (PeerGetChatMessageRes)
+	post /beaver/api/message/chat/v1/get_message (PeerGetChatMessageReq) returns (PeerGetChatMessageRes)
 
 	@doc "分页查消息"
 	@handler peerListChatMessages
-	post /beaver/api/message/chat_s2s/v1/messages (PeerListChatMessagesReq) returns (PeerListChatMessagesRes)
+	post /beaver/api/message/chat/v1/messages (PeerListChatMessagesReq) returns (PeerListChatMessagesRes)
 
 	@doc "批量更新消息状态"
 	@handler peerUpdateChatMessages
-	post /beaver/api/message/chat_s2s/v1/update_messages (PeerUpdateChatMessagesReq) returns (PeerUpdateChatMessagesRes)
+	post /beaver/api/message/chat/v1/update_messages (PeerUpdateChatMessagesReq) returns (PeerUpdateChatMessagesRes)
 
 	@doc "分页查会话"
 	@handler peerListConversations
-	post /beaver/api/message/chat_s2s/v1/conversations (PeerListConversationsReq) returns (PeerListConversationsRes)
+	post /beaver/api/message/chat/v1/conversations (PeerListConversationsReq) returns (PeerListConversationsRes)
 
 	@doc "查会话成员 ID 列表"
 	@handler peerGetConversationMemberIds
-	post /beaver/api/message/chat_s2s/v1/conversation_members (PeerGetConversationMemberIdsReq) returns (PeerGetConversationMemberIdsRes)
+	post /beaver/api/message/chat/v1/conversation_members (PeerGetConversationMemberIdsReq) returns (PeerGetConversationMemberIdsRes)
 
 	@doc "按会话取可读对话流（发言人昵称 + 文本预览，供摘要/Agent 使用）"
 	@handler peerGetChatHistory
-	post /beaver/api/message/chat_s2s/v1/get_chat_history (PeerChatHistoryReq) returns (PeerChatHistoryRes)
+	post /beaver/api/message/chat/v1/peer_get_chat_history (PeerChatHistoryReq) returns (PeerChatHistoryRes)
 
 
 

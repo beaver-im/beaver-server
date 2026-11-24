@@ -1,10 +1,27 @@
 syntax = "v1"
 
+type (
+	PreviewReq {
+		FileKey string `form:"fileKey"`
+	}
+
+	// 预览决策：logic 校验/查库/签名后填充，handler 据此输出文件流或 302。
+	// 本接口返回原始 HTTP 响应（与 WS 握手同类的专用接线），不走 {code,msg,result} 信封，
+	// 以下字段仅供 handler 内部读取，不序列化给客户端。
+	PreviewRes {
+		Source       string `json:"source"`              // 文件来源：qiniu/local/minio
+		RedirectURL  string `json:"redirectUrl,optional"`  // 签名 URL，非空时 handler 302 跳转
+		LocalPath    string `json:"localPath,optional"`    // 本地绝对路径，仅 handler 内部读取
+		ContentType  string `json:"contentType,optional"`  // 本地文件的 Content-Type
+		OriginalName string `json:"originalName,optional"` // 原始文件名，用于 Content-Disposition
+	}
+)
+
 @server (
-	group: file
+	group: file_public
 )
 service asset {
-	@doc "文件预览"
+	@doc "文件预览（公开面，返回文件流或重定向）"
 	@handler Preview
-	get /beaver/api/asset/preview_public/v1/get (PreviewReq) returns (PreviewRes)
+	get /beaver/api/asset/file_public/v1/preview (PreviewReq) returns (PreviewRes)
 }

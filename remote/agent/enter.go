@@ -22,7 +22,7 @@
 // Package agent beaver-agent（py，beaver-ai 业务线）的 S2S 出站客户端。
 //
 // beaver-agent 与本仓是跨团队边界：禁止 etcd gRPC 直连（团队铁律），统一走对方
-// 标准机器视图 /beaver-ai/api/agent/chat/v1/* 端点。鉴权与 beaver-ai 的其它机器面一致：
+// 默认鉴权端点 /beaver-ai/api/agent/chat/v1/*。鉴权与 beaver-ai 其它端点一致：
 // client_credentials 换票 + Bearer（s2s.clients 按 client_id 白名单，本仓登记为 beaver-server）。
 // 域名由 commonconfig.Load 从 yaml 的 RemoteProxy.Agent.BaseURL 灌入 commonconfig.AgentUrl。
 // 业务侧直接调包函数 SendMessageApi(...) / ListConversationsApi(...)。

@@ -114,7 +114,7 @@ func (l *UpdateInfoLogic) UpdateInfo(req *types.UpdateInfoReq) (resp *types.Upda
 	if version > 0 {
 		go func() {
 			// 创建新的context，避免使用请求的context
-			ctx := context.Background()
+			ctx := l.ctx
 
 			// 获取所有需要推送的用户ID
 			allRecipients, err := l.getAllRelatedUserIds(ctx, req.UserID)

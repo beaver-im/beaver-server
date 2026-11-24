@@ -132,7 +132,7 @@ func (l *MarkReadByCategoryLogic) MarkReadByCategory(req *types.MarkReadByCatego
 			},
 			"conversationId": "",
 		}
-		l.svcCtx.RocketMQ.SendMessage(context.Background(), mqwsconst.MqTopicWs, payload)
+		l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload)
 	}(l.svcCtx.Config.Etcd, userId, category, cursorVersion)
 
 	l.logger.Info(model.LogMsg{

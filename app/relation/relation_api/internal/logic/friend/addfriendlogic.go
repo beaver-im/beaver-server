@@ -151,7 +151,7 @@ func (l *AddFriendLogic) AddFriend(req *types.AddFriendReq) (resp *types.AddFrie
 			"message":  verifyModel.Message,
 			"source":   verifyModel.Source,
 		})
-		_, err := l.svcCtx.NotifyRpc.PushEvent(context.Background(), &notification_rpc.PushEventReq{
+		_, err := l.svcCtx.NotifyRpc.PushEvent(l.ctx, &notification_rpc.PushEventReq{
 			EventType:   notifyconst.EventTypeFriendRequest,
 			Category:    notifyconst.CategorySocial,
 			FromUserId:  req.UserID,
@@ -166,14 +166,14 @@ func (l *AddFriendLogic) AddFriend(req *types.AddFriendReq) (resp *types.AddFrie
 		}
 
 		// 获取发送者和接收者的用户信息
-		senderInfo, senderErr := l.svcCtx.UserRpc.UserInfo(context.Background(), &accttypes.UserInfoReq{
+		senderInfo, senderErr := l.svcCtx.UserRpc.UserInfo(l.ctx, &accttypes.UserInfoReq{
 			UserID: req.UserID,
 		})
 		if senderErr != nil {
 			l.logger.Error(model.LogMsg{Text: "获取发送者用户信息失败", Data: map[string]interface{}{"userId": req.UserID, "err": senderErr.Error()}})
 		}
 
-		receiverInfo, receiverErr := l.svcCtx.UserRpc.UserInfo(context.Background(), &accttypes.UserInfoReq{
+		receiverInfo, receiverErr := l.svcCtx.UserRpc.UserInfo(l.ctx, &accttypes.UserInfoReq{
 			UserID: req.FriendID,
 		})
 		if receiverErr != nil {
@@ -308,7 +308,7 @@ func (l *AddFriendLogic) addInstantFriend(req *types.AddFriendReq) (*types.AddFr
 				l.logger.Error(model.LogMsg{Text: "发送欢迎消息panic", Data: map[string]interface{}{"panic": r}})
 			}
 		}()
-		_, err := l.svcCtx.ChatRpc.SendNotificationMessage(context.Background(), &chat_rpc.SendNotificationMessageReq{
+		_, err := l.svcCtx.ChatRpc.SendNotificationMessage(l.ctx, &chat_rpc.SendNotificationMessageReq{
 			ConversationId: initResp.ConversationId,
 			MessageType:    1,
 			Content:        "我们已经是好友了，开始聊天吧",
@@ -340,7 +340,7 @@ func (l *AddFriendLogic) addInstantFriend(req *types.AddFriendReq) (*types.AddFr
 			},
 		}
 		for _, uid := range []string{req.UserID, req.FriendID} {
-			info, uErr := l.svcCtx.UserRpc.UserInfo(context.Background(), &accttypes.UserInfoReq{UserID: uid})
+			info, uErr := l.svcCtx.UserRpc.UserInfo(l.ctx, &accttypes.UserInfoReq{UserID: uid})
 			if uErr != nil || info == nil || info.UserInfo == nil {
 				l.logger.Error(model.LogMsg{Text: "自动通过好友后查询用户资料失败，跳过该用户的 users 更新", Data: map[string]interface{}{"userId": uid, "err": fmt.Sprint(uErr)}})
 				continue
@@ -353,7 +353,7 @@ func (l *AddFriendLogic) addInstantFriend(req *types.AddFriendReq) (*types.AddFr
 			})
 		}
 		for _, pair := range [][2]string{{req.UserID, req.FriendID}, {req.FriendID, req.UserID}} {
-			l.svcCtx.RocketMQ.SendMessage(context.Background(), mqwsconst.MqTopicWs, map[string]interface{}{
+			l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, map[string]interface{}{
 				"command":        wsCommandConst.FRIEND_OPERATION,
 				"type":           wsTypeConst.FriendVerifyReceive,
 				"senderId":       pair[0],

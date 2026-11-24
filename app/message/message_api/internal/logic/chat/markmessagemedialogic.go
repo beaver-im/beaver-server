@@ -138,7 +138,7 @@ func (l *MarkMessageMediaLogic) notifyMessageMedia(userID string, messageIDs []s
 			"tableUpdates": []map[string]interface{}{update},
 		},
 	}
-	if err := l.svcCtx.RocketMQ.SendMessage(context.Background(), mqwsconst.MqTopicWs, payload); err != nil {
+	if err := l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload); err != nil {
 		l.logger.Error(model.LogMsg{
 			Text: "推送消息媒体状态失败",
 			Data: map[string]any{"userId": userID, "err": err.Error()},

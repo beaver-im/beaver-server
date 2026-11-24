@@ -31,7 +31,7 @@ import (
 )
 
 // 本包唯一的出站通道：换票 + 带票发包，其余不碰（不重试、不聚合、不缓存业务结果）。
-// 与 remote/ai 同构：beaver-ai 的机器面（含 /agent/chat/v1/*）走同一套 client_credentials
+// 与 remote/ai 同构：beaver-ai 的所有默认鉴权端点（含 /agent/chat/v1/*）走同一套 client_credentials
 // 换票 + Bearer，token 端点在 token.go（form + 裸 JSON，Python 侧协议）。
 // 业务路径由各方法在自己的调用行写全 commonconfig.AgentUrl + 路径。
 

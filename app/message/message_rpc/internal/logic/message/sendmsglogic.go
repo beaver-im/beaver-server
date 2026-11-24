@@ -25,6 +25,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	accttypes "beaver/app/account/account_rpc/pb"
 	message_models "beaver/app/message/message_models/chat"
@@ -476,7 +477,12 @@ func (l *SendMsgLogic) SendMsg(in *chat_rpc.SendMsgReq) (*chat_rpc.SendMsgRes, e
 	}()
 
 	// 6. 异步推送机器人事件（投 MQ，由 open_api 的长连接消费者下发）
-	go newDigitalEventPusher(context.Background(), l.svcCtx).tryPush(in, msg)
+	// 脱离请求 ctx 的取消（否则响应返回即中断），但保留 trace 并设独立超时与退出机制。
+	pushCtx, pushCancel := context.WithTimeout(context.WithoutCancel(l.ctx), 30*time.Second)
+	go func() {
+		defer pushCancel()
+		newDigitalEventPusher(pushCtx, l.svcCtx).tryPush(in, msg)
+	}()
 
 	l.logger.Info(model.LogMsg{
 		Text: "消息发送成功",
@@ -556,7 +562,7 @@ func (l *SendMsgLogic) notifyMessageUpdateGrouped(conversationId, senderId strin
 			},
 			"conversationId": conversationId,
 		}
-		if err := l.svcCtx.RocketMQ.SendMessage(context.Background(), mqwsconst.MqTopicWs, payload); err != nil {
+		if err := l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload); err != nil {
 			l.logger.Error(model.LogMsg{Text: "MQ 推送失败", Data: map[string]interface{}{"recipientId": recipientId, "conversationId": conversationId, "err": err.Error()}})
 		}
 	}

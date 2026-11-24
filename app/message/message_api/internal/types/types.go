@@ -92,7 +92,7 @@ type CloudDocMsg struct {
 	Revision int64  `json:"revision,optional"` // 版本号
 }
 
-type ConversationById struct {
+type ConversationByID struct {
 	ConversationID string `json:"conversationId"` // 会话ID
 	Type           int    `json:"type"`           // 会话类型 1=私聊 2=群聊 3=系统会话
 	MaxSeq         int64  `json:"maxSeq"`         // 会话消息的最大Seq
@@ -173,7 +173,7 @@ type GetConversationsListByIdsReq struct {
 }
 
 type GetConversationsListByIdsRes struct {
-	Conversations []ConversationById `json:"conversations"` // 会话列表
+	Conversations []ConversationByID `json:"conversations"` // 会话列表
 }
 
 type GetForwardDetailsReq struct {
@@ -191,7 +191,7 @@ type GetUserConversationSettingsListByIdsReq struct {
 }
 
 type GetUserConversationSettingsListByIdsRes struct {
-	UserConversationSettings []UserConversationSettingById `json:"userConversationSettings"` // 用户会话设置列表
+	UserConversationSettings []UserConversationSettingByID `json:"userConversationSettings"` // 用户会话设置列表
 }
 
 type HideChatReq struct {
@@ -255,6 +255,15 @@ type MuteChatReq struct {
 }
 
 type MuteChatRes struct {
+}
+
+type NewChatTopicReq struct {
+	UserID         string `header:"Beaver-User-Id"` // 当前用户ID（网关注入的可信身份头）
+	ConversationID string `json:"conversationId"`   // 会话ID
+}
+
+type NewChatTopicRes struct {
+	TopicID string `json:"topicId"` // 新话题ID；实际由下一条消息在 AI 侧创建，这里仅回传占位语义
 }
 
 type NotificationMsg struct {
@@ -639,18 +648,7 @@ type UpdateReadSeqRes struct {
 	Success bool `json:"success"` // 是否成功
 }
 
-// NewChatTopicReq 开启新话题请求
-type NewChatTopicReq struct {
-	UserID         string `header:"Beaver-User-Id"`
-	ConversationID string `json:"conversationId"`
-}
-
-// NewChatTopicRes 开启新话题响应；话题实际由下一条消息在 AI 侧创建
-type NewChatTopicRes struct {
-	TopicID string `json:"topicId"`
-}
-
-type UserConversationSettingById struct {
+type UserConversationSettingByID struct {
 	UserID         string `json:"userId"`         // 用户ID
 	ConversationID string `json:"conversationId"` // 会话ID
 	IsHidden       bool   `json:"isHidden"`       // 是否隐藏

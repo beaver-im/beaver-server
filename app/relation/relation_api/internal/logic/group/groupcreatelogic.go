@@ -152,7 +152,7 @@ func (l *GroupCreateLogic) GroupCreate(req *types.GroupCreateReq) (resp *types.G
 
 	go func() {
 		// 创建新的context，避免使用请求的context
-		ctx := context.Background()
+		ctx := l.ctx
 
 		// 获取群成员列表
 		response, err := l.svcCtx.GroupRpc.GetGroupMembers(ctx, &relationtypes.GetGroupMembersReq{
@@ -184,7 +184,7 @@ func (l *GroupCreateLogic) GroupCreate(req *types.GroupCreateReq) (resp *types.G
 			}()
 
 			// 调用Chat服务的通知消息发送接口，发送群创建通知
-			_, err := l.svcCtx.ChatRpc.SendNotificationMessage(context.Background(), &chat_rpc.SendNotificationMessageReq{
+			_, err := l.svcCtx.ChatRpc.SendNotificationMessage(l.ctx, &chat_rpc.SendNotificationMessageReq{
 				ConversationId: "group_" + groupModel.GroupID,
 				MessageType:    2,                                   // 群创建成功消息
 				Content:        fmt.Sprintf("%s 创建了群聊", req.UserID), // 这里应该用实际的用户名，但简化处理

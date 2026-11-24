@@ -62,6 +62,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: friend.BlockListHandler(serverCtx),
 				},
 				{
+					// 队间：分页查询黑名单
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/relation/friend/v1/blocks",
+					Handler: friend.ListFriendBlocksHandler(serverCtx),
+				},
+				{
 					// 删除好友
 					Method:  http.MethodDelete,
 					Path:    "/beaver/api/relation/friend/v1/friend",
@@ -92,6 +98,18 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: friend.GetFriendsListByUuidsHandler(serverCtx),
 				},
 				{
+					// 队间：取好友ID列表
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/relation/friend/v1/ids",
+					Handler: friend.FriendIdsHandler(serverCtx),
+				},
+				{
+					// 队间：分页查询好友关系
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/relation/friend/v1/list",
+					Handler: friend.ListFriendsHandler(serverCtx),
+				},
+				{
 					// 通过用户ID或邮箱搜索用户
 					Method:  http.MethodGet,
 					Path:    "/beaver/api/relation/friend/v1/search",
@@ -104,10 +122,28 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: friend.SearchValidInfoHandler(serverCtx),
 				},
 				{
+					// 队间：批量删除/恢复好友关系
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/relation/friend/v1/update",
+					Handler: friend.UpdateFriendsHandler(serverCtx),
+				},
+				{
+					// 队间：批量解除拉黑
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/relation/friend/v1/update_block",
+					Handler: friend.UpdateFriendBlocksHandler(serverCtx),
+				},
+				{
 					// 修改好友备注
 					Method:  http.MethodPost,
 					Path:    "/beaver/api/relation/friend/v1/update_notice",
 					Handler: friend.NoticeUpdateHandler(serverCtx),
+				},
+				{
+					// 队间：批量删除好友验证记录
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/relation/friend/v1/update_valid",
+					Handler: friend.UpdateFriendVerifiesHandler(serverCtx),
 				},
 				{
 					// 处理好友验证请求(同意/拒绝)
@@ -122,45 +158,9 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: friend.ValidListHandler(serverCtx),
 				},
 				{
-					// 队间：分页查询黑名单
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/relation/friend_s2s/v1/blocks",
-					Handler: friend.ListFriendBlocksHandler(serverCtx),
-				},
-				{
-					// 队间：取好友ID列表
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/relation/friend_s2s/v1/ids",
-					Handler: friend.FriendIdsHandler(serverCtx),
-				},
-				{
-					// 队间：分页查询好友关系
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/relation/friend_s2s/v1/list",
-					Handler: friend.ListFriendsHandler(serverCtx),
-				},
-				{
-					// 队间：批量删除/恢复好友关系
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/relation/friend_s2s/v1/update",
-					Handler: friend.UpdateFriendsHandler(serverCtx),
-				},
-				{
-					// 队间：批量解除拉黑
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/relation/friend_s2s/v1/update_block",
-					Handler: friend.UpdateFriendBlocksHandler(serverCtx),
-				},
-				{
-					// 队间：批量删除好友验证记录
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/relation/friend_s2s/v1/update_valid",
-					Handler: friend.UpdateFriendVerifiesHandler(serverCtx),
-				},
-				{
 					// 队间：分页查询好友验证记录
 					Method:  http.MethodPost,
-					Path:    "/beaver/api/relation/friend_s2s/v1/verifies",
+					Path:    "/beaver/api/relation/friend/v1/verifies",
 					Handler: friend.ListFriendVerifiesHandler(serverCtx),
 				},
 			}...,
@@ -172,6 +172,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			[]rest.Middleware{serverCtx.JwtS2s},
 			[]rest.Route{
 				{
+					// 队间：添加群成员
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/relation/group/v1/add_member",
+					Handler: group.AddGroupMemberHandler(serverCtx),
+				},
+				{
 					// 创建群组
 					Method:  http.MethodPost,
 					Path:    "/beaver/api/relation/group/v1/create",
@@ -182,6 +188,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Method:  http.MethodPost,
 					Path:    "/beaver/api/relation/group/v1/delete",
 					Handler: group.GroupDeleteHandler(serverCtx),
+				},
+				{
+					// 队间：取用户加入的群组ID列表
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/relation/group/v1/ids",
+					Handler: group.UserGroupIdsHandler(serverCtx),
 				},
 				{
 					// 获取群信息
@@ -226,10 +238,28 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: group.GroupJoinRequestSyncHandler(serverCtx),
 				},
 				{
+					// 队间：分页查询群组
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/relation/group/v1/list",
+					Handler: group.ListGroupsHandler(serverCtx),
+				},
+				{
+					// 队间：按ID批量取群组（支持增量）
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/relation/group/v1/list_by_ids",
+					Handler: group.GroupsListByIdsHandler(serverCtx),
+				},
+				{
 					// 添加群成员
 					Method:  http.MethodPost,
 					Path:    "/beaver/api/relation/group/v1/member_add",
 					Handler: group.GroupMemberAddHandler(serverCtx),
+				},
+				{
+					// 队间：分页查询群成员
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/relation/group/v1/member_list",
+					Handler: group.ListGroupMembersHandler(serverCtx),
 				},
 				{
 					// 禁言/解禁群成员
@@ -268,6 +298,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: group.GroupMineHandler(serverCtx),
 				},
 				{
+					// 队间：更新群组信息
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/relation/group/v1/modify",
+					Handler: group.UpdateGroupHandler(serverCtx),
+				},
+				{
 					// 全员禁言/解禁
 					Method:  http.MethodPost,
 					Path:    "/beaver/api/relation/group/v1/mute_all",
@@ -278,6 +314,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Method:  http.MethodPost,
 					Path:    "/beaver/api/relation/group/v1/quit",
 					Handler: group.QuitGroupHandler(serverCtx),
+				},
+				{
+					// 队间：移除群成员
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/relation/group/v1/remove_member",
+					Handler: group.RemoveGroupMemberHandler(serverCtx),
 				},
 				{
 					// 搜索群组
@@ -304,51 +346,9 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: group.UpdateGroupInfoHandler(serverCtx),
 				},
 				{
-					// 队间：添加群成员
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/relation/group_s2s/v1/add_member",
-					Handler: group.AddGroupMemberHandler(serverCtx),
-				},
-				{
-					// 队间：取用户加入的群组ID列表
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/relation/group_s2s/v1/ids",
-					Handler: group.UserGroupIdsHandler(serverCtx),
-				},
-				{
-					// 队间：分页查询群组
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/relation/group_s2s/v1/list",
-					Handler: group.ListGroupsHandler(serverCtx),
-				},
-				{
-					// 队间：按ID批量取群组（支持增量）
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/relation/group_s2s/v1/list_by_ids",
-					Handler: group.GroupsListByIdsHandler(serverCtx),
-				},
-				{
-					// 队间：分页查询群成员
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/relation/group_s2s/v1/member_list",
-					Handler: group.ListGroupMembersHandler(serverCtx),
-				},
-				{
-					// 队间：更新群组信息
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/relation/group_s2s/v1/modify",
-					Handler: group.UpdateGroupHandler(serverCtx),
-				},
-				{
-					// 队间：移除群成员
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/relation/group_s2s/v1/remove_member",
-					Handler: group.RemoveGroupMemberHandler(serverCtx),
-				},
-				{
 					// 队间：更新群成员角色/禁言
 					Method:  http.MethodPost,
-					Path:    "/beaver/api/relation/group_s2s/v1/update_member",
+					Path:    "/beaver/api/relation/group/v1/update_member",
 					Handler: group.UpdateGroupMemberHandler(serverCtx),
 				},
 			}...,

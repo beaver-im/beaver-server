@@ -27,6 +27,7 @@ import (
 
 	emoji "beaver/app/asset/asset_api/internal/handler/emoji"
 	file "beaver/app/asset/asset_api/internal/handler/file"
+	file_public "beaver/app/asset/asset_api/internal/handler/file_public"
 	"beaver/app/asset/asset_api/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
@@ -80,6 +81,24 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: emoji.GetEmojisByUuidsHandler(serverCtx),
 				},
 				{
+					// 队间：分页查询用户收藏的表情
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/asset/emoji/v1/list_collects",
+					Handler: emoji.EmojiCollectListHandler(serverCtx),
+				},
+				{
+					// 队间：分页查询表情
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/asset/emoji/v1/list_emojis",
+					Handler: emoji.EmojiListHandler(serverCtx),
+				},
+				{
+					// 队间：分页查询表情包
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/asset/emoji/v1/list_packages",
+					Handler: emoji.EmojiPackageListHandler(serverCtx),
+				},
+				{
 					// 批量获取用户收藏的表情包记录详情（数据库同步）
 					Method:  http.MethodPost,
 					Path:    "/beaver/api/asset/emoji/v1/package_collects_by_ids",
@@ -122,39 +141,21 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: emoji.GetEmojiPackagesByIdsHandler(serverCtx),
 				},
 				{
-					// 队间：分页查询用户收藏的表情
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/asset/emoji_s2s/v1/list_collects",
-					Handler: emoji.EmojiCollectListHandler(serverCtx),
-				},
-				{
-					// 队间：分页查询表情
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/asset/emoji_s2s/v1/list_emojis",
-					Handler: emoji.EmojiListHandler(serverCtx),
-				},
-				{
-					// 队间：分页查询表情包
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/asset/emoji_s2s/v1/list_packages",
-					Handler: emoji.EmojiPackageListHandler(serverCtx),
-				},
-				{
 					// 队间：新建/增量更新表情
 					Method:  http.MethodPost,
-					Path:    "/beaver/api/asset/emoji_s2s/v1/save",
+					Path:    "/beaver/api/asset/emoji/v1/save",
 					Handler: emoji.EmojiSaveHandler(serverCtx),
 				},
 				{
 					// 队间：新建/增量更新表情包
 					Method:  http.MethodPost,
-					Path:    "/beaver/api/asset/emoji_s2s/v1/save_package",
+					Path:    "/beaver/api/asset/emoji/v1/save_package",
 					Handler: emoji.EmojiPackageSaveHandler(serverCtx),
 				},
 				{
 					// 队间：增删表情包内容
 					Method:  http.MethodPost,
-					Path:    "/beaver/api/asset/emoji_s2s/v1/update_package_content",
+					Path:    "/beaver/api/asset/emoji/v1/update_package_content",
 					Handler: emoji.EmojiPackageContentUpdateHandler(serverCtx),
 				},
 			}...,
@@ -165,6 +166,54 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		rest.WithMiddlewares(
 			[]rest.Middleware{serverCtx.JwtS2s},
 			[]rest.Route{
+				{
+					// 队间：批量删除文件记录
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/asset/file/v1/batch_delete",
+					Handler: file.FileBatchDeleteHandler(serverCtx),
+				},
+				{
+					// 队间：按MD5取文件
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/asset/file/v1/by_md5",
+					Handler: file.FileByMd5Handler(serverCtx),
+				},
+				{
+					// 队间：删除单个文件记录
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/asset/file/v1/delete",
+					Handler: file.FileDeleteHandler(serverCtx),
+				},
+				{
+					// 队间：按记录ID取文件
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/asset/file/v1/detail",
+					Handler: file.FileByIdHandler(serverCtx),
+				},
+				{
+					// 队间：按文件Key取详情
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/asset/file/v1/detail_by_key",
+					Handler: file.FileDetailByKeyHandler(serverCtx),
+				},
+				{
+					// 队间：分页查询文件记录
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/asset/file/v1/list",
+					Handler: file.FileListHandler(serverCtx),
+				},
+				{
+					// 队间：签发七牛上传凭证
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/asset/file/v1/qiniu_token",
+					Handler: file.QiniuUploadTokenHandler(serverCtx),
+				},
+				{
+					// 队间：登记文件记录
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/asset/file/v1/save",
+					Handler: file.FileSaveHandler(serverCtx),
+				},
 				{
 					// 文件通用上传(按yaml StorageType配置路由到local/qiniu/minio)
 					Method:  http.MethodPost,
@@ -189,54 +238,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Path:    "/beaver/api/asset/file/v1/upload_qiniu",
 					Handler: file.FileUploadQiniuHandler(serverCtx),
 				},
-				{
-					// 队间：批量删除文件记录
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/asset/file_s2s/v1/batch_delete",
-					Handler: file.FileBatchDeleteHandler(serverCtx),
-				},
-				{
-					// 队间：按MD5取文件
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/asset/file_s2s/v1/by_md5",
-					Handler: file.FileByMd5Handler(serverCtx),
-				},
-				{
-					// 队间：删除单个文件记录
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/asset/file_s2s/v1/delete",
-					Handler: file.FileDeleteHandler(serverCtx),
-				},
-				{
-					// 队间：按记录ID取文件
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/asset/file_s2s/v1/detail",
-					Handler: file.FileByIdHandler(serverCtx),
-				},
-				{
-					// 队间：按文件Key取详情
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/asset/file_s2s/v1/detail_by_key",
-					Handler: file.FileDetailByKeyHandler(serverCtx),
-				},
-				{
-					// 队间：分页查询文件记录
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/asset/file_s2s/v1/list",
-					Handler: file.FileListHandler(serverCtx),
-				},
-				{
-					// 队间：签发七牛上传凭证
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/asset/file_s2s/v1/qiniu_token",
-					Handler: file.QiniuUploadTokenHandler(serverCtx),
-				},
-				{
-					// 队间：登记文件记录
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/asset/file_s2s/v1/save",
-					Handler: file.FileSaveHandler(serverCtx),
-				},
 			}...,
 		),
 	)
@@ -244,10 +245,10 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
 		[]rest.Route{
 			{
-				// 文件预览
+				// 文件预览（公开面，返回文件流或重定向）
 				Method:  http.MethodGet,
-				Path:    "/beaver/api/asset/preview_public/v1/get",
-				Handler: file.PreviewHandler(serverCtx),
+				Path:    "/beaver/api/asset/file_public/v1/preview",
+				Handler: file_public.PreviewHandler(serverCtx),
 			},
 		},
 	)

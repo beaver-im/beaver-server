@@ -74,16 +74,16 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			[]rest.Middleware{serverCtx.JwtS2s},
 			[]rest.Route{
 				{
+					// 队间：投递通知事件
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/notification/push/v1/push_event",
+					Handler: push.PushEventHandler(serverCtx),
+				},
+				{
 					// 注册或更新离线推送 Token（FCM/APNs）
 					Method:  http.MethodPost,
 					Path:    "/beaver/api/notification/push/v1/register_push_token",
 					Handler: push.RegisterPushTokenHandler(serverCtx),
-				},
-				{
-					// 队间：投递通知事件
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/notification/push_s2s/v1/push_event",
-					Handler: push.PushEventHandler(serverCtx),
 				},
 			}...,
 		),

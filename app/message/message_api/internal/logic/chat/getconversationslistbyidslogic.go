@@ -61,9 +61,9 @@ func (l *GetConversationsListByIdsLogic) GetConversationsListByIds(req *types.Ge
 		return nil, err
 	}
 
-	conversationList := make([]types.ConversationById, 0, len(conversations))
+	conversationList := make([]types.ConversationByID, 0, len(conversations))
 	for _, conv := range conversations {
-		conversationList = append(conversationList, types.ConversationById{
+		conversationList = append(conversationList, types.ConversationByID{
 			ConversationID: conv.ConversationID,
 			Type:           conv.Type,
 			MaxSeq:         conv.MaxSeq,
