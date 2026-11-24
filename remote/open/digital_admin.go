@@ -31,15 +31,15 @@ import (
 
 // ListDigitals 列数字伙伴（数字人）。
 func ListDigitalsApi(ctx context.Context, header http.Header, body *opentype.ListDigitalsReq) (*opentype.ListDigitalsRes, error) {
-	return Post[opentype.ListDigitalsRes](ctx, commonconfig.OpenUrl+"/beaver-open/api/open/machine/v1/list_digitals", header, body)
+	return Post[opentype.ListDigitalsRes](ctx, commonconfig.OpenUrl+"/beaver-open/api/open/digital/v1/digital_platform_list", header, body)
 }
 
 // CreateDigital 创建数字伙伴。
 func CreateDigitalApi(ctx context.Context, header http.Header, body *opentype.CreateDigitalReq) (*opentype.CreateDigitalRes, error) {
-	return Post[opentype.CreateDigitalRes](ctx, commonconfig.OpenUrl+"/beaver-open/api/open/machine/v1/create_digital", header, body)
+	return Post[opentype.CreateDigitalRes](ctx, commonconfig.OpenUrl+"/beaver-open/api/open/digital/v1/digital_platform_create", header, body)
 }
 
 // UpdateDigital 更新数字伙伴。
 func UpdateDigitalApi(ctx context.Context, header http.Header, body *opentype.UpdateDigitalReq) (*opentype.UpdateDigitalRes, error) {
-	return Post[opentype.UpdateDigitalRes](ctx, commonconfig.OpenUrl+"/beaver-open/api/open/machine/v1/update_digital", header, body)
+	return Post[opentype.UpdateDigitalRes](ctx, commonconfig.OpenUrl+"/beaver-open/api/open/digital/v1/digital_platform_update", header, body)
 }

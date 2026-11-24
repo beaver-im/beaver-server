@@ -61,10 +61,14 @@ type (
 type (
 	VerifyPasswordReq {
 		UserID   string `json:"userId,optional"`
+		Account  string `json:"account,optional"`
+		Type     string `json:"type,optional"`
 		Password string `json:"password,optional"`
 	}
 	VerifyPasswordRes {
-		Valid bool `json:"valid,optional"`
+		Valid    bool   `json:"valid,optional"`
+		UserID   string `json:"userId,optional"`
+		NickName string `json:"nickName,optional"`
 	}
 )
 

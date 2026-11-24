@@ -31,15 +31,15 @@ import (
 
 // ExchangeToken OAuth 授权码换 token。
 func ExchangeTokenApi(ctx context.Context, header http.Header, body *opentype.ExchangeTokenReq) (*opentype.ExchangeTokenRes, error) {
-	return Post[opentype.ExchangeTokenRes](ctx, commonconfig.OpenUrl+"/beaver-open/api/open/machine/v1/exchange_token", header, body)
+	return Post[opentype.ExchangeTokenRes](ctx, commonconfig.OpenUrl+"/beaver-open/api/open/oauth/v1/token_exchange", header, body)
 }
 
 // ListOpenOAuth 列开放平台 OAuth 应用。
 func ListOpenOAuthApi(ctx context.Context, header http.Header, body *opentype.ListOpenOAuthReq) (*opentype.ListOpenOAuthRes, error) {
-	return Post[opentype.ListOpenOAuthRes](ctx, commonconfig.OpenUrl+"/beaver-open/api/open/machine/v1/list_open_oauth", header, body)
+	return Post[opentype.ListOpenOAuthRes](ctx, commonconfig.OpenUrl+"/beaver-open/api/open/auth/v1/app_platform_list", header, body)
 }
 
 // UpdateOpenOAuth 更新开放平台 OAuth 应用。
 func UpdateOpenOAuthApi(ctx context.Context, header http.Header, body *opentype.UpdateOpenOAuthReq) (*opentype.UpdateOpenOAuthRes, error) {
-	return Post[opentype.UpdateOpenOAuthRes](ctx, commonconfig.OpenUrl+"/beaver-open/api/open/machine/v1/update_open_oauth", header, body)
+	return Post[opentype.UpdateOpenOAuthRes](ctx, commonconfig.OpenUrl+"/beaver-open/api/open/auth/v1/app_platform_status_update", header, body)
 }

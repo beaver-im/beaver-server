@@ -31,11 +31,11 @@ import (
 
 // GetDigitalByUserID 按用户 ID 取数字身份。
 func GetDigitalByUserIDApi(ctx context.Context, header http.Header, body *opentype.GetDigitalByUserIDReq) (*opentype.GetDigitalByUserIDRes, error) {
-	return Post[opentype.GetDigitalByUserIDRes](ctx, commonconfig.OpenUrl+"/beaver-open/api/open/machine/v1/get_digital_by_user_id", header, body)
+	return Post[opentype.GetDigitalByUserIDRes](ctx, commonconfig.OpenUrl+"/beaver-open/api/open/digital/v1/digital_platform_by_user_id", header, body)
 }
 
 // GetDigitalConfig 取数字人配置（Runtime / AgentId / 渠道参数）。
 // 编排配置（人设、模型、工具、知识）在 agents 表，按 AgentId 去 AI 侧取。
 func GetDigitalConfigApi(ctx context.Context, header http.Header, body *opentype.GetDigitalConfigReq) (*opentype.GetDigitalConfigRes, error) {
-	return Post[opentype.GetDigitalConfigRes](ctx, commonconfig.OpenUrl+"/beaver-open/api/open/machine/v1/get_digital_config", header, body)
+	return Post[opentype.GetDigitalConfigRes](ctx, commonconfig.OpenUrl+"/beaver-open/api/open/digital/v1/digital_platform_config_get", header, body)
 }

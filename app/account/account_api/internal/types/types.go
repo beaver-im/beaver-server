@@ -483,9 +483,13 @@ type UserVersion struct {
 
 type VerifyPasswordReq struct {
 	UserID   string `json:"userId,optional"`
+	Account  string `json:"account,optional"`
+	Type     string `json:"type,optional"`
 	Password string `json:"password,optional"`
 }
 
 type VerifyPasswordRes struct {
-	Valid bool `json:"valid,optional"`
+	Valid    bool   `json:"valid,optional"`
+	UserID   string `json:"userId,optional"`
+	NickName string `json:"nickName,optional"`
 }

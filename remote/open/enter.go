@@ -21,8 +21,9 @@
 
 // Package open A 主体对开放接口服务（beaver-open）的 S2S 出站客户端。
 //
-// 跨仓不允许 etcd gRPC 直连（团队铁律），统一走对方标准路径 /beaver-open/api/open/machine/v1/*（client_credentials
-// 换票 + Bearer）。Req/Res 放到 types/remote/open（由 open_rpc proto 生成后整体迁入），
+// 跨仓不允许 etcd gRPC 直连（团队铁律），统一走对方标准 /beaver-open/api/open/<域>/v1/* 业务路径
+// （client_credentials 换票 + Bearer）。路径按 open 侧的分组落在 auth / bot / digital / oauth 各域，
+// 不再有统一的 machine 分组。Req/Res 放到 types/remote/open（由 open_rpc proto 生成后整体迁入），
 // 本包不依赖 beaver-open 模块。
 //
 // 结构对齐 remote/circle：Init 灌入凭据并把域名写入 commonconfig.OpenUrl；业务侧直接调包函数

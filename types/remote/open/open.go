@@ -29,17 +29,14 @@ package open
 // CreateDigitalApi 创建数字伙伴：Req + Res。
 type (
 	CreateDigitalReq struct {
-		Name         string `json:"name,omitempty"`
-		Description  string `json:"description,omitempty"`
-		Avatar       string `json:"avatar,omitempty"`
-		Runtime      string `json:"runtime,omitempty"`
-		Visibility   string `json:"visibility,omitempty"`
-		Source       string `json:"source,omitempty"`
-		OwnerId      string `json:"ownerId,omitempty"`
-		SystemPrompt string `json:"systemPrompt,omitempty"`
-		LlmModelId   string `json:"llmModelId,omitempty"`
-		Tools        string `json:"tools,omitempty"`
-		McpServerIds string `json:"mcpServerIds,omitempty"`
+		Name        string `json:"name,omitempty"`
+		Description string `json:"description,omitempty"`
+		Avatar      string `json:"avatar,omitempty"`
+		Runtime     string `json:"runtime,omitempty"`
+		Visibility  string `json:"visibility,omitempty"`
+		Source      string `json:"source,omitempty"`
+		OwnerId     string `json:"ownerId,omitempty"`
+		AgentId     string `json:"agentId,omitempty"` // 所绑 Agent；runtime=builtin/workflow 时必填
 	}
 
 	CreateDigitalRes struct {
@@ -140,20 +137,17 @@ type (
 
 	// ListDigitalsDigitalItem 数字伙伴项。
 	ListDigitalsDigitalItem struct {
-		DigitalId    string `json:"digitalId,omitempty"`
-		Name         string `json:"name,omitempty"`
-		Description  string `json:"description,omitempty"`
-		Avatar       string `json:"avatar,omitempty"`
-		OwnerId      string `json:"ownerId,omitempty"`
-		Runtime      string `json:"runtime,omitempty"`
-		Visibility   string `json:"visibility,omitempty"`
-		Status       int32  `json:"status,omitempty"`
-		Source       string `json:"source,omitempty"`
-		CreatedAt    int64  `json:"createdAt,omitempty"`
-		SystemPrompt string `json:"systemPrompt,omitempty"`
-		LlmModelId   string `json:"llmModelId,omitempty"`
-		Tools        string `json:"tools,omitempty"`
-		McpServerIds string `json:"mcpServerIds,omitempty"`
+		DigitalId   string `json:"digitalId,omitempty"`
+		Name        string `json:"name,omitempty"`
+		Description string `json:"description,omitempty"`
+		Avatar      string `json:"avatar,omitempty"`
+		OwnerId     string `json:"ownerId,omitempty"`
+		AgentId     string `json:"agentId,omitempty"` // 所绑 Agent，渠道只存引用
+		Runtime     string `json:"runtime,omitempty"`
+		Visibility  string `json:"visibility,omitempty"`
+		Status      int32  `json:"status,omitempty"`
+		Source      string `json:"source,omitempty"`
+		CreatedAt   int64  `json:"createdAt,omitempty"`
 	}
 )
 
@@ -209,14 +203,11 @@ type (
 // UpdateDigitalApi 更新数字伙伴：Req + Res。
 type (
 	UpdateDigitalReq struct {
-		DigitalId    string `json:"digitalId,omitempty"`
-		Name         string `json:"name,omitempty"`
-		Visibility   string `json:"visibility,omitempty"`
-		Status       int32  `json:"status,omitempty"`
-		SystemPrompt string `json:"systemPrompt,omitempty"`
-		LlmModelId   string `json:"llmModelId,omitempty"`
-		Tools        string `json:"tools,omitempty"`
-		McpServerIds string `json:"mcpServerIds,omitempty"`
+		DigitalId  string `json:"digitalId,omitempty"`
+		Name       string `json:"name,omitempty"`
+		Visibility string `json:"visibility,omitempty"`
+		Status     int32  `json:"status,omitempty"`
+		AgentId    string `json:"agentId,omitempty"` // 改绑 Agent
 	}
 
 	UpdateDigitalRes struct{}
