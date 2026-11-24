@@ -18,7 +18,7 @@
 | 六段路由 | `/{team}/{surface}/{service}/{group}/v1/{action}`；网关按第 3 段 service 做服务发现（含 ServiceAlias），第 4 段 group 表业务/鉴权边界 | 旧材料“五段”已作废；`@server group` 名与 URL 段解耦，改路径不必重生成 |
 | team / surface | URL 前两段，如 `beaver/api`、`beaver-open/api`、`beaver-admin/api`；决定鉴权首选平面和机器票密钥/受众的查表键 | 不是两个服务，也不代表两个数据库 |
 | 外部票 / 机器票 | 外部票分用户/开发者/管理员三类，只在网关验；机器票（S2S）用于服务间调用，下游业务只验机器票 | 机器身份 ≠ 用户身份；网关入站注入与外部出站换票是两条路径 |
-| `_public` / `_publish` | `_public` 是 **URL group 段**后缀，命中网关 `PublicPatterns` 才免外部票；`_publish` 是 **`.api` 文件名**后缀，仅表示源码里的公开面 | 文件名不会让网关放行；两者必须同时做对 |
+| `_public`（文件名 / URL group） | 拼写已统一为 `_public`，但分属两层：**URL group 段**后缀命中网关 `PublicPatterns` 才免外部票；**`.api` 文件名**后缀只是源码里的公开面组织约定 | 文件名不会让网关放行；URL group 才是放行依据，两者必须同时做对 |
 | `xxx_s2s` / `machine` | 当前主仓与子仓并存的机器面 group 命名，均为事实差异；统一方案待裁决 | 不要同时新增两套；统一方案未决前按现有契约，不新增第三套 |
 
 ## 身份与实体

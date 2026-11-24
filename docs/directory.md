@@ -128,7 +128,7 @@ app/account/account_api/
   account_api.api            手写    唯一 import 入口，把 api/*.api 汇总
   api/
     auth.api                 手写    业务分类：登录/S2S 保护面
-    auth_public.api          手写    业务分类的公开面（文件名后缀 _publish 为目标态）
+    auth_public.api          手写    业务分类的公开面（文件名后缀统一为 _public）
     user.api                 手写    业务分类
   etc/account_api.yaml       配置    端口、DSN、Redis、etcd、JWT 受众
   internal/
@@ -287,7 +287,7 @@ app/datasync/datasync_api/api/     agent  chat  circle  emoji  friend  group  no
 app/ws/ws_api/api/                 proxy.api  socket.api  types.api
 ```
 
-各域顶层的 `<domain>_api.api` 只做 import 汇总，**不写路由**。文件名后缀 `_public` 是现状、`_publish` 是目标态，两者都必须同时满足"文件名 + URL group"才算公开面——判定规则见[第 3 章](03-contracts/)。
+各域顶层的 `<domain>_api.api` 只做 import 汇总，**不写路由**。文件名后缀与 URL group 后缀现已统一为 `_public`：前者是源码组织约定，后者才是网关放行依据；新增公开接口两者都要做对（文件名本身不参与鉴权）——判定规则见[第 3 章](03-contracts/)。
 
 ### 5.2 `.proto` 文件分布（6 份）
 

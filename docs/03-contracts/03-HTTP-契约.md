@@ -9,7 +9,7 @@
 | 文件名（目标规范） | 放什么 | 不能怎么用 |
 |---|---|---|
 | `<业务>.api` | 该类别需要登录鉴权的接口、S2S 调用接口；按本项目受保护链路声明中间件 | 不因增加分类而把保护接口复制到公开面 |
-| `<业务>_publish.api` | 该类别无需登录/统一身份闸门的公开接口 | 后缀精确为 **`_publish`**，不是我替用户改成 `_public`；公开不是可泄露数据或绕资源/签名校验 |
+| `<业务>_public.api` | 该类别无需登录/统一身份闸门的公开接口 | 文件名后缀精确为 **`_public`**；公开不是可泄露数据或绕资源/签名校验 |
 
 目录为**分类扩展示意，不声称这些新文件已经创建**：
 
@@ -18,13 +18,13 @@ account_api/
   account_api.api          同一服务统一 import 入口
   api/
     auth.api               身份业务：登录/S2S 保护面
-    auth_publish.api       身份业务：公开面（登录/注册/换票等依其业务语义）
+    auth_public.api        身份业务：公开面（登录/注册/换票等依其业务语义）
     user.api               用户业务：保护面
-    user_publish.api       用户业务：仅确实需要公开能力时增加
+    user_public.api        用户业务：仅确实需要公开能力时增加
     device.api             设备业务：保护面，可继续扩展其它类别
 ```
 
-**当前事实与目标不要混写**：[account_api.api](../../app/account/account_api/account_api.api) 现在实际 import `auth_public.api`、`auth.api`、`user.api`，源码后缀未改名；`_publish`（文件名）与 `_public`（URL group）的分工、整改方向见本章 3.4 与[第 5 章](../05-runtime/)。
+**当前事实与目标不要混写**：[account_api.api](../../app/account/account_api/account_api.api) 现在实际 import `auth_public.api`、`auth.api`、`user.api`，文件名后缀已与目标规范一致；`_public` 在文件名侧是源码组织约定、在 URL group 侧才是网关放行依据，职责分工见本章 3.4 与[第 5 章](../05-runtime/)。
 文件后缀是源码维护约定，不由 go-zero 自动决定鉴权；**必须核对实际 `@server` 中间件声明**。
 本仓典型保护链路为网关校验用户身份并注入机器票，下游 JwtS2s 验机器 Bearer；不要误认为 JwtS2s 直接校验用户登录 JWT。
 S2S（服务间调用）属于调用/认证方式，不是“对外公开”的同义词；换票不走已有身份闸门，但仍校验自身凭据。
@@ -43,5 +43,5 @@ S2S（服务间调用）属于调用/认证方式，不是“对外公开”的�
    `template/api/routes.tpl` 的 RegisterHandlers 汇总入口正是此组织方式。分类新增后仍只有一条主服务生成命令，不直接改 handler/routes/types。
 7. 公开接口不走登录鉴权不代表不校验：按业务验证输入、验证码/签名/client_secret（适用时）、资源可见性与防滥用；秘密与内部管理字段不得作为公开结果返回。
 
-文件名不是 URL：不能把 `_publish` 自动拼为新公开路径，也不能为目录分类顺手撤掉受保护接口的中间件。
+文件名不是 URL：不能把文件名后缀 `_public` 自动拼为新公开路径（网关只看 URL group），也不能为目录分类顺手撤掉受保护接口的中间件。
 分类契约调整要同步消费者并删除废弃路径；不为已废弃版本单独留路由。
