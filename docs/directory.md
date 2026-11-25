@@ -32,31 +32,28 @@
 
 ## 1 工作区
 
-工作区根 `F:\code\mine\github` 不是 git 仓，下面 8 个是独立仓，2 个是聚合目录。
+当前工作区根不是 Git 仓，共 13 个独立仓、2 个聚合目录；下表按当前实际目录登记，不沿用其他机器的历史工作区路径。
 
 | 目录 | 类型 | 是什么 | 技术栈 |
 |---|---|---|---|
-| `beaver-server` | 独立仓 | **服务端主仓**，本手册的对象。gateway/account/relation/message/asset/notification/platform/datasync/ws | Go + go-zero |
-| `beaver-server-package` | **聚合目录（非仓）** | 把 6 个已拆出的服务端仓放在一起，便于同时打开 | — |
-| `beaver-server-social` | 独立仓（在 package 下） | 圈子与动态：moment、circle | Go |
-| `beaver-server-call` | 独立仓（在 package 下） | 音视频通话：call（依赖 livekit） | Go |
-| `beaver-server-open` | 独立仓（在 package 下） | 开放平台 API：open（机器人长连接落这里） | Go |
-| `beaver-server-backend` | 独立仓（在 package 下） | 后台管理服务：backend_admin | Go |
-| `beaver-server-online` | 独立仓（在 package 下） | 在线文档：office | Go |
-| `beaver-server-ai` | 独立仓（在 package 下） | AI 服务与 Python Agent（`app/ai`、`app/agent`） | Python |
-| `beaver-desktop` | 独立仓 | Electron 桌面客户端 | Node/Electron |
-| `beaver-desktop-package` | **聚合目录（非仓）** | 桌面插件：`beaver-desktop-ai`、`beaver-desktop-online` | Vite/TS |
+| `beaver-server` | 独立仓 | **服务端主仓**，本手册的对象 | Go + go-zero |
+| `beaver-server-package` | **聚合目录（非仓）** | 六个服务端子仓的容器 | — |
+| `beaver-server-package/beaver-server-ai` | 独立仓 | Python Agent 服务 | Python |
+| `beaver-server-package/beaver-server-backend` | 独立仓 | 管理面：backend_admin | Go |
+| `beaver-server-package/beaver-server-call` | 独立仓 | 音视频通话：call_api + LiveKit | Go |
+| `beaver-server-package/beaver-server-online` | 独立仓 | 在线文档：office_api + Yjs WS | Go |
+| `beaver-server-package/beaver-server-open` | 独立仓 | 开放平台：open_api + WS + MQ | Go |
+| `beaver-server-package/beaver-server-social` | 独立仓 | 圈子与动态：social_api 双库 | Go |
+| `beaver-desktop` | 独立仓 | Electron 桌面宿主 | Node/Electron |
+| `beaver-desktop-package` | **聚合目录（非仓）** | 两个外置桌面能力包的容器 | — |
+| `beaver-desktop-package/beaver-desktop-ai` | 独立仓 | 外置 AI 能力包 | Vite/TS |
+| `beaver-desktop-package/beaver-desktop-online` | 独立仓 | 外置在线文档能力包 | Vite/TS/Vue |
 | `beaver-flutter` | 独立仓 | 移动端 App | Flutter |
-| `beaver-manager` | 独立仓 | 管理后台前端（`dist/` 是产物） | Vite 前端 |
-| `beaver-open` | 独立仓 | 开放平台控制台前端 | Vite 前端 |
+| `beaver-manager` | 独立仓 | 管理后台前端 | Vite 前端 |
 | `beaver-oauth` | 独立仓 | OAuth 授权页前端 | Vite 前端 |
-| `beaver-sdk` | 独立仓 | `packages/beaver-js-sdk`、`packages/beaver-openclaw` | TS/pnpm |
-| `beaver-docs` | 独立仓 | 对外文档站（`community/`、`commercial/`、`deployment/`…） | 静态站 |
 
-**容易踩错**：`beaver-server-open` 是**服务端**开放平台，`beaver-open` 是**控制台前端**，两个不同仓，别按名字混。
 `beaver-server-package` 与 `beaver-desktop-package` 只是容器目录，没有 `.git`。
-
-各拆仓的内部形状与主仓一致（`app/ common/ core/ deploy/ build/`），差异只有业务域和是否带 `remote/`。跨仓协作规则见[第 11 章](11-subservices/)。
+六个服务端子仓均有各自 `AGENTS.md` 和 `docs/README.md`，入口见[第 11 章](11-subservices/)；其目录深度、进程数、迁移行为和模板相对路径可能与主仓不同，不套用主仓形状。
 
 ---
 
