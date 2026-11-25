@@ -19,7 +19,7 @@
  * beaver-server-header-v1
  */
 
-// 通知域聚合客户端：把 notification_rpc 拆出的 event/inbox/push 三个 service
+// 通知域聚合客户端：把 notification_rpc 拆出的 event/inbox 两个 service
 // 组合成一个 Notification 接口，供仓内各服务复用，避免每个调用方分别持有多个 client。
 // 这是手写维护的聚合层（非 goctl 生成物）。
 
@@ -30,7 +30,6 @@ import (
 
 	eventcli "beaver/app/notification/notification_rpc/client/event"
 	inboxcli "beaver/app/notification/notification_rpc/client/inbox"
-	pushcli "beaver/app/notification/notification_rpc/client/push"
 	"beaver/app/notification/notification_rpc/pb"
 
 	"github.com/zeromicro/go-zero/zrpc"
@@ -38,8 +37,6 @@ import (
 )
 
 type (
-	DisablePushTokenReq      = pb.DisablePushTokenReq
-	DisablePushTokenRes      = pb.DisablePushTokenRes
 	EventVersion             = pb.EventVersion
 	GetEventVersionsReq      = pb.GetEventVersionsReq
 	GetEventVersionsRes      = pb.GetEventVersionsRes
@@ -48,11 +45,8 @@ type (
 	GetReadCursorVersionsReq = pb.GetReadCursorVersionsReq
 	GetReadCursorVersionsRes = pb.GetReadCursorVersionsRes
 	InboxVersion             = pb.InboxVersion
-	ListPushTokensReq        = pb.ListPushTokensReq
-	ListPushTokensRes        = pb.ListPushTokensRes
 	PushEventReq             = pb.PushEventReq
 	PushEventRes             = pb.PushEventRes
-	PushTokenInfo            = pb.PushTokenInfo
 	ReadCursorVersion        = pb.ReadCursorVersion
 
 	Notification interface {
@@ -60,14 +54,11 @@ type (
 		GetEventVersions(ctx context.Context, in *GetEventVersionsReq, opts ...grpc.CallOption) (*GetEventVersionsRes, error)
 		GetInboxVersions(ctx context.Context, in *GetInboxVersionsReq, opts ...grpc.CallOption) (*GetInboxVersionsRes, error)
 		GetReadCursorVersions(ctx context.Context, in *GetReadCursorVersionsReq, opts ...grpc.CallOption) (*GetReadCursorVersionsRes, error)
-		ListPushTokens(ctx context.Context, in *ListPushTokensReq, opts ...grpc.CallOption) (*ListPushTokensRes, error)
-		DisablePushToken(ctx context.Context, in *DisablePushTokenReq, opts ...grpc.CallOption) (*DisablePushTokenRes, error)
 	}
 
 	defaultNotification struct {
 		event eventcli.Event
 		inbox inboxcli.Inbox
-		push  pushcli.Push
 	}
 )
 
@@ -75,7 +66,6 @@ func NewNotification(cli zrpc.Client) Notification {
 	return &defaultNotification{
 		event: eventcli.NewEvent(cli),
 		inbox: inboxcli.NewInbox(cli),
-		push:  pushcli.NewPush(cli),
 	}
 }
 
@@ -93,12 +83,4 @@ func (m *defaultNotification) GetInboxVersions(ctx context.Context, in *GetInbox
 
 func (m *defaultNotification) GetReadCursorVersions(ctx context.Context, in *GetReadCursorVersionsReq, opts ...grpc.CallOption) (*GetReadCursorVersionsRes, error) {
 	return m.inbox.GetReadCursorVersions(ctx, in, opts...)
-}
-
-func (m *defaultNotification) ListPushTokens(ctx context.Context, in *ListPushTokensReq, opts ...grpc.CallOption) (*ListPushTokensRes, error) {
-	return m.push.ListPushTokens(ctx, in, opts...)
-}
-
-func (m *defaultNotification) DisablePushToken(ctx context.Context, in *DisablePushTokenReq, opts ...grpc.CallOption) (*DisablePushTokenRes, error) {
-	return m.push.DisablePushToken(ctx, in, opts...)
 }

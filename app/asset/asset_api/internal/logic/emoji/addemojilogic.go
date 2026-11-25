@@ -22,7 +22,7 @@
 package logic
 
 import (
-	mqwsconst "beaver/common/const/mqwsconst"
+	pushcli "beaver/remote/push"
 	"context"
 	"errors"
 
@@ -152,7 +152,7 @@ func (l *AddEmojiLogic) AddEmoji(req *types.AddEmojiReq) (resp *types.AddEmojiRe
 				"body":           map[string]interface{}{"tableUpdates": tableUpdates},
 				"conversationId": "",
 			}
-			l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload)
+			pushcli.SendRealtimeApi(l.ctx, "sync", payload)
 		}(l.svcCtx.Config.Etcd, req.UserID, favoriteEmoji.EmojiCollectID, collectVersion, emoji.Version)
 	}
 

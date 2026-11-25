@@ -22,12 +22,12 @@
 package logic
 
 import (
+	pushcli "beaver/remote/push"
 	"context"
 
 	"beaver/app/asset/asset_api/internal/svc"
 	"beaver/app/asset/asset_api/internal/types"
 	emoji_models "beaver/app/asset/asset_models/emoji"
-	mqwsconst "beaver/common/const/mqwsconst"
 	"beaver/common/wsEnum/wsCommandConst"
 	"beaver/common/wsEnum/wsTypeConst"
 	beaverlog "beaver/utils/beaverlog"
@@ -199,7 +199,7 @@ func (l *UpdateFavoriteEmojiPackageLogic) UpdateFavoriteEmojiPackage(req *types.
 				},
 				"conversationId": "",
 			}
-			l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload)
+			pushcli.SendRealtimeApi(l.ctx, "sync", payload)
 		}(l.svcCtx.Config.Etcd, req.UserID, collectRecord.PackageCollectID, collectVersion, req.PackageID, emojiPackage.Version)
 
 		l.logger.Info(model.LogMsg{
@@ -296,7 +296,7 @@ func (l *UpdateFavoriteEmojiPackageLogic) UpdateFavoriteEmojiPackage(req *types.
 				},
 				"conversationId": "",
 			}
-			l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload)
+			pushcli.SendRealtimeApi(l.ctx, "sync", payload)
 		}(l.svcCtx.Config.Etcd, req.UserID, collectRecord.PackageCollectID, collectRecord.Version, req.PackageID, emojiPackage.Version)
 
 		l.logger.Info(model.LogMsg{

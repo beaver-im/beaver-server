@@ -29,11 +29,11 @@ import (
 	"beaver/app/asset/asset_rpc/client/file"
 	assettypes "beaver/app/asset/asset_rpc/pb"
 	"beaver/common/zrpc_interceptor"
+	"beaver/commonconfig"
 	"beaver/core/coregorm"
 	"beaver/core/coreredis"
-	"beaver/core/corerocketmq"
 	versionPkg "beaver/core/version"
-	"beaver/utils/beaverlog"
+	pushcli "beaver/remote/push"
 
 	"github.com/go-redis/redis"
 	"github.com/minio/minio-go/v7"
@@ -51,29 +51,27 @@ type ServiceContext struct {
 	DB          *gorm.DB
 	Redis       *redis.Client
 	VersionGen  *versionPkg.VersionGenerator
-	RocketMQ    *corerocketmq.Client
 	MinioClient *minio.Client // MinIO客户端，仅在配置了Endpoint时初始化，供上传与预览预签名使用
 	// JwtS2s 由 .api 的 @server 声明接线，goctl 生成 WithMiddlewares 注入。
-	JwtS2s    rest.Middleware
+	JwtS2s rest.Middleware
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
 	mysqlDb := coregorm.InitGorm(c.Mysql.DataSource)
 	client := coreredis.InitRedis(c.Redis.Addr, c.Redis.Password, c.Redis.Db)
 
-	mqClient := corerocketmq.InitRocketMQ(c.RocketMQ.Addr)
-	beaverlog.SetRocketMQ(mqClient)
+	commonconfig.Load(c.RemoteProxy)
+	pushcli.Init(c.Name, c.RemoteProxy.Push.ClientSecret)
 
 	svc := &ServiceContext{
 		Config:     c,
 		DB:         mysqlDb,
 		Redis:      client,
 		VersionGen: versionPkg.NewVersionGenerator(client, mysqlDb),
-		RocketMQ:   mqClient,
 		UserRpc:    user.NewUser(zrpc.MustNewClient(c.UserRpc, zrpc.WithUnaryClientInterceptor(zrpc_interceptor.ClientInfoInterceptor))),
 		FileRpc:    file.NewFile(zrpc.MustNewClient(c.AssetRpc, zrpc.WithUnaryClientInterceptor(zrpc_interceptor.ClientInfoInterceptor))),
 		EmojiRpc:   emoji.NewEmoji(zrpc.MustNewClient(c.AssetRpc, zrpc.WithUnaryClientInterceptor(zrpc_interceptor.ClientInfoInterceptor))),
-		JwtS2s:    middleware.NewJwtS2sMiddleware(c).Handle,
+		JwtS2s:     middleware.NewJwtS2sMiddleware(c).Handle,
 	}
 
 	// 初始化MinIO客户端（仅在配置了Endpoint时）

@@ -22,13 +22,13 @@
 package logic
 
 import (
+	pushcli "beaver/remote/push"
 	"context"
 	"errors"
 
 	"beaver/app/relation/relation_api/internal/svc"
 	"beaver/app/relation/relation_api/internal/types"
 	friend_models "beaver/app/relation/relation_models/friend"
-	mqwsconst "beaver/common/const/mqwsconst"
 	"beaver/common/wsEnum/wsCommandConst"
 	"beaver/common/wsEnum/wsTypeConst"
 	"beaver/openevent"
@@ -94,7 +94,7 @@ func (l *DeleteFriendLogic) DeleteFriend(req *types.DeleteFriendReq) (resp *type
 			"body":           map[string]interface{}{"tableUpdates": tableUpdates},
 			"conversationId": "",
 		}
-		l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload1)
+		pushcli.SendRealtimeApi(l.ctx, "sync", payload1)
 
 		payload2 := map[string]interface{}{
 			"command":        wsCommandConst.FRIEND_OPERATION,
@@ -104,7 +104,7 @@ func (l *DeleteFriendLogic) DeleteFriend(req *types.DeleteFriendReq) (resp *type
 			"body":           map[string]interface{}{"tableUpdates": tableUpdates},
 			"conversationId": "",
 		}
-		l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload2)
+		pushcli.SendRealtimeApi(l.ctx, "sync", payload2)
 	}()
 
 	go func() {
@@ -116,7 +116,7 @@ func (l *DeleteFriendLogic) DeleteFriend(req *types.DeleteFriendReq) (resp *type
 		ctx := l.ctx
 		res, err := open.GetDigitalByUserIDApi(ctx, nil, &opentype.GetDigitalByUserIDReq{DigitalUserId: req.FriendID})
 		if err == nil && res != nil && res.Found {
-			if pushErr := openevent.Push(ctx, l.svcCtx.RocketMQ, req.FriendID,
+			if pushErr := openevent.Push(ctx, req.FriendID,
 				openevent.EventIMDigitalUnfollowed, "", map[string]interface{}{
 					"digital_id": req.FriendID,
 					"user_id":    req.UserID,
@@ -126,7 +126,7 @@ func (l *DeleteFriendLogic) DeleteFriend(req *types.DeleteFriendReq) (resp *type
 		}
 		res, err = open.GetDigitalByUserIDApi(ctx, nil, &opentype.GetDigitalByUserIDReq{DigitalUserId: req.UserID})
 		if err == nil && res != nil && res.Found {
-			if pushErr := openevent.Push(ctx, l.svcCtx.RocketMQ, req.UserID,
+			if pushErr := openevent.Push(ctx, req.UserID,
 				openevent.EventIMDigitalUnfollowed, "", map[string]interface{}{
 					"digital_id": req.UserID,
 					"user_id":    req.FriendID,

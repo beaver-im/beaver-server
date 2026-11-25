@@ -22,25 +22,20 @@
 package messagelogic
 
 import (
-	"context"
+	pushcli "beaver/remote/push"
 	"strconv"
 
 	message_models "beaver/app/message/message_models/chat"
-	notification_rpc "beaver/app/notification/notification_rpc/pb"
-	"beaver/core/coreonline"
-	"beaver/core/corepush"
 	"beaver/utils/beaverlog/model"
 )
 
+// sendOfflinePushIfNeeded 只负责计算调用方已知的 is_muted 并交给推送中台。
+// 不查在线态、不查 token、不直接调厂商；这些都在 push 服务的 OfflinePipeline 里。
 func (l *SendMsgLogic) sendOfflinePushIfNeeded(
 	conversationID, senderID string,
 	chatModel message_models.ChatMessage,
 	recipientIDs []string,
 ) {
-	if l.svcCtx.PushSender == nil || !l.svcCtx.PushSender.Enabled() {
-		return
-	}
-
 	sender, err := l.getSenderInfo(chatModel)
 	if err != nil {
 		l.logger.Error(model.LogMsg{
@@ -58,7 +53,6 @@ func (l *SendMsgLogic) sendOfflinePushIfNeeded(
 	if body == "" {
 		body = "你收到一条新消息"
 	}
-
 	data := map[string]string{
 		"type":           "chat_message",
 		"conversationId": conversationID,
@@ -71,36 +65,14 @@ func (l *SendMsgLogic) sendOfflinePushIfNeeded(
 		if recipientID == senderID {
 			continue
 		}
-		if coreonline.IsOnline(l.svcCtx.Redis, recipientID) {
-			continue
-		}
-
 		var userConvo message_models.ChatUserConversation
+		isMuted := false
 		if err := l.svcCtx.DB.Where("user_id = ? AND conversation_id = ?", recipientID, conversationID).
-			First(&userConvo).Error; err == nil && userConvo.IsMuted {
-			continue
+			First(&userConvo).Error; err == nil {
+			isMuted = userConvo.IsMuted
 		}
-
-		res, err := l.svcCtx.NotificationRpc.ListPushTokens(context.Background(), &notification_rpc.ListPushTokensReq{
-			UserId: recipientID,
-		})
-		if err != nil || len(res.Tokens) == 0 {
-			continue
+		if err := pushcli.SendOfflineApi(l.ctx, recipientID, title, body, chatModel.MessageID, conversationID, isMuted, data); err != nil {
+			l.logger.Error(model.LogMsg{Text: "离线推送投递失败", Data: map[string]any{"recipientId": recipientID, "err": err.Error()}})
 		}
-
-		tokens := make([]corepush.PushToken, 0, len(res.Tokens))
-		for _, t := range res.Tokens {
-			tokens = append(tokens, corepush.PushToken{
-				DeviceID:     t.DeviceId,
-				PushToken:    t.PushToken,
-				PushPlatform: t.PushPlatform,
-			})
-		}
-
-		l.svcCtx.PushSender.SendToTokens(context.Background(), tokens, corepush.Message{
-			Title: title,
-			Body:  body,
-			Data:  data,
-		})
 	}
 }

@@ -22,13 +22,13 @@
 package eventlogic
 
 import (
+	pushcli "beaver/remote/push"
 	"context"
 	"errors"
 
 	notification_models "beaver/app/notification/notification_models/notification"
 	"beaver/app/notification/notification_rpc/internal/svc"
 	"beaver/app/notification/notification_rpc/pb"
-	mqwsconst "beaver/common/const/mqwsconst"
 	"beaver/common/wsEnum/wsCommandConst"
 	"beaver/common/wsEnum/wsTypeConst"
 	beaverlog "beaver/utils/beaverlog"
@@ -172,7 +172,7 @@ func (l *PushEventLogic) PushEvent(in *pb.PushEventReq) (*pb.PushEventRes, error
 				},
 				"conversationId": "",
 			}
-			l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload)
+			pushcli.SendRealtimeApi(l.ctx, "sync", payload)
 		}
 	}(l.svcCtx.Config.Etcd.Hosts[0], in.ToUserIds, eventID, eventVersion)
 

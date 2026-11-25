@@ -26,11 +26,11 @@ import (
 	accttypes "beaver/app/account/account_rpc/pb"
 	"beaver/app/notification/notification_rpc/internal/config"
 	"beaver/common/zrpc_interceptor"
+	"beaver/commonconfig"
 	"beaver/core/coregorm"
 	"beaver/core/coreredis"
-	"beaver/core/corerocketmq"
 	versionPkg "beaver/core/version"
-	"beaver/utils/beaverlog"
+	pushcli "beaver/remote/push"
 
 	"github.com/go-redis/redis"
 	"github.com/zeromicro/go-zero/zrpc"
@@ -44,7 +44,6 @@ type ServiceContext struct {
 
 	DB         *gorm.DB
 	VersionGen *versionPkg.VersionGenerator
-	RocketMQ   *corerocketmq.Client
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -53,16 +52,13 @@ func NewServiceContext(c config.Config) *ServiceContext {
 
 	versionGen := versionPkg.NewVersionGenerator(client, mysqlDb)
 
-	// 初始化 RocketMQ 客户端
-
-	mqClient := corerocketmq.InitRocketMQ(c.RocketMQ.Addr)
-	beaverlog.SetRocketMQ(mqClient)
+	commonconfig.Load(c.RemoteProxy)
+	pushcli.Init(c.Name, c.RemoteProxy.Push.ClientSecret)
 
 	return &ServiceContext{
 		Config:     c,
 		DB:         mysqlDb,
 		VersionGen: versionGen,
 		UserRpc:    user.NewUser(zrpc.MustNewClient(c.UserRpc, zrpc.WithUnaryClientInterceptor(zrpc_interceptor.ClientInfoInterceptor))),
-		RocketMQ:   mqClient,
 	}
 }

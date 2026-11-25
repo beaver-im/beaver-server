@@ -22,6 +22,7 @@
 package logic
 
 import (
+	pushcli "beaver/remote/push"
 	"context"
 	"errors"
 	"fmt"
@@ -29,8 +30,6 @@ import (
 	"beaver/app/account/account_api/internal/svc"
 	"beaver/app/account/account_api/internal/types"
 	auth_models "beaver/app/account/account_models/auth"
-	notification_rpc "beaver/app/notification/notification_rpc/pb"
-	mqwsconst "beaver/common/const/mqwsconst"
 	"beaver/common/wsEnum/wsCommandConst"
 	"beaver/common/wsEnum/wsTypeConst"
 	beaverlog "beaver/utils/beaverlog"
@@ -67,16 +66,6 @@ func (l *KickDeviceLogic) KickDevice(req *types.KickDeviceReq) (*types.KickDevic
 
 	l.svcCtx.DB.Model(&device).Update("is_active", false)
 
-	if _, err := l.svcCtx.NotificationRpc.DisablePushToken(l.ctx, &notification_rpc.DisablePushTokenReq{
-		UserId:   req.UserID,
-		DeviceId: req.DeviceID,
-	}); err != nil {
-		l.logger.Error(model.LogMsg{
-			Text: "禁用推送令牌失败",
-			Data: map[string]any{"userId": req.UserID, "deviceId": req.DeviceID, "err": err.Error()},
-		})
-	}
-
 	go func() {
 		payload := map[string]interface{}{
 			"command":  wsCommandConst.USER_PROFILE,
@@ -89,7 +78,7 @@ func (l *KickDeviceLogic) KickDevice(req *types.KickDeviceReq) (*types.KickDevic
 			},
 			"conversationId": "",
 		}
-		l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload)
+		pushcli.SendRealtimeApi(l.ctx, "sync", payload)
 	}()
 
 	l.logger.Info(model.LogMsg{

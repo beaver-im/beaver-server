@@ -100,9 +100,9 @@ func (l *AgentDoneConsumerLogic) StartConsumer() error {
 	}
 
 	err := mqClient.RegisterConsumer(
-		mqwsconst.MqGroupAgentDone,
+		mqwsconst.GroupAgentDone,
 		l.svcCtx.Config.RocketMQ.Addr,
-		mqwsconst.MqTopicAgentDone,
+		mqwsconst.TopicAgentDone,
 		false, // CLUSTERING：单实例消费
 		handler,
 	)

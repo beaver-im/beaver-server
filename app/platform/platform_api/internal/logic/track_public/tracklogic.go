@@ -69,7 +69,7 @@ func (l *TrackLogic) Track(req *types.TrackReq) (*types.TrackRes, error) {
 			return nil, fmt.Errorf("client log item too large")
 		}
 		// 原样透传：不加 Text/Data/attributes，不注入 source/module/traceId
-		if err := l.svcCtx.RocketMQ.SendRawJSON(l.ctx, mqwsconst.MqTopicClientLog, item); err != nil {
+		if err := l.svcCtx.RocketMQ.SendRawJSON(l.ctx, mqwsconst.TopicPlatformLogs, item); err != nil {
 			return nil, fmt.Errorf("forward client logs failed: %w", err)
 		}
 	}

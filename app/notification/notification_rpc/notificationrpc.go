@@ -29,7 +29,6 @@ import (
 	"beaver/app/notification/notification_rpc/internal/config"
 	eventserver "beaver/app/notification/notification_rpc/internal/server/event"
 	inboxserver "beaver/app/notification/notification_rpc/internal/server/inbox"
-	pushserver "beaver/app/notification/notification_rpc/internal/server/push"
 	"beaver/app/notification/notification_rpc/internal/svc"
 	"beaver/app/notification/notification_rpc/pb"
 	"beaver/utils/beaverlog"
@@ -54,7 +53,6 @@ func main() {
 	s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {
 		pb.RegisterEventServer(grpcServer, eventserver.NewEventServer(ctx))
 		pb.RegisterInboxServer(grpcServer, inboxserver.NewInboxServer(ctx))
-		pb.RegisterPushServer(grpcServer, pushserver.NewPushServer(ctx))
 
 		if c.Mode == service.DevMode || c.Mode == service.TestMode {
 			reflection.Register(grpcServer)

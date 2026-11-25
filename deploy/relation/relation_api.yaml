@@ -4,7 +4,6 @@
 RemoteProxy:
   Open:
     BaseURL: http://127.0.0.1:21900
-    ClientID: beaver-server
     ClientSecret: beaver-s2s-open-server-256bf11a40d14dfda744da14969a5a1a
 Name: relation
 Host: 0.0.0.0

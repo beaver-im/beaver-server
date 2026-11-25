@@ -145,7 +145,7 @@ func (p *digitalEventPusher) pushGroupAt(senderID, conversationID string, msg *c
 // dispatch external 模式：走 openevent → WS 长连接下发外部 agent。
 func (p *digitalEventPusher) dispatch(digitalID, eventType string, event map[string]interface{}) {
 	conversationID, _ := event["conversation_id"].(string)
-	if err := openevent.Push(p.ctx, p.svcCtx.RocketMQ, digitalID, eventType, conversationID, event); err != nil {
+	if err := openevent.Push(p.ctx, digitalID, eventType, conversationID, event); err != nil {
 		p.logger.Error(model.LogMsg{
 			Text: "数字伙伴事件投递失败",
 			Data: map[string]any{"digitalId": digitalID, "event": eventType, "err": err.Error()},
@@ -169,7 +169,7 @@ func (p *digitalEventPusher) pushAgentTask(digitalID string, event map[string]in
 		"digitalId":      digitalID,
 	}
 	envelope := map[string]interface{}{"payload": payload}
-	if err := p.svcCtx.RocketMQ.SendMessage(p.ctx, mqwsconst.MqTopicAgentTask, envelope); err != nil {
+	if err := p.svcCtx.RocketMQ.SendMessage(p.ctx, mqwsconst.TopicAgentTask, envelope); err != nil {
 		p.logger.Error(model.LogMsg{
 			Text: "agent_task 投递失败",
 			Data: map[string]any{"digitalId": digitalID, "messageId": messageID, "err": err.Error()},
@@ -192,7 +192,7 @@ func (p *digitalEventPusher) pushWorkflowTask(digitalID string, event map[string
 		"digitalId":      digitalID,
 	}
 	envelope := map[string]interface{}{"payload": payload}
-	if err := p.svcCtx.RocketMQ.SendMessage(p.ctx, mqwsconst.MqTopicWorkflowTask, envelope); err != nil {
+	if err := p.svcCtx.RocketMQ.SendMessage(p.ctx, mqwsconst.TopicWorkflowTask, envelope); err != nil {
 		p.logger.Error(model.LogMsg{
 			Text: "workflow_task 投递失败",
 			Data: map[string]any{"digitalId": digitalID, "messageId": messageID, "err": err.Error()},

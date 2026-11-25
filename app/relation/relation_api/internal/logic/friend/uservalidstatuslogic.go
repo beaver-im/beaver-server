@@ -22,6 +22,7 @@
 package logic
 
 import (
+	pushcli "beaver/remote/push"
 	"context"
 	"encoding/json"
 	"errors"
@@ -34,7 +35,6 @@ import (
 	"beaver/app/relation/relation_api/internal/svc"
 	"beaver/app/relation/relation_api/internal/types"
 	friend_models "beaver/app/relation/relation_models/friend"
-	mqwsconst "beaver/common/const/mqwsconst"
 	notifyconst "beaver/common/const/notifyconst"
 	"beaver/common/wsEnum/wsCommandConst"
 	"beaver/common/wsEnum/wsTypeConst"
@@ -169,7 +169,7 @@ func (l *UserValidStatusLogic) UserValidStatus(req *types.FriendValidStatusReq) 
 			ctx := l.ctx
 			res, err := open.GetDigitalByUserIDApi(ctx, nil, &opentype.GetDigitalByUserIDReq{DigitalUserId: friendVerify.RevUserID})
 			if err == nil && res != nil && res.Found {
-				if pushErr := openevent.Push(ctx, l.svcCtx.RocketMQ, friendVerify.RevUserID,
+				if pushErr := openevent.Push(ctx, friendVerify.RevUserID,
 					openevent.EventIMDigitalFollowed, "", map[string]interface{}{
 						"digital_id": friendVerify.RevUserID,
 						"user_id":    friendVerify.SendUserID,
@@ -179,7 +179,7 @@ func (l *UserValidStatusLogic) UserValidStatus(req *types.FriendValidStatusReq) 
 			}
 			res, err = open.GetDigitalByUserIDApi(ctx, nil, &opentype.GetDigitalByUserIDReq{DigitalUserId: friendVerify.SendUserID})
 			if err == nil && res != nil && res.Found {
-				if pushErr := openevent.Push(ctx, l.svcCtx.RocketMQ, friendVerify.SendUserID,
+				if pushErr := openevent.Push(ctx, friendVerify.SendUserID,
 					openevent.EventIMDigitalFollowed, "", map[string]interface{}{
 						"digital_id": friendVerify.SendUserID,
 						"user_id":    friendVerify.RevUserID,
@@ -289,7 +289,7 @@ func (l *UserValidStatusLogic) UserValidStatus(req *types.FriendValidStatusReq) 
 			},
 			"conversationId": conversationID,
 		}
-		l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload1)
+		pushcli.SendRealtimeApi(l.ctx, "sync", payload1)
 		payload2 := map[string]interface{}{
 			"command":  wsCommandConst.FRIEND_OPERATION,
 			"type":     wsTypeConst.FriendVerifyReceive,
@@ -300,7 +300,7 @@ func (l *UserValidStatusLogic) UserValidStatus(req *types.FriendValidStatusReq) 
 			},
 			"conversationId": conversationID,
 		}
-		l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload2)
+		pushcli.SendRealtimeApi(l.ctx, "sync", payload2)
 
 		l.logger.Info(model.LogMsg{Text: "异步发送WebSocket通知完成", Data: map[string]interface{}{"verifyId": req.VerifyID, "status": friendVerify.RevStatus}})
 	}()

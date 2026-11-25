@@ -22,6 +22,7 @@
 package logic
 
 import (
+	pushcli "beaver/remote/push"
 	"context"
 	"errors"
 
@@ -29,7 +30,6 @@ import (
 	"beaver/app/relation/relation_api/internal/svc"
 	"beaver/app/relation/relation_api/internal/types"
 	group_models "beaver/app/relation/relation_models/group"
-	mqwsconst "beaver/common/const/mqwsconst"
 	"beaver/common/wsEnum/wsCommandConst"
 	"beaver/common/wsEnum/wsTypeConst"
 	beaverlog "beaver/utils/beaverlog"
@@ -147,7 +147,7 @@ func (l *GroupDeleteLogic) GroupDelete(req *types.GroupDeleteReq) (resp *types.G
 				},
 				"conversationId": "",
 			}
-			l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload)
+			pushcli.SendRealtimeApi(l.ctx, "sync", payload)
 		}
 	}()
 

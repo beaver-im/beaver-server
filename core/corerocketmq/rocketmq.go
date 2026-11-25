@@ -45,8 +45,8 @@ type Message struct {
 
 // Client RocketMQ 客户端
 type Client struct {
-	Producer rocketmq.Producer
-	Consumer rocketmq.PushConsumer
+	Producer  rocketmq.Producer
+	Consumers []rocketmq.PushConsumer
 }
 
 // NewClient 创建 RocketMQ 客户端
@@ -111,6 +111,33 @@ func (c *Client) SendMessage(ctx context.Context, topic mqwsconst.TopicType, pay
 	return nil
 }
 
+// SendMessageWithKey 带 sharding key 发送，供 push 服务 Dispatcher 的点对点出口预留。
+// 一期 Locator 返回广播哨兵时不走这里；后续 DirectLocator 用 nodeId 作 key。
+func (c *Client) SendMessageWithKey(ctx context.Context, topic mqwsconst.TopicType, key string, payload map[string]interface{}) error {
+	if c == nil || c.Producer == nil {
+		return fmt.Errorf("RocketMQ 未初始化")
+	}
+
+	msg := &Message{
+		MessageID: generateMessageID(),
+		Timestamp: time.Now().UnixMilli(),
+		Payload:   payload,
+	}
+	body, err := json.Marshal(msg)
+	if err != nil {
+		return fmt.Errorf("序列化消息失败: %v", err)
+	}
+	rmMsg := primitive.NewMessage(string(topic), body).WithKeys([]string{key})
+	result, err := c.Producer.SendSync(ctx, rmMsg)
+	if err != nil {
+		return fmt.Errorf("发送消息失败: %v", err)
+	}
+	if result.Status != primitive.SendOK {
+		return fmt.Errorf("消息发送状态异常: %v", result.Status)
+	}
+	return nil
+}
+
 // SendRawJSON 发送顶层扁平 JSON（不加 Message 信封）。
 // 用于客户端日志等需原样透传到 OpenSearch 的场景，body 即文档本身。
 func (c *Client) SendRawJSON(ctx context.Context, topic mqwsconst.TopicType, v any) error {
@@ -157,7 +184,7 @@ func (c *Client) RegisterRawConsumer(group mqwsconst.GroupType, addr string, top
 	if err = c2.Start(); err != nil {
 		return fmt.Errorf("启动 Consumer 失败: %v", err)
 	}
-	c.Consumer = c2
+	c.Consumers = append(c.Consumers, c2)
 	logx.Infof("RocketMQ RawConsumer 启动成功, Group: %s, Topic: %s", group, topic)
 	return nil
 }
@@ -203,8 +230,42 @@ func (c *Client) RegisterConsumer(group mqwsconst.GroupType, addr string, topic 
 		return fmt.Errorf("启动 Consumer 失败: %v", err)
 	}
 
-	c.Consumer = c2
+	c.Consumers = append(c.Consumers, c2)
 	logx.Infof("RocketMQ Consumer 启动成功, Group: %s, Topic: %s", group, topic)
+	return nil
+}
+
+// RegisterOrderlyConsumer 按队列串行消费，用于 im.realtime.chat 的同会话有序。
+// 毒消息由 handler 自行 ack（返回 nil），不得靠无限重试阻塞队列。
+func (c *Client) RegisterOrderlyConsumer(group mqwsconst.GroupType, addr string, topic mqwsconst.TopicType, handler func(msg *Message) error) error {
+	c2, err := rocketmq.NewPushConsumer(
+		consumer.WithGroupName(string(group)),
+		consumer.WithNameServer([]string{addr}),
+		consumer.WithConsumerModel(consumer.BroadCasting),
+	)
+	if err != nil {
+		return fmt.Errorf("创建有序 Consumer 失败: %v", err)
+	}
+	if err := c2.Subscribe(string(topic), consumer.MessageSelector{}, func(_ context.Context, msgs ...*primitive.MessageExt) (consumer.ConsumeResult, error) {
+		for _, msg := range msgs {
+			var mqMsg Message
+			if err := json.Unmarshal(msg.Body, &mqMsg); err != nil {
+				logx.Errorf("有序消息反序列化失败，跳过: %v", err)
+				continue
+			}
+			if err := handler(&mqMsg); err != nil {
+				logx.Errorf("有序消息处理失败: %v", err)
+				return consumer.ConsumeRetryLater, nil
+			}
+		}
+		return consumer.ConsumeSuccess, nil
+	}); err != nil {
+		return fmt.Errorf("订阅有序 Topic 失败: %v", err)
+	}
+	if err := c2.Start(); err != nil {
+		return fmt.Errorf("启动有序 Consumer 失败: %v", err)
+	}
+	c.Consumers = append(c.Consumers, c2)
 	return nil
 }
 
@@ -213,8 +274,10 @@ func (c *Client) Shutdown() {
 	if c.Producer != nil {
 		c.Producer.Shutdown()
 	}
-	if c.Consumer != nil {
-		c.Consumer.Shutdown()
+	for _, consumer := range c.Consumers {
+		if consumer != nil {
+			consumer.Shutdown()
+		}
 	}
 	logx.Info("RocketMQ 客户端已关闭")
 }

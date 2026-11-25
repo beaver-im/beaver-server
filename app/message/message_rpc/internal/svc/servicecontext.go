@@ -23,6 +23,7 @@ package svc
 
 import (
 	aicli "beaver/remote/ai"
+	pushcli "beaver/remote/push"
 
 	"beaver/app/message/message_rpc/internal/config"
 
@@ -112,16 +113,16 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	// 装配各跨仓对端的 S2S 出站客户端（域名与凭据来自本服务 yaml）：
 	// open=beaver-open 独立仓，ai=beaver-ai 独立仓，agent=beaver-ai(py，S2S Bearer 换票)。
 	commonconfig.Load(c.RemoteProxy)
-	opencli.Init(c.RemoteProxy.Open.ClientID, c.RemoteProxy.Open.ClientSecret)
-	aicli.Init(c.RemoteProxy.Ai.ClientID, c.RemoteProxy.Ai.ClientSecret)
-	agentcli.Init(c.RemoteProxy.Agent.ClientID, c.RemoteProxy.Agent.ClientSecret)
+	opencli.Init(c.Name, c.RemoteProxy.Open.ClientSecret)
+	aicli.Init(c.Name, c.RemoteProxy.Ai.ClientSecret)
+	agentcli.Init(c.Name, c.RemoteProxy.Agent.ClientSecret)
+	pushcli.Init(c.Name, c.RemoteProxy.Push.ClientSecret)
 
 	mqClient := corerocketmq.InitRocketMQ(c.RocketMQ.Addr)
 
 	beaverlog.SetRocketMQ(mqClient)
 
 	return &ServiceContext{
-
 		Config: c,
 
 		Redis: client,

@@ -22,13 +22,13 @@
 package logic
 
 import (
+	pushcli "beaver/remote/push"
 	"context"
 	"fmt"
 
 	"beaver/app/message/message_api/internal/svc"
 	"beaver/app/message/message_api/internal/types"
 	message_models "beaver/app/message/message_models/chat"
-	mqwsconst "beaver/common/const/mqwsconst"
 	"beaver/common/wsEnum/wsCommandConst"
 	"beaver/common/wsEnum/wsTypeConst"
 	beaverlog "beaver/utils/beaverlog"
@@ -138,7 +138,7 @@ func (l *MarkMessageMediaLogic) notifyMessageMedia(userID string, messageIDs []s
 			"tableUpdates": []map[string]interface{}{update},
 		},
 	}
-	if err := l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload); err != nil {
+	if err := pushcli.SendRealtimeApi(l.ctx, "sync", payload); err != nil {
 		l.logger.Error(model.LogMsg{
 			Text: "推送消息媒体状态失败",
 			Data: map[string]any{"userId": userID, "err": err.Error()},

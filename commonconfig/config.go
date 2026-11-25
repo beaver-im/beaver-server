@@ -45,10 +45,10 @@ const (
 //
 // Auth 单独留成字段而不是隐含约定，是为了让 yaml 把「怎么鉴权」写清楚；
 // 目前只有 client_credentials 一种合法值，为空按 client_credentials 处理。
+// 没有 ClientID：出站身份一律取本服务名（c.Name），一个进程一个身份，不在 yaml 里另配。
 type Endpoint struct {
 	BaseURL      string `json:",optional"`
 	Auth         string `json:",optional"`
-	ClientID     string `json:",optional"`
 	ClientSecret string `json:",optional"`
 }
 
@@ -70,6 +70,9 @@ type RemoteProxy struct {
 	Doc Endpoint `json:",optional"`
 	// Agent 智能体 py 服务（beaver-ai，/agent/chat/v1/*）：与 Ai 同凭据，client_credentials 换票。
 	Agent Endpoint `json:",optional"`
+	// Push A 主体推送网关（beaver-server 内部 push_api，:20500）：出站到同团队 HTTP 业务面。
+	// 与其它 peer 一样在此登记地址与 S2S 机器票凭据；本仓业务服务经 remote/push 调用，不直连 MQ。
+	Push Endpoint `json:",optional"`
 }
 
 // 各对端服务域名，由 Load 从服务自己的 yaml 灌入；该服务用不到的对端保持空。
@@ -82,6 +85,7 @@ var (
 	SocialUrl string
 	DocUrl    string
 	AgentUrl  string
+	PushUrl   string
 )
 
 // Load 由各服务 NewServiceContext 在装配依赖前调一次，把 yaml 里配的域名存进本包。
@@ -94,4 +98,5 @@ func Load(p RemoteProxy) {
 	SocialUrl = p.Social.BaseURL
 	DocUrl = p.Doc.BaseURL
 	AgentUrl = p.Agent.BaseURL
+	PushUrl = p.Push.BaseURL
 }

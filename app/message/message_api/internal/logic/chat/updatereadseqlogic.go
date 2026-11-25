@@ -22,6 +22,7 @@
 package logic
 
 import (
+	pushcli "beaver/remote/push"
 	"context"
 	"errors"
 	"fmt"
@@ -31,7 +32,6 @@ import (
 	"beaver/app/message/message_api/internal/types"
 	message_models "beaver/app/message/message_models/chat"
 	"beaver/common/const/chattypeconst"
-	mqwsconst "beaver/common/const/mqwsconst"
 	"beaver/common/wsEnum/wsCommandConst"
 	"beaver/common/wsEnum/wsTypeConst"
 	beaverlog "beaver/utils/beaverlog"
@@ -208,7 +208,7 @@ func (l *UpdateReadSeqLogic) notifyReadSeqUpdate(userID, conversationID string, 
 		},
 		"conversationId": conversationID,
 	}
-	if err := l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload); err != nil {
+	if err := pushcli.SendRealtimeApi(l.ctx, "sync", payload); err != nil {
 		l.logger.Error(model.LogMsg{
 			Text: "推送已读同步失败",
 			Data: map[string]any{
@@ -258,7 +258,7 @@ func (l *UpdateReadSeqLogic) notifyPeerReadSeq(readerID, conversationID string, 
 			},
 			"conversationId": conversationID,
 		}
-		if err := l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload); err != nil {
+		if err := pushcli.SendRealtimeApi(l.ctx, "sync", payload); err != nil {
 			l.logger.Error(model.LogMsg{
 				Text: "推送对端已读通知失败",
 				Data: map[string]any{

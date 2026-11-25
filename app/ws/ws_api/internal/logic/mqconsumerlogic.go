@@ -116,17 +116,25 @@ func (l *MqConsumerLogic) StartConsumer() error {
 		return nil
 	}
 
-	err := mqClient.RegisterConsumer(
-		mqwsconst.MqGroupWs,
-		l.svcCtx.Config.RocketMQ.Addr,
-		mqwsconst.MqTopicWs,
-		true, // 广播模式：每个 WS 实例都消费，才能推送到本机在线连接
-		handler,
-	)
-
-	if err != nil {
-		l.logger.Error(model.LogMsg{Text: "启动RocketMQConsumer失败", Data: map[string]any{"err": err.Error()}})
-		return err
+	// 聊天与同步拆两个 Topic，共用同一 handler；广播模式让每个 WS 实例都收到，才能推给本机连接。
+	subscriptions := []struct {
+		group mqwsconst.GroupType
+		topic mqwsconst.TopicType
+	}{
+		{mqwsconst.GroupRealtimeChat, mqwsconst.TopicRealtimeChat},
+		{mqwsconst.GroupRealtimeSync, mqwsconst.TopicRealtimeSync},
+	}
+	for _, sub := range subscriptions {
+		var err error
+		if sub.topic == mqwsconst.TopicRealtimeChat {
+			err = mqClient.RegisterOrderlyConsumer(sub.group, l.svcCtx.Config.RocketMQ.Addr, sub.topic, handler)
+		} else {
+			err = mqClient.RegisterConsumer(sub.group, l.svcCtx.Config.RocketMQ.Addr, sub.topic, true, handler)
+		}
+		if err != nil {
+			l.logger.Error(model.LogMsg{Text: "启动实时推送 Consumer 失败", Data: map[string]any{"topic": sub.topic, "err": err.Error()}})
+			return err
+		}
 	}
 
 	l.logger.Info(model.LogMsg{Text: "WSAPIRocketMQConsumer启动成功"})

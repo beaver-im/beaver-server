@@ -4,7 +4,6 @@
 RemoteProxy:
   Open:
     BaseURL: http://127.0.0.1:21900
-    ClientID: beaver-server
     ClientSecret: beaver-s2s-open-server-256bf11a40d14dfda744da14969a5a1a
 Name: account
 Host: 0.0.0.0
@@ -73,27 +72,12 @@ S2S:
   Secret: beaver-s2s-core-b0db00321ca84fc783a2ba81505e82b1
   Clients:
     beaver-backend:
-      ClientID: beaver-backend
       ClientSecret: beaver-s2s-core-backend-4014803bd8424192ba406a7b2e2fa84b
-      Scopes: []
-      Enabled: true
     beaver-open:
-      ClientID: beaver-open
       ClientSecret: beaver-s2s-core-open-d20742355d8840ba925d26e055246d96
-      Scopes: []
-      Enabled: true
     beaver-social:
-      ClientID: beaver-social
       ClientSecret: beaver-s2s-core-social-f76f5e27e9fc4846979416fa7da3c5a9
-      Scopes: []
-      Enabled: true
     beaver-call:
-      ClientID: beaver-call
       ClientSecret: beaver-s2s-core-call-ff365be3367a4029b2345ef8dad54ee1
-      Scopes: []
-      Enabled: true
     beaver-agent:
-      ClientID: beaver-agent
       ClientSecret: beaver-s2s-core-agent-931a68bae0ea4eeeba4059dbda5b359b
-      Scopes: []
-      Enabled: true

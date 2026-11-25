@@ -155,9 +155,9 @@ func (l *AgentTaskConsumerLogic) StartConsumer() error {
 	}
 
 	err := mqClient.RegisterConsumer(
-		mqwsconst.MqGroupAgentTask,
+		mqwsconst.GroupAgentTask,
 		l.svcCtx.Config.RocketMQ.Addr,
-		mqwsconst.MqTopicAgentTask,
+		mqwsconst.TopicAgentTask,
 		false, // CLUSTERING：单实例消费
 		handler,
 	)

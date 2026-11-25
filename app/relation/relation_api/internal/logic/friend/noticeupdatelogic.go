@@ -22,13 +22,13 @@
 package logic
 
 import (
+	pushcli "beaver/remote/push"
 	"context"
 	"errors"
 
 	"beaver/app/relation/relation_api/internal/svc"
 	"beaver/app/relation/relation_api/internal/types"
 	friend_models "beaver/app/relation/relation_models/friend"
-	mqwsconst "beaver/common/const/mqwsconst"
 	"beaver/common/wsEnum/wsCommandConst"
 	"beaver/common/wsEnum/wsTypeConst"
 	beaverlog "beaver/utils/beaverlog"
@@ -145,7 +145,7 @@ func (l *NoticeUpdateLogic) NoticeUpdate(req *types.NoticeUpdateReq) (resp *type
 			},
 			"conversationId": "",
 		}
-		l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload)
+		pushcli.SendRealtimeApi(l.ctx, "sync", payload)
 
 		l.logger.Info(model.LogMsg{Text: "异步发送好友备注更新通知完成", Data: map[string]interface{}{"userId": req.UserID, "friendId": friend.FriendID, "version": nextVersion}})
 	}()

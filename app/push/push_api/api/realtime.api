@@ -1,0 +1,71 @@
+syntax = "v1"
+
+// 实时推送：业务服务经本面把帧投给 ws_api / open_api。
+// 调用方是队间服务，统一走 JwtS2s 机器票；targetID 由调用方传入，不做用户身份提权。
+
+type (
+	PushToUserReq {
+		TargetID       string      `json:"targetId"`
+		Channel        string      `json:"channel"`
+		Command        string      `json:"command"`
+		Type           string      `json:"type"`
+		ConversationID string      `json:"conversationId,optional"`
+		SenderID       string      `json:"senderId,optional"`
+		Body           interface{} `json:"body"`
+	}
+
+	PushToUserRes {
+		FailedTargetIDs []string `json:"failedTargetIds,optional"`
+	}
+)
+
+type (
+	PushToUsersReq {
+		Envelopes []RealtimeEnvelope `json:"envelopes"`
+	}
+
+	RealtimeEnvelope {
+		TargetID       string      `json:"targetId"`
+		Channel        string      `json:"channel"`
+		Command        string      `json:"command"`
+		Type           string      `json:"type"`
+		ConversationID string      `json:"conversationId,optional"`
+		SenderID       string      `json:"senderId,optional"`
+		Body           interface{} `json:"body"`
+	}
+
+	PushToUsersRes {
+		FailedTargetIDs []string `json:"failedTargetIds,optional"`
+	}
+)
+
+type (
+	PushToBotReq {
+		DigitalID      string      `json:"digitalId"`
+		EventType      string      `json:"eventType"`
+		ConversationID string      `json:"conversationId,optional"`
+		Body           interface{} `json:"body"`
+	}
+
+	PushToBotRes {
+		FailedTargetIDs []string `json:"failedTargetIds,optional"`
+	}
+)
+
+@server (
+	group: realtime
+	middleware: JwtS2s
+)
+service push {
+	@doc "推给用户端 WS 实时帧（channel=chat/sync）"
+	@handler pushToUser
+	post /beaver/api/push/realtime/v1/push_to_user (PushToUserReq) returns (PushToUserRes)
+
+	@doc "批量实时推送，单次最多 100 条，返回失败 targetID"
+	@handler pushToUsers
+	post /beaver/api/push/realtime/v1/push_to_users (PushToUsersReq) returns (PushToUsersRes)
+
+	@doc "推给机器人长连接（channel 固定 bot）"
+	@handler pushToBot
+	post /beaver/api/push/realtime/v1/push_to_bot (PushToBotReq) returns (PushToBotRes)
+}

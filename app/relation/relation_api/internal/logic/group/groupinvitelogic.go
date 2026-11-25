@@ -22,6 +22,7 @@
 package logic
 
 import (
+	pushcli "beaver/remote/push"
 	"context"
 	"errors"
 	"time"
@@ -30,7 +31,6 @@ import (
 	"beaver/app/relation/relation_api/internal/types"
 	group_models "beaver/app/relation/relation_models/group"
 	relationtypes "beaver/app/relation/relation_rpc/pb"
-	mqwsconst "beaver/common/const/mqwsconst"
 	"beaver/common/wsEnum/wsCommandConst"
 	"beaver/common/wsEnum/wsTypeConst"
 	beaverlog "beaver/utils/beaverlog"
@@ -187,7 +187,7 @@ func (l *GroupInviteLogic) GroupInvite(req *types.GroupInviteReq) (resp *types.G
 					},
 					"conversationId": "",
 				}
-				l.svcCtx.RocketMQ.SendMessage(ctx, mqwsconst.MqTopicWs, payload)
+				pushcli.SendRealtimeApi(ctx, "sync", payload)
 			}
 		}
 
@@ -209,7 +209,7 @@ func (l *GroupInviteLogic) GroupInvite(req *types.GroupInviteReq) (resp *types.G
 				},
 				"conversationId": "",
 			}
-			l.svcCtx.RocketMQ.SendMessage(ctx, mqwsconst.MqTopicWs, payload)
+			pushcli.SendRealtimeApi(ctx, "sync", payload)
 		}
 	}()
 

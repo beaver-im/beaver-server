@@ -54,15 +54,14 @@ func NewAuthTokenLogic(ctx context.Context, svcCtx *svc.ServiceContext) *AuthTok
 
 // AuthToken 校验调用方凭据并签发访问秘钥。
 //
-// fail-closed：注册表里没有该 client、Enabled 为假、口令不一致，一律拒绝；
+// fail-closed：注册表里没有该 client、口令不一致，一律拒绝；
 // 口令比对走 s2s.AuthenticateClient 的常量时间实现，不做长度/前缀短路。
 func (l *AuthTokenLogic) AuthToken(req *types.AuthTokenReq) (resp *types.AuthTokenRes, err error) {
 	if req.GrantType != "" && req.GrantType != commonconfig.AuthClientCredentials {
 		return nil, errors.New("不支持的授权方式")
 	}
 
-	scopes, ok := s2s.AuthenticateClient(l.svcCtx.Config.S2S.Clients, req.ClientID, req.ClientSecret)
-	if !ok {
+	if !s2s.AuthenticateClient(l.svcCtx.Config.S2S.Clients, req.ClientID, req.ClientSecret) {
 		l.logger.Error(model.LogMsg{
 			Text: "秘钥签发被拒",
 			Data: map[string]any{"clientID": req.ClientID},
@@ -75,7 +74,6 @@ func (l *AuthTokenLogic) AuthToken(req *types.AuthTokenReq) (resp *types.AuthTok
 		l.svcCtx.Config.Name,
 		req.ClientID,
 		s2s.AudienceCore,
-		scopes,
 		s2s.S2STTL,
 	)
 	if err != nil {

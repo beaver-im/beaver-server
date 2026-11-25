@@ -132,7 +132,15 @@ func (s *PushSender) Enabled() bool {
 	return s != nil && s.cfg.Enabled && (s.fcm != nil || s.apns != nil)
 }
 
-// SendToTokens 向指定 Token 列表发通知（chat_rpc 经 AuthRpc 拉取 Token 后调用）。
+// SendToToken 单设备发送并返回错误，供离线 Pipeline 的 ChannelPlugin 使用。
+func (s *PushSender) SendToToken(ctx context.Context, tok PushToken, msg Message) error {
+	if !s.Enabled() {
+		return nil
+	}
+	return s.sendToToken(ctx, tok, msg)
+}
+
+// SendToTokens 向指定 Token 列表发通知（push 服务离线 Pipeline 独占调用）。
 func (s *PushSender) SendToTokens(ctx context.Context, tokens []PushToken, msg Message) {
 	if !s.Enabled() {
 		return

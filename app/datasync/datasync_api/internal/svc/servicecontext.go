@@ -64,8 +64,8 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	// 装配跨仓对端的 S2S 出站客户端：circle=圈子服务（client_credentials 换票），
 	// agent=beaver-ai(py，S2S client_credentials 换 Bearer)。域名与凭据来自本服务 yaml。
 	commonconfig.Load(c.RemoteProxy)
-	circle.Init(c.RemoteProxy.Social.ClientID, c.RemoteProxy.Social.ClientSecret)
-	agentcli.Init(c.RemoteProxy.Agent.ClientID, c.RemoteProxy.Agent.ClientSecret)
+	circle.Init(c.Name, c.RemoteProxy.Social.ClientSecret)
+	agentcli.Init(c.Name, c.RemoteProxy.Agent.ClientSecret)
 
 	return &ServiceContext{
 		Config:          c,

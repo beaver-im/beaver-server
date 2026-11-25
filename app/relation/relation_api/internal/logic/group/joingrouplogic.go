@@ -22,6 +22,7 @@
 package logic
 
 import (
+	pushcli "beaver/remote/push"
 	"context"
 	"encoding/json"
 	"errors"
@@ -34,7 +35,6 @@ import (
 	"beaver/app/relation/relation_api/internal/types"
 	group_models "beaver/app/relation/relation_models/group"
 	relationtypes "beaver/app/relation/relation_rpc/pb"
-	mqwsconst "beaver/common/const/mqwsconst"
 	notifyconst "beaver/common/const/notifyconst"
 	"beaver/common/wsEnum/wsCommandConst"
 	"beaver/common/wsEnum/wsTypeConst"
@@ -317,7 +317,7 @@ func (l *JoinGroupLogic) JoinGroup(req *types.GroupJoinReq) (resp *types.GroupJo
 					},
 					"conversationId": "",
 				}
-				l.svcCtx.RocketMQ.SendMessage(ctx, mqwsconst.MqTopicWs, payload)
+				pushcli.SendRealtimeApi(ctx, "sync", payload)
 			}
 		}
 
@@ -351,7 +351,7 @@ func (l *JoinGroupLogic) JoinGroup(req *types.GroupJoinReq) (resp *types.GroupJo
 			},
 			"conversationId": "",
 		}
-		l.svcCtx.RocketMQ.SendMessage(ctx, mqwsconst.MqTopicWs, joinerPayload)
+		pushcli.SendRealtimeApi(ctx, "sync", joinerPayload)
 
 		// 3. 触发开放平台 Webhook 事件(群成员变更)
 		l.triggerOpenPlatformWebhook(req.GroupID, req.UserID, []string{req.UserID}, "added")

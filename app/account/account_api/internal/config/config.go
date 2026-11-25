@@ -39,9 +39,6 @@ type Config struct {
 		Password string
 		Db       int
 	}
-	RocketMQ struct {
-		Addr string
-	}
 	WhiteList []string
 	// AccountRpc 本域 rpc（user + auth 同进程，etcd accountrpc.rpc）
 	AccountRpc      zrpc.RpcClientConf

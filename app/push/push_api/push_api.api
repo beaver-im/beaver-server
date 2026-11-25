@@ -1,0 +1,5 @@
+import "api/realtime.api"
+import "api/offline.api"
+import "api/auth_public.api"
+
+// goctl api go -api push_api.api -dir . --home ../../../template

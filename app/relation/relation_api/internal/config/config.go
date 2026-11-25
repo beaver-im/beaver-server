@@ -39,9 +39,6 @@ type Config struct {
 		Db       int
 	}
 	Domain   string
-	RocketMQ struct {
-		Addr string
-	}
 	UserRpc         zrpc.RpcClientConf
 	RelationRpc     zrpc.RpcClientConf // relation_rpc（friend+group 同进程，etcd relationrpc.rpc）
 	ChatRpc         zrpc.RpcClientConf

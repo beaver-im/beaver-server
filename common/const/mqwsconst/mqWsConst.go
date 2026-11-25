@@ -21,41 +21,33 @@
 
 package mqwsconst
 
-// RocketMQ Topic 类型（用于 WebSocket 推送）
+// 一套 RocketMQ 集群，靠 Topic / ConsumerGroup 隔离。
+// 实时用户侧三个 Topic 仅由 push 服务生产；离线 Topic 仅由 push 服务生产并消费。
+// 编排与日志 Topic 不经 push 服务。
+
 type TopicType string
 
-// RocketMQ Topic 常量
 const (
-	// MqTopicWs WebSocket 推送专用 Topic（用户侧）
-	MqTopicWs TopicType = "ws_push_topic"
-	// MqTopicWsBot 机器人长连接推送专用 Topic（开放平台侧）
-	// 与用户侧 ws_push_topic 分离，用户侧 ws_api 消费者完全看不到机器人事件
-	MqTopicWsBot TopicType = "ws_bot_push_topic"
-	// MqTopicClientLog 客户端日志扁平 JSON（无 Message 信封）
-	MqTopicClientLog TopicType = "beaver_logs"
-	// MqTopicAgentTask builtin 数字伙伴消息投递 Topic（chat_rpc 投 → agent 消费跑 LLM）
-	MqTopicAgentTask TopicType = "agent_task"
-	// MqTopicAgentDone agent 终稿回投 Topic（agent 跑完 LLM → chat_rpc 消费落库）
-	MqTopicAgentDone TopicType = "agent_done"
-	// MqTopicWorkflowTask workflow 数字伙伴消息投递 Topic（chat_rpc 投 → workflow 引擎消费）
-	MqTopicWorkflowTask TopicType = "workflow_task"
+	TopicRealtimeChat TopicType = "im.realtime.chat"
+	TopicRealtimeSync TopicType = "im.realtime.sync"
+	TopicRealtimeBot  TopicType = "im.realtime.bot"
+	TopicOfflinePush  TopicType = "im.offline.push"
+	TopicAgentTask    TopicType = "im.agent.task"
+	TopicAgentDone    TopicType = "im.agent.done"
+	TopicWorkflowTask TopicType = "im.workflow.task"
+	TopicPlatformLogs TopicType = "im.platform.logs"
 )
 
-// RocketMQ Consumer Group 类型
 type GroupType string
 
-// RocketMQ Consumer Group 常量
+// ConsumerGroup 与 Topic 一对一镜像，后缀 .cg（consumer group）。
 const (
-	// MqGroupWs WS API 消费者组
-	MqGroupWs GroupType = "ws_api_consumer_group"
-	// MqGroupWsBot 开放平台机器人长连接消费者组
-	MqGroupWsBot GroupType = "open_api_bot_consumer_group"
-	// MqGroupClientLog 客户端日志写入 OpenSearch 的消费者组
-	MqGroupClientLog GroupType = "platform_client_log_group"
-	// MqGroupAgentTask chat_rpc 消费 agent_task 的消费者组（CLUSTERING，builtin 编排层）
-	MqGroupAgentTask GroupType = "chat_rpc_agent_task_group"
-	// MqGroupAgentDone chat_rpc 消费 agent_done 的消费者组（CLUSTERING，终稿落库）
-	MqGroupAgentDone GroupType = "chat_rpc_agent_done_group"
-	// MqGroupWorkflowTask workflow 引擎消费 workflow_task 的消费者组（CLUSTERING）
-	MqGroupWorkflowTask GroupType = "workflow_engine_group"
+	GroupRealtimeChat GroupType = "im.realtime.chat.cg"
+	GroupRealtimeSync GroupType = "im.realtime.sync.cg"
+	GroupRealtimeBot  GroupType = "im.realtime.bot.cg"
+	GroupOfflinePush  GroupType = "im.offline.push.cg"
+	GroupAgentTask    GroupType = "im.agent.task.cg"
+	GroupAgentDone    GroupType = "im.agent.done.cg"
+	GroupWorkflowTask GroupType = "im.workflow.task.cg"
+	GroupPlatformLogs GroupType = "im.platform.logs.cg"
 )

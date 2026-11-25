@@ -23,7 +23,6 @@ package config
 
 import (
 	"beaver/commonconfig"
-
 	"github.com/zeromicro/go-zero/zrpc"
 )
 
@@ -46,7 +45,7 @@ type Config struct {
 	GroupRpc        zrpc.RpcClientConf
 	NotificationRpc zrpc.RpcClientConf
 	PlatformRpc     zrpc.RpcClientConf
-	Push        struct {
+	Push            struct {
 		Enabled bool
 		FCM     struct {
 			Enabled         bool
@@ -67,4 +66,8 @@ type Config struct {
 	// 本仓出站不使用任何 /internal/* 私有端点，只走对端标准 .api 路径。
 	RemoteProxy commonconfig.RemoteProxy `json:",optional"`
 
+	// S2S 入站机器票：受众 core:api，同团队业务面共用一套凭据。
+	S2S struct {
+		Secret string `json:",optional"`
+	}
 }

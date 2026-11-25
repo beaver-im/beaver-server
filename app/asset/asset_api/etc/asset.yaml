@@ -1,3 +1,8 @@
+# RemoteProxy 唯一出站注册表：push_api 地址与 S2S 机器票凭据在此登记。
+RemoteProxy:
+  Push:
+    BaseURL: http://127.0.0.1:20500
+    ClientSecret: beaver-s2s-push-asset-f296a87e54ef131369e9d7a2da9a3bfc
 Name: asset
 Host: 0.0.0.0
 Port: 20600
@@ -89,3 +94,4 @@ Assertion:
     {"keys":[{"alg":"ES256","crv":"P-256","kid":"gateway-2026-11","kty":"EC","use":"sig","x":"46Jx5dTVRu4EQsot-rtD1lBS302SYrVJ7EJsHblRtig","y":"wEbsT3a7M4uWO7nZLxM4tHCx9-QN-MnZAOn1jyqC6Zw"}]}
 S2S:
   Secret: beaver-s2s-core-b0db00321ca84fc783a2ba81505e82b1
+

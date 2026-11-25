@@ -93,12 +93,14 @@ services:
     restart: on-failure
     entrypoint: >
       sh -c "sleep 10 &&
-      mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t ws_push_topic &&
-      mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t ws_bot_push_topic &&
-      mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t beaver_logs &&
-      mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t agent_task &&
-      mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t agent_done &&
-      mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t workflow_task"
+      mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im.realtime.chat &&
+      mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im.realtime.sync &&
+      mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im.realtime.bot &&
+      mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im.offline.push &&
+      mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im.agent.task &&
+      mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im.agent.done &&
+      mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im.workflow.task &&
+      mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im.platform.logs"
 
   rocketmq-console:
     image: apacherocketmq/rocketmq-dashboard:latest

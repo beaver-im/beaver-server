@@ -22,6 +22,7 @@
 package conversationlogic
 
 import (
+	pushcli "beaver/remote/push"
 	"context"
 	"errors"
 	"fmt"
@@ -31,7 +32,6 @@ import (
 	"beaver/app/message/message_rpc/internal/svc"
 	chat_rpc "beaver/app/message/message_rpc/pb"
 	"beaver/common/const/chattypeconst"
-	mqwsconst "beaver/common/const/mqwsconst"
 	"beaver/common/const/usertypeconst"
 	"beaver/common/wsEnum/wsCommandConst"
 	"beaver/common/wsEnum/wsTypeConst"
@@ -245,7 +245,7 @@ func (l *InitializeConversationLogic) notifyConversationInitialized(
 			},
 			"conversationId": conversationId,
 		}
-		if err := l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload); err != nil {
+		if err := pushcli.SendRealtimeApi(l.ctx, "chat", payload); err != nil {
 			l.logger.Error(model.LogMsg{Text: "MQ推送会话初始化失败", Data: map[string]any{"recipient": user.UserID, "conversation": conversationId, "err": err.Error()}})
 			continue
 		}

@@ -67,9 +67,7 @@ NotificationRpc:
 RemoteProxy:
   Agent:
     BaseURL: http://127.0.0.1:22300
-    ClientID: beaver-server
     ClientSecret: beaver-s2s-ai-server-4a19e36992084ffb826d7bb8d3f56717
   Social:
     BaseURL: http://127.0.0.1:22100
-    ClientID: beaver-server
     ClientSecret: beaver-s2s-social-server-d336db23e7bc49b5a89f4c587384cd16

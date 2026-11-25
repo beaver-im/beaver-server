@@ -38,9 +38,6 @@ type Config struct {
 		Password string
 		Db       int
 	}
-	RocketMQ struct {
-		Addr string
-	}
 	Domain      string // 项目对外访问域名（用于生成本地文件完整URL）
 	FileMaxSize map[string]float64
 	WhiteList   []string
@@ -72,6 +69,8 @@ type Config struct {
 	}
 	// Auth 用户 JWT 签名密钥，本服务独立签发并校验用户票：
 	// 本服务独立验用户票，不信任任何外部直接塞进来的 Beaver-User-Id。
+	// RemoteProxy 唯一出站注册表：push_api 地址与 S2S 机器票凭据在此登记。
+	RemoteProxy commonconfig.RemoteProxy `json:",optional"`
 	// Assertion 北向：用 JWKS 验网关 ES256 断言（iss + kid），不是共享 HMAC。
 	Assertion commonconfig.AssertionVerify `json:",optional"`
 	// S2S 入站机器票：东西向队间调用与本服务共用同一套路由，凭据受众统一 core:api。

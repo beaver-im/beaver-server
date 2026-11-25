@@ -71,30 +71,6 @@ message GetReadCursorVersionsRes {
   int64 max_version = 2;
 }
 
-// 离线 Push Token（FCM/APNs）
-message PushTokenInfo {
-  string device_id = 1;
-  string push_token = 2;
-  string push_platform = 3;
-}
-
-message ListPushTokensReq {
-  string user_id = 1;
-}
-
-message ListPushTokensRes {
-  repeated PushTokenInfo tokens = 1;
-}
-
-message DisablePushTokenReq {
-  string user_id = 1;
-  string device_id = 2;
-}
-
-message DisablePushTokenRes {
-  bool success = 1;
-}
-
 service event {
   rpc PushEvent(PushEventReq) returns (PushEventRes);
   rpc GetEventVersions(GetEventVersionsReq) returns (GetEventVersionsRes);
@@ -103,11 +79,6 @@ service event {
 service inbox {
   rpc GetInboxVersions(GetInboxVersionsReq) returns (GetInboxVersionsRes);
   rpc GetReadCursorVersions(GetReadCursorVersionsReq) returns (GetReadCursorVersionsRes);
-}
-
-service push {
-  rpc ListPushTokens(ListPushTokensReq) returns (ListPushTokensRes);
-  rpc DisablePushToken(DisablePushTokenReq) returns (DisablePushTokenRes);
 }
 
 // goctl rpc protoc notification_rpc.proto --go_out=. --go-grpc_out=. --zrpc_out=. --home ../../../template

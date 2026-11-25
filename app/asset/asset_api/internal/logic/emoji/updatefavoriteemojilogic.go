@@ -22,13 +22,13 @@
 package logic
 
 import (
+	pushcli "beaver/remote/push"
 	"context"
 	"errors"
 
 	"beaver/app/asset/asset_api/internal/svc"
 	"beaver/app/asset/asset_api/internal/types"
 	emoji_models "beaver/app/asset/asset_models/emoji"
-	mqwsconst "beaver/common/const/mqwsconst"
 	"beaver/common/wsEnum/wsCommandConst"
 	"beaver/common/wsEnum/wsTypeConst"
 	beaverlog "beaver/utils/beaverlog"
@@ -121,7 +121,7 @@ func (l *UpdateFavoriteEmojiLogic) UpdateFavoriteEmoji(req *types.UpdateFavorite
 				},
 				"conversationId": "",
 			}
-			l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload)
+			pushcli.SendRealtimeApi(l.ctx, "sync", payload)
 		}(l.svcCtx.Config.Etcd, req.UserID, newFavoriteEmoji.EmojiCollectID, collectVersion)
 
 	case "unfavorite":
@@ -174,7 +174,7 @@ func (l *UpdateFavoriteEmojiLogic) UpdateFavoriteEmoji(req *types.UpdateFavorite
 				},
 				"conversationId": "",
 			}
-			l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload)
+			pushcli.SendRealtimeApi(l.ctx, "sync", payload)
 		}(l.svcCtx.Config.Etcd, req.UserID, favoriteEmoji.EmojiCollectID, favoriteEmoji.Version)
 
 	default:

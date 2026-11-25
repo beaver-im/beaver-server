@@ -22,6 +22,7 @@
 package logic
 
 import (
+	pushcli "beaver/remote/push"
 	"context"
 	"errors"
 	"time"
@@ -29,7 +30,6 @@ import (
 	"beaver/app/notification/notification_api/internal/svc"
 	"beaver/app/notification/notification_api/internal/types"
 	notification_models "beaver/app/notification/notification_models/notification"
-	mqwsconst "beaver/common/const/mqwsconst"
 	"beaver/common/wsEnum/wsCommandConst"
 	"beaver/common/wsEnum/wsTypeConst"
 	beaverlog "beaver/utils/beaverlog"
@@ -132,7 +132,7 @@ func (l *MarkReadByCategoryLogic) MarkReadByCategory(req *types.MarkReadByCatego
 			},
 			"conversationId": "",
 		}
-		l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload)
+		pushcli.SendRealtimeApi(l.ctx, "sync", payload)
 	}(l.svcCtx.Config.Etcd, userId, category, cursorVersion)
 
 	l.logger.Info(model.LogMsg{

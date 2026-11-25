@@ -58,9 +58,9 @@ func (l *ClientLogConsumerLogic) StartConsumer() error {
 	}
 
 	return l.svcCtx.RocketMQ.RegisterRawConsumer(
-		mqwsconst.MqGroupClientLog,
+		mqwsconst.GroupPlatformLogs,
 		l.svcCtx.Config.RocketMQ.Addr,
-		mqwsconst.MqTopicClientLog,
+		mqwsconst.TopicPlatformLogs,
 		func(body []byte) error {
 			if err := l.svcCtx.OpenSearch.IndexRaw(context.Background(), index, body); err != nil {
 				l.logger.Error(model.LogMsg{Text: "写入OpenSearch失败", Data: map[string]any{"err": err.Error()}})

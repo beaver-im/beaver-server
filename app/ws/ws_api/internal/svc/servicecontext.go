@@ -31,9 +31,11 @@ import (
 	"beaver/app/ws/ws_api/internal/config"
 	"beaver/app/ws/ws_api/internal/middleware"
 	"beaver/common/zrpc_interceptor"
+	"beaver/commonconfig"
 	"beaver/core/coregorm"
 	"beaver/core/coreredis"
 	"beaver/core/corerocketmq"
+	pushcli "beaver/remote/push"
 	"beaver/utils/beaverlog"
 
 	"github.com/go-redis/redis"
@@ -51,7 +53,7 @@ type ServiceContext struct {
 	RocketMQ   *corerocketmq.Client
 	InstanceID string
 	// JwtS2s 由 .api 的 @server 声明接线，goctl 生成 WithMiddlewares 注入。
-	JwtS2s    rest.Middleware
+	JwtS2s rest.Middleware
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -59,6 +61,9 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	client := coreredis.InitRedis(c.Redis.Addr, c.Redis.Password, c.Redis.Db)
 	mqClient := corerocketmq.InitRocketMQ(c.RocketMQ.Addr)
 	beaverlog.SetRocketMQ(mqClient)
+
+	commonconfig.Load(c.RemoteProxy)
+	pushcli.Init(c.Name, c.RemoteProxy.Push.ClientSecret)
 
 	return &ServiceContext{
 		DB:         mysqlDb,
@@ -68,7 +73,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		ChatRpc:    chat.NewChat(zrpc.MustNewClient(c.ChatRpc, zrpc.WithUnaryClientInterceptor(zrpc_interceptor.ClientInfoInterceptor))),
 		RocketMQ:   mqClient,
 		InstanceID: buildInstanceID(c.InstanceID),
-		JwtS2s:    middleware.NewJwtS2sMiddleware(c).Handle,
+		JwtS2s:     middleware.NewJwtS2sMiddleware(c).Handle,
 	}
 }
 

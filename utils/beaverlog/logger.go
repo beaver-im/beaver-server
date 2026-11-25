@@ -258,7 +258,7 @@ func (l *Logger) publishMQ(level string, msg model.LogMsg, userID, traceID strin
 	}
 
 	go func() {
-		if err := mq.SendRawJSON(context.Background(), mqwsconst.MqTopicClientLog, payload); err != nil {
+		if err := mq.SendRawJSON(context.Background(), mqwsconst.TopicPlatformLogs, payload); err != nil {
 			logx.Errorf("beaverlog mq publish failed: %v", err)
 		}
 	}()

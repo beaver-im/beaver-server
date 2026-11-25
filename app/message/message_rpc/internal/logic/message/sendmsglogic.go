@@ -22,6 +22,7 @@
 package messagelogic
 
 import (
+	pushcli "beaver/remote/push"
 	"context"
 	"errors"
 	"strings"
@@ -34,7 +35,6 @@ import (
 	chat_rpc "beaver/app/message/message_rpc/pb"
 	"beaver/app/relation/relation_rpc/pb"
 	"beaver/common/const/chattypeconst"
-	mqwsconst "beaver/common/const/mqwsconst"
 	"beaver/common/models/ctype"
 	"beaver/common/wsEnum/wsCommandConst"
 	"beaver/common/wsEnum/wsTypeConst"
@@ -562,7 +562,7 @@ func (l *SendMsgLogic) notifyMessageUpdateGrouped(conversationId, senderId strin
 			},
 			"conversationId": conversationId,
 		}
-		if err := l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload); err != nil {
+		if err := pushcli.SendRealtimeApi(l.ctx, "chat", payload); err != nil {
 			l.logger.Error(model.LogMsg{Text: "MQ 推送失败", Data: map[string]interface{}{"recipientId": recipientId, "conversationId": conversationId, "err": err.Error()}})
 		}
 	}

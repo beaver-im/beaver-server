@@ -22,6 +22,7 @@
 package chat_message
 
 import (
+	pushcli "beaver/remote/push"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -34,7 +35,6 @@ import (
 	"beaver/app/ws/ws_api/internal/types"
 	type_struct "beaver/app/ws/ws_api/types"
 	"beaver/common/const/chattypeconst"
-	mqwsconst "beaver/common/const/mqwsconst"
 	"beaver/common/wsEnum/wsCommandConst"
 	"beaver/common/wsEnum/wsTypeConst"
 	"beaver/utils/beaverlog/model"
@@ -75,7 +75,7 @@ func HandleTypingSend(
 			},
 			"conversationId": body.ConversationID,
 		}
-		if err := svcCtx.RocketMQ.SendMessage(ctx, mqwsconst.MqTopicWs, payload); err != nil {
+		if err := pushcli.SendRealtimeApi(ctx, "sync", payload); err != nil {
 			logger.Error(model.LogMsg{
 				Text: "推送typing通知失败",
 				Data: map[string]any{"sender": req.UserID, "target": peerID, "err": err.Error()},

@@ -34,10 +34,9 @@ import (
 	"beaver/commonconfig"
 	"beaver/core/coregorm"
 	"beaver/core/coreredis"
-	"beaver/core/corerocketmq"
 	versionPkg "beaver/core/version"
 	opencli "beaver/remote/open"
-	"beaver/utils/beaverlog"
+	pushcli "beaver/remote/push"
 
 	"github.com/go-redis/redis"
 	"github.com/zeromicro/go-zero/rest"
@@ -55,9 +54,8 @@ type ServiceContext struct {
 	GroupRpc        pb.GroupClient
 	NotificationRpc notification.Notification
 	VersionGen      *versionPkg.VersionGenerator
-	RocketMQ        *corerocketmq.Client
 	// JwtS2s 由 .api 的 @server 声明接线，goctl 生成 WithMiddlewares 注入。
-	JwtS2s    rest.Middleware
+	JwtS2s rest.Middleware
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -66,12 +64,10 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	versionGen := versionPkg.NewVersionGenerator(client, mysqlDb)
 	rpcOpt := zrpc.WithUnaryClientInterceptor(zrpc_interceptor.ClientInfoInterceptor)
 
-	mqClient := corerocketmq.InitRocketMQ(c.RocketMQ.Addr)
-	beaverlog.SetRocketMQ(mqClient)
-
 	// 装配开放接口服务（beaver-open 独立仓）S2S 出站客户端：域名与凭据来自本服务 yaml。
 	commonconfig.Load(c.RemoteProxy)
-	opencli.Init(c.RemoteProxy.Open.ClientID, c.RemoteProxy.Open.ClientSecret)
+	opencli.Init(c.Name, c.RemoteProxy.Open.ClientSecret)
+	pushcli.Init(c.Name, c.RemoteProxy.Push.ClientSecret)
 
 	return &ServiceContext{
 		Config:          c,
@@ -83,7 +79,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		GroupRpc:        group.NewGroup(zrpc.MustNewClient(c.RelationRpc, rpcOpt)),
 		NotificationRpc: notification.NewNotification(zrpc.MustNewClient(c.NotificationRpc, rpcOpt)),
 		VersionGen:      versionGen,
-		RocketMQ:        mqClient,
-		JwtS2s:    middleware.NewJwtS2sMiddleware(c).Handle,
+		JwtS2s:          middleware.NewJwtS2sMiddleware(c).Handle,
 	}
 }

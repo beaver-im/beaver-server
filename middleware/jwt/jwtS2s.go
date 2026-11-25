@@ -96,7 +96,7 @@ func inboundGate(s2sSecret, aud string, verifier *assertion.Verifier) func(http.
 				http.Error(w, "S2S 密钥未配置，拒绝访问", http.StatusUnauthorized)
 				return
 			}
-			clientID, _, err := s2s.Verify(s2sSecret, aud, token)
+			clientID, err := s2s.Verify(s2sSecret, aud, token)
 			if err != nil {
 				http.Error(w, "调用方令牌校验失败: "+err.Error(), http.StatusUnauthorized)
 				return

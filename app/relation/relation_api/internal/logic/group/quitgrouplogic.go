@@ -22,6 +22,7 @@
 package logic
 
 import (
+	pushcli "beaver/remote/push"
 	"context"
 	"encoding/json"
 	"errors"
@@ -32,7 +33,6 @@ import (
 	"beaver/app/relation/relation_api/internal/types"
 	group_models "beaver/app/relation/relation_models/group"
 	relationtypes "beaver/app/relation/relation_rpc/pb"
-	mqwsconst "beaver/common/const/mqwsconst"
 	notifyconst "beaver/common/const/notifyconst"
 	"beaver/common/wsEnum/wsCommandConst"
 	"beaver/common/wsEnum/wsTypeConst"
@@ -124,7 +124,7 @@ func (l *QuitGroupLogic) QuitGroup(req *types.GroupQuitReq) (resp *types.GroupQu
 					},
 					"conversationId": "",
 				}
-				l.svcCtx.RocketMQ.SendMessage(ctx, mqwsconst.MqTopicWs, payload)
+				pushcli.SendRealtimeApi(ctx, "sync", payload)
 			}
 		}
 

@@ -22,6 +22,7 @@
 package logic
 
 import (
+	pushcli "beaver/remote/push"
 	"context"
 	"encoding/json"
 	"errors"
@@ -34,7 +35,6 @@ import (
 	"beaver/app/relation/relation_api/internal/svc"
 	"beaver/app/relation/relation_api/internal/types"
 	friend_models "beaver/app/relation/relation_models/friend"
-	mqwsconst "beaver/common/const/mqwsconst"
 	notifyconst "beaver/common/const/notifyconst"
 	usertypeconst "beaver/common/const/usertypeconst"
 	"beaver/common/wsEnum/wsCommandConst"
@@ -231,7 +231,7 @@ func (l *AddFriendLogic) AddFriend(req *types.AddFriendReq) (resp *types.AddFrie
 			},
 			"conversationId": "",
 		}
-		l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload1)
+		pushcli.SendRealtimeApi(l.ctx, "sync", payload1)
 
 		payload2 := map[string]interface{}{
 			"command":  wsCommandConst.FRIEND_OPERATION,
@@ -244,7 +244,7 @@ func (l *AddFriendLogic) AddFriend(req *types.AddFriendReq) (resp *types.AddFrie
 			},
 			"conversationId": "",
 		}
-		l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, payload2)
+		pushcli.SendRealtimeApi(l.ctx, "sync", payload2)
 
 		l.logger.Info(model.LogMsg{Text: "异步发送好友验证请求通知完成", Data: map[string]interface{}{"sender": req.UserID, "receiver": req.FriendID, "version": nextVersion, "verifyId": verifyModel.VerifyID}})
 	}()
@@ -353,7 +353,7 @@ func (l *AddFriendLogic) addInstantFriend(req *types.AddFriendReq) (*types.AddFr
 			})
 		}
 		for _, pair := range [][2]string{{req.UserID, req.FriendID}, {req.FriendID, req.UserID}} {
-			l.svcCtx.RocketMQ.SendMessage(l.ctx, mqwsconst.MqTopicWs, map[string]interface{}{
+			pushcli.SendRealtimeApi(l.ctx, "sync", map[string]interface{}{
 				"command":        wsCommandConst.FRIEND_OPERATION,
 				"type":           wsTypeConst.FriendVerifyReceive,
 				"senderId":       pair[0],
