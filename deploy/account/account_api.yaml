@@ -71,13 +71,13 @@ Assertion:
 S2S:
   Secret: beaver-s2s-core-b0db00321ca84fc783a2ba81505e82b1
   Clients:
-    beaver-backend:
+    backend_admin:
       ClientSecret: beaver-s2s-core-backend-4014803bd8424192ba406a7b2e2fa84b
-    beaver-open:
+    open:
       ClientSecret: beaver-s2s-core-open-d20742355d8840ba925d26e055246d96
-    beaver-social:
+    social:
       ClientSecret: beaver-s2s-core-social-f76f5e27e9fc4846979416fa7da3c5a9
-    beaver-call:
+    call_api:
       ClientSecret: beaver-s2s-core-call-ff365be3367a4029b2345ef8dad54ee1
-    beaver-agent:
+    agent_api:
       ClientSecret: beaver-s2s-core-agent-931a68bae0ea4eeeba4059dbda5b359b

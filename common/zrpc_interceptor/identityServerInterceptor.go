@@ -66,9 +66,6 @@ func IdentityServerInterceptor(ctx context.Context, req any, info *grpc.UnarySer
 			id.Kind = identity.KindUser
 		}
 	}
-	if scopes := md.Get("scopes"); len(scopes) > 0 {
-		id.Scopes = scopes
-	}
 
 	return handler(identity.With(ctx, id), req)
 }

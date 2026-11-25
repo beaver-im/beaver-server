@@ -43,9 +43,8 @@ const (
 // Identity 一次请求的身份结论，由鉴权中间件写入 context。
 type Identity struct {
 	Kind     Kind
-	UserID   string   // Kind==KindUser 时为验签得出的用户 ID
-	ClientID string   // Kind==KindS2S 时为票据里的调用方 client_id
-	Scopes   []string // Kind==KindS2S 时为票据携带的授权域
+	UserID   string // Kind==KindUser 时为验签得出的用户 ID
+	ClientID string // Kind==KindS2S 时为票据里的调用方 client_id
 }
 
 func (i Identity) IsUser() bool    { return i.Kind == KindUser }

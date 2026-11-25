@@ -68,9 +68,6 @@ func ClientInfoInterceptor(ctx context.Context, method string, req, reply any, c
 	case identity.KindS2S:
 		md.Set("kind", "s2s")
 	}
-	if len(id.Scopes) > 0 {
-		md.Set("scopes", id.Scopes...)
-	}
 	if id := traceid.FromContext(ctx); id != "" {
 		md.Set(traceid.MetadataKey, id)
 	}
