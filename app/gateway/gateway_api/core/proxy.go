@@ -25,6 +25,7 @@ import (
 	"beaver/app/gateway/gateway_api/types"
 	"beaver/common/etcd"
 	"beaver/common/traceid"
+	"beaver/utils/assertion"
 	beaverlog "beaver/utils/beaverlog"
 	"beaver/utils/beaverlog/model"
 	"bufio"
@@ -60,24 +61,36 @@ func writeErrorResponse(res http.ResponseWriter, msg string, statusCode int, uui
 
 }
 
-// Proxy 做外部票验签 + 身份头规范化 + 机器票注入 + 服务发现反向代理。
-// 业务服务默认只验 S2S，身份由网关写入的 Beaver-User-Id 头传递。
+// Proxy 做外部票验签 + 身份头规范化 + 网关断言注入 + 服务发现反向代理。
+// 业务用 JWKS 验网关公钥（北向）或本团队 S2S（东西向）；身份由断言载荷重建。
 type Proxy struct {
 	Config types.Config
 	auth   authMatcher // 预编译的公开/鉴权正则，NewProxy 装配
+	signer *assertion.Signer
 }
 
-// NewProxy 用配置构造代理，预编译鉴权正则；正则非法即返回错误，调用方须 fail-fast。
+// NewProxy 用配置构造代理，预编译鉴权正则并装配断言签发器；任一失败即返回错误，调用方须 fail-fast。
 func NewProxy(config types.Config) (*Proxy, error) {
 	matcher, err := compileAuthMatcher(config)
 	if err != nil {
 		return nil, err
 	}
-	// 公开白名单为空 = 连登录都要带票，配置漏拷时就表现为全站 401，启动先喊一声。
 	if len(config.PublicPatterns) == 0 {
 		apiGwLogger.Error(model.LogMsg{Text: "gateway.yaml 未配置 PublicPatterns，登录等公开端点会被要求带票"})
 	}
-	return &Proxy{Config: config, auth: matcher}, nil
+	a := config.Assertion
+	signer, err := assertion.NewSigner(
+		a.KeyID,
+		a.Issuer,
+		a.ClientID,
+		time.Duration(a.TTLSeconds)*time.Second,
+		a.PrivateKeyPEM,
+		a.PrivateKeyFile,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("网关断言签发器: %w", err)
+	}
+	return &Proxy{Config: config, auth: matcher, signer: signer}, nil
 }
 
 type statusRecorder struct {
@@ -143,6 +156,22 @@ func bodyForLog(raw []byte) any {
 }
 
 func (p Proxy) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+	// 签发方 JWKS 公开端点（OIDC 同款）；不鉴权。业务也可静态挂同一份 JWKS。
+	if req.URL.Path == "/.well-known/jwks.json" && (req.Method == http.MethodGet || req.Method == http.MethodHead) {
+		raw, err := p.signer.JWKS()
+		if err != nil {
+			http.Error(res, "jwks unavailable", http.StatusInternalServerError)
+			return
+		}
+		res.Header().Set("Content-Type", "application/json")
+		res.Header().Set("Cache-Control", "public, max-age=60")
+		res.WriteHeader(http.StatusOK)
+		if req.Method == http.MethodGet {
+			_, _ = res.Write(raw)
+		}
+		return
+	}
+
 	start := time.Now()
 	clientUuid := traceid.ClientUuidFromHeaders(req.Header)
 	serverTrace := ensureServerTraceId(res, req)
@@ -198,21 +227,18 @@ func (p Proxy) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	// 鉴权流水线：剥客户端身份头 → 机器票优先 → 外部票按路由组验 → 写身份头 → 注入网关机器票。
-	// 鉴权失败直接 401，不进入服务发现与转发。
-	isMachine, err := p.authenticate(req)
+	// 鉴权流水线：剥客户端身份头 → 外部票按路由组验 → 写身份头 → 注入网关 ES256 断言。
+	// 鉴权失败直接 401，不进入服务发现与转发。东西向不经网关。
+	kind, err := p.authenticate(req)
 	if err != nil {
 		writeAuthError(rec, err.Error())
 		finish("网关鉴权失败", "warn", map[string]any{"reason": err.Error()})
 		return
 	}
-	// 已带合法机器票的请求保留原票（调用方身份不能被我方覆盖）；其余换成网关票。
-	if !isMachine {
-		if err := p.injectMachineTicket(req); err != nil {
-			writeErrorResponse(rec, "机器票注入失败", http.StatusInternalServerError, serverTrace)
-			finish("机器票注入失败", "error", map[string]any{"reason": err.Error()})
-			return
-		}
+	if err := p.injectGatewayAssertion(req, kind); err != nil {
+		writeErrorResponse(rec, "身份断言注入失败", http.StatusInternalServerError, serverTrace)
+		finish("身份断言注入失败", "error", map[string]any{"reason": err.Error()})
+		return
 	}
 
 	// 匹配路由：标准路径为 /{team}/{surface}/{service}/{group}/v1/{action}，

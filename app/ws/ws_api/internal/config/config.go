@@ -22,6 +22,7 @@
 package config
 
 import (
+	"beaver/commonconfig"
 	"github.com/zeromicro/go-zero/rest"
 	"github.com/zeromicro/go-zero/zrpc"
 )
@@ -39,7 +40,9 @@ type Config struct {
 	Auth struct {
 		AccessSecret string
 	}
-	// S2S 入站机器票：本团队业务面共用一套凭据，票据受众统一 core:api。
+	// Assertion 北向：用 JWKS 验网关 ES256 断言（iss + kid），不是共享 HMAC。
+	Assertion commonconfig.AssertionVerify `json:",optional"`
+	// S2S 入站机器票：东西向本团队业务面共用一套凭据，票据受众统一 core:api。
 	S2S struct {
 		Secret string
 	}

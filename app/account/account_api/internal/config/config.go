@@ -55,7 +55,9 @@ type Config struct {
 		AccessSecret string
 		AccessExpire int
 	}
-	// S2S 入站机器票：本团队业务面共用一套凭据，票据受众统一 core:api。
+	// Assertion 北向：用 JWKS 验网关 ES256 断言（iss + kid），不是共享 HMAC。
+	Assertion commonconfig.AssertionVerify `json:",optional"`
+	// S2S 入站机器票：东西向本团队业务面共用一套凭据，票据受众统一 core:api。
 	// auth 秘钥签发端点在本服务的 POST /beaver/api/account/auth_public/v1/issue（client_credentials）。
 	S2S struct {
 		Secret  string                     `json:",optional"`

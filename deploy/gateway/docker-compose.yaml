@@ -1,5 +1,4 @@
 
-
 services:
   gateway_api:
     image: wsrh8888/gateway_api:1.0.0
@@ -9,5 +8,9 @@ services:
       - /etc/localtime:/etc/localtime:ro
       # 挂载外部配置文件
       - ./gateway.yaml:/etc/config.yaml:ro
+      # 断言三件套由 config.sh 按 config_prod assertion 段写出；私钥运行时必用
+      - ./gateway-assertion.pem:/etc/keys/gateway-assertion.pem:ro
+      - ./gateway-assertion.jwks.json:/etc/keys/gateway-assertion.jwks.json:ro
+      - ./gateway-assertion.pub.pem:/etc/keys/gateway-assertion.pub.pem:ro
     restart: "no"
-    pull_policy: always 
+    pull_policy: always

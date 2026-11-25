@@ -52,8 +52,10 @@ type Config struct {
 	RemoteProxy commonconfig.RemoteProxy `json:",optional"`
 	// Auth 用户 JWT 签名密钥，本服务独立签发并校验用户票：
 	// 本服务独立验用户票，不信任任何外部直接塞进来的 Beaver-User-Id。
-	// S2S 入站机器票：队间调用与本服务共用同一套路由，凭据受众统一 core:api。
+	// Assertion 北向：用 JWKS 验网关 ES256 断言（iss + kid），不是共享 HMAC。
+	Assertion commonconfig.AssertionVerify `json:",optional"`
+	// S2S 入站机器票：东西向队间调用与本服务共用同一套路由，凭据受众统一 core:api。
 	S2S struct {
-		Secret  string                     `json:",optional"`
+		Secret string `json:",optional"`
 	}
 }

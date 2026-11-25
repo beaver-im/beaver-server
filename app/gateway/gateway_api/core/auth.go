@@ -30,6 +30,7 @@ import (
 	"strings"
 
 	"beaver/app/gateway/gateway_api/types"
+	"beaver/utils/assertion"
 	"beaver/utils/jwts"
 	"beaver/utils/s2s"
 )
@@ -134,33 +135,23 @@ func (p Proxy) routeAuthKind(path string) ticketKind {
 	return ticketBeaver
 }
 
-// authenticate 强制处理顺序第 1~3 步：剥头 → 验票 → 写可信身份头。
+// authenticate 强制处理顺序第 1~3 步：剥头 → 验外部票 → 写可信身份头。
 //
-// 验票分两条口：
-//  1. 机器票优先：团队间调用带的是 S2S 票，受众就是目标团队，验过即放行，不再要求外部票。
-//     机器面（machine/v1 等）本该如此，否则内部调用全被外部票闸门拦死。
-//  2. 外部票：AuthRules 按路径给出首选平面，票自身密钥与受众决定真实平面（见 verifyExternalTicket）。
-//
-// admin 平面写 Beaver-Admin-Id，其余平面写 Beaver-User-Id，让下游字段名与语义对齐。
+// 东西向服务间调用不经网关（直连内网 + S2S）；网关只服务客户端北向流量。
+// admin 平面写 Beaver-Admin-Id，其余平面写 Beaver-User-Id。
 // public 路由不验票，但同样先剥头，杜绝客户端自带身份头透传到下游。
-// 返回 isMachine：true 表示请求携带的是内部机器票，此时不再注入网关票（保留原调用方身份）。
-func (p Proxy) authenticate(r *http.Request) (bool, error) {
+func (p Proxy) authenticate(r *http.Request) (ticketKind, error) {
 	stripIdentityHeaders(r)
 	preferred := p.routeAuthKind(r.URL.Path)
 	if preferred == ticketPublic {
-		return false, nil
+		return ticketPublic, nil
 	}
-	// 1) 机器票（服务间调用）：票面本身就是内部凭据，不再叠加外部票要求。
-	if p.verifyMachineTicket(r) {
-		return true, nil
-	}
-	// 2) 外部票：平面由票自身决定，路径只给首选尝试顺序。
 	kind, claims, err := p.verifyExternalTicket(r, preferred)
 	if err != nil {
-		return false, err
+		return preferred, err
 	}
 	r.Header.Set(identityHeader(kind), claims.UserID)
-	return false, nil
+	return kind, nil
 }
 
 // verifyExternalTicket 验外部票并返回票的真实平面。
@@ -170,14 +161,11 @@ func (p Proxy) authenticate(r *http.Request) (bool, error) {
 //
 // 唯一的兼容是单向的：开放平台面额外接受主站用户票——IM 客户端自用的 oauth 面挂在
 // /beaver-open/ 下却必须用 C 端用户票（UserID 来自 Beaver-User-Id，空即报未登录）。
-// 这是平面级规则，落在代码里而非配置里的 action 级特例；反向（用户面收开发者票、
-// 管理面收其它票）一律拒绝，避免跨平面越权。
 func (p Proxy) verifyExternalTicket(r *http.Request, preferred ticketKind) (ticketKind, *jwts.CustomClaims, error) {
 	claims, err := p.verifyExternalByKind(r, preferred)
 	if err == nil {
 		return preferred, claims, nil
 	}
-	// 开放平台面额外接受主站用户票（oauth 面）。仅此一个方向，不反向放宽。
 	if preferred == ticketOpen {
 		if userClaims, userErr := p.verifyExternalByKind(r, ticketBeaver); userErr == nil {
 			return ticketBeaver, userClaims, nil
@@ -199,7 +187,6 @@ func (p Proxy) verifyExternalByKind(r *http.Request, kind ticketKind) (*jwts.Cus
 }
 
 // verifyTicket 三个平面共用的验签口径：取票 → 验签 → 校验非空与受众。
-// 密钥与受众由调用方按平面传入，本函数不持有任何配置。
 func verifyTicket(r *http.Request, secret, audience, missingSecretMsg string) (*jwts.CustomClaims, error) {
 	if strings.TrimSpace(secret) == "" {
 		return nil, errors.New(missingSecretMsg)
@@ -212,27 +199,10 @@ func verifyTicket(r *http.Request, secret, audience, missingSecretMsg string) (*
 	if err != nil || claims.UserID == "" {
 		return nil, errors.New("票据无效或已过期")
 	}
-	// 三票各有独立密钥，但仍校验 Audience 分平面作双保险；缺了这一步，票据错投平面就可能越权。
 	if !claims.VerifyAudience(audience, true) {
 		return nil, errors.New("票据与访问平面不匹配")
 	}
 	return claims, nil
-}
-
-// verifyMachineTicket 校验服务间 S2S 机器票。只认 Authorization: Bearer。
-// 密钥与受众都按目标团队选（与网关注入机器票时同一套映射）：一把密钥对应一个团队，
-// 网关签发给 team-X 的票只能用 team-X 的密钥验过，验过即视为内部调用。
-func (p Proxy) verifyMachineTicket(r *http.Request) bool {
-	secret := strings.TrimSpace(p.machineSecret(r.URL.Path))
-	if secret == "" {
-		return false
-	}
-	raw := bearerToken(r)
-	if raw == "" {
-		return false
-	}
-	_, _, err := s2s.Verify(secret, p.machineAudience(r.URL.Path), raw)
-	return err == nil
 }
 
 // identityHeader 按票面类型选择下游可信身份头名。
@@ -243,65 +213,56 @@ func identityHeader(kind ticketKind) string {
 	return HeaderUserID
 }
 
-// injectMachineTicket 强制处理顺序第 5 步：用网关机器身份签发一张 S2S 票覆盖
-// Authorization，使只挂 JwtS2s 的下游业务验过机器票后采信网关注入的身份头。
-// 签发放 core 模块（非 middleware、非 issue.go），符合换票不进中间件的约束。
-// 机器密钥未配置时返回 nil（开发态降级，生产必须配置）。
-func (p Proxy) injectMachineTicket(r *http.Request) error {
-	if p.routeAuthKind(r.URL.Path) == ticketPublic {
+// injectGatewayAssertion 强制处理顺序第 5 步：用网关 ES256 私钥签发带 kid 的身份断言，
+// 覆盖 Authorization。下游按 JWKS 选公钥验签，并按断言载荷重建身份头。
+// 签发器未装配时返回错误（fail-closed，禁止静默降级）。
+func (p Proxy) injectGatewayAssertion(r *http.Request, kind ticketKind) error {
+	if kind == ticketPublic {
 		return nil
 	}
-	m := p.Config.Machine
-	secret := p.machineSecret(r.URL.Path)
-	if strings.TrimSpace(secret) == "" {
-		return nil
+	if p.signer == nil {
+		return errors.New("网关断言签发器未配置")
 	}
-	token, err := s2s.Issue(secret, m.Issuer, m.ClientID, p.machineAudience(r.URL.Path), nil, s2s.S2STTL)
+	var userID, adminID string
+	if kind == ticketAdmin {
+		adminID = r.Header.Get(HeaderAdminID)
+	} else {
+		userID = r.Header.Get(HeaderUserID)
+	}
+	token, err := p.signer.Issue(p.assertionAudience(r.URL.Path), userID, adminID)
 	if err != nil {
 		return err
 	}
+	clientID := p.Config.Assertion.ClientID
+	if clientID == "" {
+		clientID = assertion.DefaultClientID
+	}
 	r.Header.Set("Authorization", bearerPrefix+token)
 	r.Header.Del(s2s.HeaderClientID)
-	r.Header.Set(s2s.HeaderClientID, m.ClientID)
+	r.Header.Set(s2s.HeaderClientID, clientID)
 	return nil
 }
 
-// machineAudience 按 team/surface 选机器票受众：
+// assertionAudience 按 team/surface 选断言受众：
 // /beaver-admin/api/... -> admin:internal，/beaver-open/api/... -> open:internal，
 // 主站 /beaver/api/... -> core:api。
-// 先查 team/surface 精确键，再回退 team，最后回退默认。
-func (p Proxy) machineAudience(path string) string {
-	m := p.Config.Machine
-	aud := m.DefaultAudience
+func (p Proxy) assertionAudience(path string) string {
+	a := p.Config.Assertion
+	aud := a.DefaultAudience
+	if aud == "" {
+		aud = s2s.AudienceCore
+	}
 	team, surface := teamAndSurface(path)
-	if configured, ok := m.Audiences[team+"/"+surface]; ok {
-		aud = configured
-	} else if configured, ok := m.Audiences[team]; ok {
-		aud = configured
+	if configured, ok := a.Audiences[team+"/"+surface]; ok {
+		return configured
+	}
+	if configured, ok := a.Audiences[team]; ok {
+		return configured
 	}
 	return aud
 }
 
-// machineSecret 按 team/surface 选机器票密钥，查表口径与 machineAudience 完全一致：
-// 先查 team/surface 精确键，再回退 team，最后回退 DefaultSecret / 旧 Secret。
-// 密钥与受众用同一套路径映射，保证「发给 team-X 的票」只用 team-X 的密钥签发与校验。
-func (p Proxy) machineSecret(path string) string {
-	m := p.Config.Machine
-	team, surface := teamAndSurface(path)
-	if configured, ok := m.Secrets[team+"/"+surface]; ok {
-		return configured
-	}
-	if configured, ok := m.Secrets[team]; ok {
-		return configured
-	}
-	if strings.TrimSpace(m.DefaultSecret) != "" {
-		return m.DefaultSecret
-	}
-	return m.Secret
-}
-
-// teamAndSurface 取六段路径的前两段（team/surface），用于选择机器票受众。
-// 后台管理面 /beaver-admin/api/... 与 C 端 /beaver/api/... 分属不同 team。
+// teamAndSurface 取六段路径的前两段（team/surface），用于选择断言受众。
 func teamAndSurface(path string) (string, string) {
 	parts := strings.Split(strings.TrimPrefix(path, "/"), "/")
 	if len(parts) == 0 {
@@ -311,15 +272,6 @@ func teamAndSurface(path string) (string, string) {
 		return parts[0], ""
 	}
 	return parts[0], parts[1]
-}
-
-// bearerToken 只取 Authorization: Bearer 的裸票，用于机器票判定（机器票不走 Token 头 / query）。
-func bearerToken(r *http.Request) string {
-	raw := strings.TrimSpace(r.Header.Get("Authorization"))
-	if !strings.HasPrefix(raw, bearerPrefix) {
-		return ""
-	}
-	return strings.TrimSpace(strings.TrimPrefix(raw, bearerPrefix))
 }
 
 // ticketFromRequest 三种携带口径：Authorization: Bearer / Token 头 / query token。

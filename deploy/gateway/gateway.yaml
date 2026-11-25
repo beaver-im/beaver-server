@@ -1,7 +1,6 @@
 Name: gateway
 Addr: 0.0.0.0:20800
 etcd: 127.0.0.1:2379
-# 服务映射：路径第 3 段 service → 完整 etcd 服务名（未命中默认 {service}_api）。
 ServiceAlias:
   account: account_api
   message: message_api
@@ -29,29 +28,33 @@ Log:
   Stat: false
 Limit:
   Enable: true
-  Rate: 100    # 每秒请求数
-  Burst: 200   # 峰值容忍
-# 网关统一验外部票 → 写可信身份头（admin 平面 Beaver-Admin-Id，其余 Beaver-User-Id）
-# → 注入机器票 → 转发。业务服务默认只挂 JwtS2s；外部票只在此处验。
-# 三类外部票统一挂在 Auth 段下，各占一段、密钥各不相同（分别取自各签发方的 Auth.AccessSecret）：
-# 网关按段取密钥验签，再靠 claims.Audience 分平面；改任一把须同步对应签发方仓。
+  Rate: 100
+  Burst: 200
 Auth:
   AuthBeaver:
-    # 主站 C 端用户票，签发方 app/account 的 auth_public。
     AccessSecret: beaver-jwt-user-5a99dd68227b4aa4bca260349995d485
   AuthOpen:
-    # 开放平台开发者票，签发方 beaver-open 的 developer 登录。
     AccessSecret: beaver-jwt-open-089b1407d2b0408dbef868f651750d4b
   AuthAdmin:
-    # 后台管理员票，签发方 beaver-backend 的 auth_public 登录。
     AccessSecret: beaver-jwt-admin-b2135d16210e40058bc10319272bb994
-# 公开端点唯一规范：group 段以 _public 结尾的整组公开，命中即不验外部票。
-# 所有公开端点必须按此命名，禁止 action 级特例。换票端点不经网关（内部直连），无需放行。
+Assertion:
+  KeyID: gateway-2026-11
+  # 容器内路径；由 docker-compose 挂载同目录 gateway-assertion.pem
+  PrivateKeyFile: /etc/keys/gateway-assertion.pem
+  Issuer: beaver-gateway
+  ClientID: gateway
+  TTLSeconds: 300
+  DefaultAudience: core:api
+  Audiences:
+    beaver: core:api
+    beaver-open: open:api
+    beaver-social: social:internal
+    beaver-doc: doc:internal
+    beaver-call: call:internal
+    beaver-ai: ai:internal
+    beaver-admin/api: admin:internal
 PublicPatterns:
   - ^/[^/]+/(?:api|admin)/[^/]+/[^/]+_public/v1/
-# 鉴权平面规则：三条 team 前缀平级，给出该路径外部票的首选平面；未命中默认 beaver。
-# 首选只决定验签顺序，票的真实平面由票自身密钥与受众判定（core/auth.go verifyExternalTicket），
-# 故"路径在 beaver-open 下却是 C 端用户票"的 oauth 面无需 action 级特例。
 AuthRules:
   - Pattern: ^/beaver/
     Ticket: beaver

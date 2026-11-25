@@ -1,4 +1,4 @@
-# 部署配置批量替换规则（模板）
+﻿# 部署配置批量替换规则（模板）
 # 结构：rules -> 分组 -> 规则列表（与 config_prod.yaml 一致）
 #   - 带 key: 的规则是密钥，可用 ./gen_secrets.sh 重新生成
 #   - 密钥统一「带前缀短格式」：JWT = beaver-jwt-{user|open|admin}-{32hex}，
@@ -13,7 +13,9 @@
 #   - 本仓入站 S2S.Clients.<client>.ClientSecret（account.yaml）
 #     == 对端仓申请到的 ClientSecret。改了必须同步到对端仓，否则验签失败。
 #   - 出站 RemoteProxy.<对端>.ClientSecret 来自对端仓的分配，同样要与对端一致。
-#   - 共用 S2S.Secret 是网关注入下游票的签名密钥，改这里必须同步改网关 Machine.Secrets[core]。
+#   - S2S.Secret 只给东西向机器票用，不再同步给网关。北向是网关 ES256 断言：
+#     私钥三件套在 deploy/gateway/（随 dist/gateway/ 打包）；各业务 yaml 的 Assertion.JWKS
+#     必须是同一份公钥（本来就该一样）。轮换时改本文件 assertion 规则 + 替换 gateway/ 下密钥文件。
 #   - 想换整套密钥：运行 ./gen_secrets.sh --config <规则文件>，它会更新规则文件并打印对端同步清单。
 
 rules:
@@ -110,16 +112,33 @@ rules:
       old: "beaver-jwt-admin-b2135d16210e40058bc10319272bb994"
       new: "REPLACE_ME_JWT_ADMIN"
 
+  # ========== 网关北向断言（ES256）==========
+  # 用户只改本段 new；./config.sh 会：①刷各业务 Assertion.JWKS/KeyID ②写出 dist/gateway/ 三件套。
+  # 私钥 PEM 用 \n 写成一行；JWKS 全站同值（同一把公钥）。
+  assertion:
+    - name: 网关断言 KeyID（gateway.yaml Assertion.KeyID；只改 KeyID 行，避免误伤 JWKS）
+      key: ASSERTION_KID
+      old: "KeyID: gateway-2026-11"
+      new: "KeyID: REPLACE_ME_ASSERTION_KID"
+    - name: 网关断言 JWKS（各业务 Assertion.JWKS，一行 JSON，全站同值）
+      key: ASSERTION_JWKS
+      old: '{"keys":[{"alg":"ES256","crv":"P-256","kid":"gateway-2026-11","kty":"EC","use":"sig","x":"46Jx5dTVRu4EQsot-rtD1lBS302SYrVJ7EJsHblRtig","y":"wEbsT3a7M4uWO7nZLxM4tHCx9-QN-MnZAOn1jyqC6Zw"}]}'
+      new: "REPLACE_ME_ASSERTION_JWKS"
+    - name: 网关断言私钥 PEM（写入 dist/gateway/gateway-assertion.pem；\n 表示换行）
+      key: ASSERTION_PRIVATE_KEY
+      old: "-----BEGIN EC PRIVATE KEY-----\\nMHcCAQEEILSGk6pvfx6aZXeCfxlQOdmqj3QvgZdPytrL2KyjIEIsoAoGCCqGSM49\\nAwEHoUQDQgAE46Jx5dTVRu4EQsot+rtD1lBS302SYrVJ7EJsHblRtijARuxPdrsz\\ni5Y7udkvEzi0cLH35A34ydkA6fWPKoLpnA==\\n-----END EC PRIVATE KEY-----\\n"
+      new: "REPLACE_ME_ASSERTION_PRIVATE_KEY"
+
   # ========== S2S 机器票 ==========
   # 命名规范: beaver-s2s-{签发方}-{接收方}-{32hex}
   #   签发方 = 持有该密钥、用它验票的团队；接收方 = 拿到密钥去换票的团队
   #   例: core-backend = core 签发、backend 持有，backend 访问 core 时用它换票
-  #   只有一段（如 core/open/admin）= 该团队业务面共用验票密钥（网关 Machine.Secrets 用）
+  #   只有一段（如 core/open/admin）= 该团队业务面东西向 S2S 验票密钥（不再同步网关）
   # 每项 old=当前生效值、new=下次轮换目标；当前 old==new（状态快照）。
   s2s:
     # core 团队签发（本仓持有验票 / 分配给对端）
     core:
-      - name: core 共用验票密钥（本仓 S2S.Secret + 网关 Machine.Secrets[beaver/Default]）
+      - name: core 东西向 S2S.Secret（本仓业务面入站验票）
         key: CORE
         old: "beaver-s2s-core-b0db00321ca84fc783a2ba81505e82b1"
         new: "REPLACE_ME_CORE"
@@ -146,7 +165,7 @@ rules:
 
     # open 团队签发
     open:
-      - name: open 共用验票密钥（open S2S.Secret + 网关 Machine.Secrets[beaver-open]）
+      - name: open 共用验票密钥（open S2S.Secret + 东西向入站）
         key: OPEN
         old: "beaver-s2s-open-a1c9e7d3405b4f268e5a1d7c9b3f6402"
         new: "REPLACE_ME_OPEN"
@@ -161,7 +180,7 @@ rules:
 
     # social 团队签发
     social:
-      - name: social 共用验票密钥（social S2S.Secret + 网关 Machine.Secrets[beaver-social]）
+      - name: social 共用验票密钥（social S2S.Secret + 东西向入站）
         key: SOCIAL
         old: "beaver-s2s-social-73d1e5b9a2c846f0b3e7d9a1c5f28064"
         new: "REPLACE_ME_SOCIAL"
@@ -176,7 +195,7 @@ rules:
 
     # doc 团队签发（beaver-server-online）
     doc:
-      - name: doc 共用验票密钥（office S2S.Secret + 网关 Machine.Secrets[beaver-doc]）
+      - name: doc 共用验票密钥（office S2S.Secret + 东西向入站）
         key: DOC
         old: "beaver-s2s-doc-8c4f1a6e2b9d5037a1e6f4c8d2b97053"
         new: "REPLACE_ME_DOC"
@@ -195,7 +214,7 @@ rules:
 
     # call 团队签发
     call:
-      - name: call 共用验票密钥（call S2S.Secret + 网关 Machine.Secrets[beaver-call]）
+      - name: call 共用验票密钥（call S2S.Secret + 东西向入站）
         key: CALL
         old: "beaver-s2s-call-1e6b4d9a7c2f8053b6e1a9d4c7f28305"
         new: "REPLACE_ME_CALL"
@@ -206,7 +225,7 @@ rules:
 
     # ai 团队签发（beaver-server-ai）
     ai:
-      - name: ai 共用验票密钥（agent_api secret + 网关 Machine.Secrets[beaver-ai]）
+      - name: ai 共用验票密钥（agent_api secret + 东西向入站）
         key: AI
         old: "beaver-s2s-ai-c5e8a1d4b7f20396a1c5e8d4b7f20369"
         new: "REPLACE_ME_AI"
@@ -225,7 +244,8 @@ rules:
 
     # admin 团队签发（beaver-server-backend）
     admin:
-      - name: admin 共用验票密钥（backend S2S.Secret + 网关 Machine.Secrets[beaver/admin]）
+      - name: admin 共用验票密钥（backend S2S.Secret + 东西向入站）
         key: ADMIN
         old: "beaver-s2s-admin-2a8e5c1d7f4b6039a2c8e5d1f7b40639"
         new: "REPLACE_ME_ADMIN"
+

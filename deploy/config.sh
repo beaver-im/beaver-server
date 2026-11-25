@@ -11,7 +11,9 @@
 #   dist/
 #     start.sh  stop.sh  update.sh
 #     account/ asset/ datasync/ gateway/ message/ notification/ platform/ relation/ ws/
-#     config.yaml   ← 由规则文件改名而来，old 已同步为最终值
+#       gateway/ 断言三件套由 config 的 assertion 段（KID/JWKS/PRIVATE_KEY）在打包时写出
+#     config.yaml   ← 规则文件副本；用户只改 config_prod.yaml 的 new 即可出完整 dist
+
 #
 # 用法：./config.sh [--config <file>]  （默认读 config.yaml 模板；生产用 --config config_prod.yaml）
 
@@ -232,6 +234,7 @@ echo "  + $(basename "$CONFIG_FILE") -> config.yaml（原样复制，old/new 语
 
 # ============================================================================
 # 第二步：只对 dist/ 内的服务配置做 old -> new 替换（源码 app/、deploy/ 不动）
+# 第三步：按 assertion 规则写出 dist/gateway/ 断言三件套（用户只填 config 即可）
 # ============================================================================
 "$PYTHON_BIN" - "$CONFIG_FILE" "$DIST_DIR" <<'PY'
 import os, sys, re
@@ -308,11 +311,15 @@ def replace_rule(text, rule):
         lines[j] = lines[j].replace(old, new)
     return "".join(lines)
 
-rules = parse_rules(config_file)
-rules = [r for r in rules if r.get("old") and r.get("new") and "REPLACE_ME_" not in r["new"]]
+all_rules = parse_rules(config_file)
+rules = [r for r in all_rules if r.get("old") and r.get("new") and "REPLACE_ME_" not in r["new"]]
 if not rules:
     print("❌ No active rules found (all rules are placeholders?)")
     sys.exit(1)
+
+# 私钥只用于写出 gateway 密钥文件，不参与业务 yaml 字符串替换
+YAML_SKIP_KEYS = {"ASSERTION_PRIVATE_KEY"}
+yaml_rules = [r for r in rules if r.get("key") not in YAML_SKIP_KEYS]
 
 # 目标文件：dist/ 下的服务 yaml，排除规则文件副本与 compose
 EXCLUDE = {"docker-compose.yaml", "config.yaml"}
@@ -323,7 +330,7 @@ for dp, _, fs in os.walk(dist_dir):
             files.append(os.path.join(dp, fn))
 
 # 按 old 长度降序：先替换长串，避免短前缀（如 beaver-s2s-core）打散长串
-ordered = sorted(rules, key=lambda r: len(r["old"]), reverse=True)
+ordered = sorted(yaml_rules, key=lambda r: len(r["old"]), reverse=True)
 
 print(f"\n🚀 Replacing in {len(files)} yaml files (dist only)...")
 updated = 0
@@ -345,6 +352,80 @@ for path in files:
         print(f"  ✅ {os.path.relpath(path, dist_dir)}")
 
 print(f"\n📊 Total: {len(files)} files, {updated} updated")
+
+# --------------------------------------------------------------------------
+# 第三步：按 assertion 规则写出 dist/gateway/ 断言三件套
+# 用户只填 config_* 的 ASSERTION_KID / JWKS / PRIVATE_KEY 即可
+# --------------------------------------------------------------------------
+import json, base64
+
+def unescape_nl(s):
+    # 规则文件里用 \n 写成一行；兼容误写成 \\n
+    return s.replace("\\\\n", "\n").replace("\\n", "\n")
+
+def b64url_decode(s):
+    s += "=" * (-len(s) % 4)
+    return base64.urlsafe_b64decode(s.encode("ascii"))
+
+def jwk_to_spki_pem(jwk):
+    """P-256 JWK -> SubjectPublicKeyInfo PEM（纯标准库，无需 openssl）"""
+    x = b64url_decode(jwk["x"]).rjust(32, b"\x00")[-32:]
+    y = b64url_decode(jwk["y"]).rjust(32, b"\x00")[-32:]
+    # SPKI 固定头 + uncompressed point (0x04||x||y)
+    prefix = bytes.fromhex("3059301306072a8648ce3d020106082a8648ce3d030107034200")
+    der = prefix + b"\x04" + x + y
+    b64 = base64.b64encode(der).decode("ascii")
+    lines = [b64[i:i + 64] for i in range(0, len(b64), 64)]
+    return "-----BEGIN PUBLIC KEY-----\n" + "\n".join(lines) + "\n-----END PUBLIC KEY-----\n"
+
+by_key_all = {r["key"]: r for r in all_rules if r.get("key")}
+by_key = {r["key"]: r for r in rules if r.get("key")}
+pk_rule = by_key.get("ASSERTION_PRIVATE_KEY")
+jwks_rule = by_key.get("ASSERTION_JWKS")
+gw_dir = os.path.join(dist_dir, "gateway")
+os.makedirs(gw_dir, exist_ok=True)
+
+if pk_rule and jwks_rule:
+    print("\n🔐 Materializing gateway assertion keys from config...")
+    pem_text = unescape_nl(pk_rule["new"]).strip() + "\n"
+    pem_path = os.path.join(gw_dir, "gateway-assertion.pem")
+    with open(pem_path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(pem_text)
+    print("  + gateway/gateway-assertion.pem")
+
+    try:
+        jwks_obj = json.loads(jwks_rule["new"])
+        jwks_text = json.dumps(jwks_obj, indent=2, ensure_ascii=False) + "\n"
+    except Exception as e:
+        print(f"❌ ASSERTION_JWKS 不是合法 JSON: {e}")
+        sys.exit(1)
+    jwks_path = os.path.join(gw_dir, "gateway-assertion.jwks.json")
+    with open(jwks_path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(jwks_text)
+    print("  + gateway/gateway-assertion.jwks.json")
+
+    keys = jwks_obj.get("keys") or []
+    if not keys:
+        print("❌ ASSERTION_JWKS.keys 为空，无法生成 pub.pem")
+        sys.exit(1)
+    pub_text = jwk_to_spki_pem(keys[0])
+    pub_path = os.path.join(gw_dir, "gateway-assertion.pub.pem")
+    with open(pub_path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(pub_text)
+    print("  + gateway/gateway-assertion.pub.pem")
+elif any(
+    "REPLACE_ME_" in (by_key_all.get(k) or {}).get("new", "")
+    for k in ("ASSERTION_PRIVATE_KEY", "ASSERTION_JWKS")
+):
+    print("\n🔐 assertion 仍为 REPLACE_ME_*，保留拷贝自 deploy/gateway/ 的开发密钥")
+else:
+    print("\n⚠️  缺少 ASSERTION_PRIVATE_KEY 或 ASSERTION_JWKS 有效 new，跳过密钥物化")
+
+for f in ("gateway-assertion.pem", "gateway-assertion.jwks.json", "gateway-assertion.pub.pem"):
+    if not os.path.isfile(os.path.join(gw_dir, f)):
+        print(f"❌ 缺少 gateway/{f}")
+        sys.exit(1)
+print("🔐 网关断言密钥就绪: gateway/{pem,jwks.json,pub.pem}")
 PY
 
 echo ""

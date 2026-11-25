@@ -23,32 +23,21 @@ package types
 
 import "github.com/zeromicro/go-zero/core/logx"
 
-// Config 网关负责：验外部票 → 写可信身份头 → 注入机器票 → 转发。
-// 业务服务默认只验 S2S，身份由网关写入的头传递，故网关持有验票密钥与机器身份。
-//
-// 三类外部票的密钥统一挂在 Auth 段下（Auth.AuthBeaver / Auth.AuthOpen / Auth.AuthAdmin），三把各不相同：
-// 各取自对应签发方（account / beaver-server-open / beaver-server-backend），轮换一类不影响其余两类。
-// 机器票（Machine）不混进外部票段——它不是「谁在用这个系统」，而是「网关以什么身份调下游」。
+// Config 网关负责：验外部票 → 写可信身份头 → 签网关身份断言 → 转发。
+// 业务用 JWKS 验网关公钥（北向）或本团队 S2S.Secret（东西向）；网关不持有任何团队签发密钥。
 type Config struct {
 	Name string
 	Addr string `json:",optional"`
 	Etcd string
-	// ServiceAlias URL 前缀 → 实际服务名（服务合并后按旧前缀路由到合并服务，
-	// 如 friend→relation；未命中映射时按 {前缀}_api 默认规则）。
+	// ServiceAlias URL 前缀 → 实际服务名（服务合并后按旧前缀路由到合并服务）。
 	ServiceAlias map[string]string `json:",optional"`
 	Log          logx.LogConf
 	Limit        LimitConfig
 
-	// Auth 三类外部票验签密钥，统一挂在 Auth 下，按平面各占一段，互不影响。
-	Auth AuthConfigs `json:",optional"`
-	// Machine 网关作为内部调用方注入到业务的机器票（业务默认只挂 JwtS2s）。
-	Machine MachineConfig `json:",optional"`
-	// PublicPatterns 公开端点正则，命中任一即不验外部票（登录、换票口、文件预览等）。
-	// 用正则表达 URL 规范，避免逐条硬编码路径前缀；新增合规接口零配置。
-	PublicPatterns []string `json:",optional"`
-	// AuthRules 鉴权平面规则，按声明顺序取首个命中；未命中默认 beaver（主站用户票）。
-	// 有序切片替代原 map：顺序即优先级，特例排前、通用排后，无需最长前缀比较。
-	AuthRules []AuthRule `json:",optional"`
+	Auth           AuthConfigs     `json:",optional"`
+	Assertion      AssertionConfig `json:",optional"`
+	PublicPatterns []string        `json:",optional"`
+	AuthRules      []AuthRule      `json:",optional"`
 }
 
 // AuthRule 一条鉴权平面规则：路径正则 → 外部票类型（beaver/open/admin/public）。
@@ -58,7 +47,6 @@ type AuthRule struct {
 }
 
 // AuthConfigs 三类外部票的验签密钥集合，按平面各占一段、三把独立。
-// 另由 claims.Audience 分平面作双保险；分开成段便于各自独立轮换。
 type AuthConfigs struct {
 	AuthBeaver AuthConfig `json:",optional"`
 	AuthOpen   AuthConfig `json:",optional"`
@@ -70,19 +58,18 @@ type AuthConfig struct {
 	AccessSecret string `json:",optional"`
 }
 
-// MachineConfig 网关注入到下游业务的机器票（S2S）配置。
-// 密钥按目标团队拆分：一把密钥对应一个受众/团队，签发方与验签方必须用同一把。
-// 网关按请求路径的目标团队选 Secrets[team] 签发，下游服务用该团队自己的 S2S.Secret 验签。
-// 查表顺序：Secrets[team/surface] → Secrets[team] → DefaultSecret → Secret（最后一项兼容旧配置）。
-// Audiences 同理按 team/surface → team → DefaultAudience 选票据受众。
-type MachineConfig struct {
-	Secrets         map[string]string `json:",optional"`
-	DefaultSecret   string            `json:",optional"`
-	Secret          string            `json:",optional"` // 旧配置兜底，新配置用 Secrets/DefaultSecret
+// AssertionConfig 网关北向身份断言（ES256）签发配置。
+// 私钥只在网关（PrivateKeyFile 优先，其次 PrivateKeyPEM）；JWT 头带 KeyID，下游按 JWKS 选公钥。
+// Audiences 按路径选 aud，与各团队 S2S.Secret 无关。
+type AssertionConfig struct {
+	KeyID           string            `json:",optional"`
+	PrivateKeyFile  string            `json:",optional"`
+	PrivateKeyPEM   string            `json:",optional"`
+	Issuer          string            `json:",optional"`
+	ClientID        string            `json:",optional"`
+	TTLSeconds      int               `json:",optional"`
 	DefaultAudience string            `json:",optional"`
 	Audiences       map[string]string `json:",optional"`
-	ClientID        string            `json:",optional"`
-	Issuer          string            `json:",optional"`
 }
 
 type LimitConfig struct {
