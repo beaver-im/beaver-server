@@ -77,7 +77,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		FileRpc:     file.NewFile(zrpc.MustNewClient(c.FileRpc, rpcOpt)),
 		PlatformRpc: platformcli.NewPlatform(zrpc.MustNewClient(c.PlatformRpc, rpcOpt)),
 		RocketMQ:    mqClient,
-		OpenSearch:  coreopensearch.New(c.OpenSearch.Addr),
+		OpenSearch:  coreopensearch.New(c.OpenSearch.Addr, c.OpenSearch.Username, c.OpenSearch.Password),
 		Instance:    loadInstance(mysqlDb),
 		JwtS2s:      middleware.NewJwtS2sMiddleware(c).Handle,
 	}

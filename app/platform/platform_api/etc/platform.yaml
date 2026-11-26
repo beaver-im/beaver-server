@@ -15,7 +15,9 @@ Etcd: 127.0.0.1:2379
 RocketMQ:
   Addr: 127.0.0.1:9876
 OpenSearch:
-  Addr: http://127.0.0.1:9200
+  Addr: https://127.0.0.1:9200
+  Username: admin
+  Password: 'Demo@123456'
   ClientLogIndex: beaver-logs
 FileRpc:
   NonBlock: true

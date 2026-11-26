@@ -53,9 +53,6 @@ services:
       - "50000-50050:50000-50050/udp" # WebRTC 媒体流
     depends_on:
       - redis
-
-  # namesrv + broker 拆成两个容器，官方 command 启动，同默认 network 用服务名互通
-  # brokerIP1=10.0.24.6 是客户端从 namesrv 拿到的地址，须为宿主机可达 IP
   rocketmq-namesrv:
     image: apache/rocketmq:5.3.1
     container_name: rocketmq-namesrv
@@ -76,7 +73,7 @@ services:
       - "10911:10911"
     environment:
       - NAMESRV_ADDR=rocketmq-namesrv:9876
-      - JAVA_OPT_EXT=-Xms512m -Xmx512m
+      - JAVA_OPT_EXT=-Xms256m -Xmx256m
     command: sh mqbroker -c /home/rocketmq/conf/broker.conf
     volumes:
       - ./rocketmq/broker/logs:/home/rocketmq/logs
@@ -112,36 +109,28 @@ services:
       /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-workflow-task-cg &&
       /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-platform-logs-cg"
 
-  # ===== 日志存储（扁平 JSON → OpenSearch；经 RocketMQ 解耦，无 OTel）=====
-  # 客户端 Track / 服务端 beaverlog → topic im-platform-logs → Consumer → 索引 beaver-logs
-  # 靠 projectName（beaver-desktop / beaver-server）区分，Dashboards 建索引模式 beaver-logs*
   opensearch:
     image: opensearchproject/opensearch:2.19.0
     container_name: opensearch
     restart: "no"
     environment:
       - discovery.type=single-node
-      - plugins.security.disabled=true
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=Beaver@2026
+      - "OPENSEARCH_INITIAL_ADMIN_PASSWORD=Demo@123456"
       - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
     ports:
       - "9200:9200"
     volumes:
       - ./opensearch:/usr/share/opensearch/data
-    healthcheck:
-      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 12
   opensearch-dashboards:
     image: opensearchproject/opensearch-dashboards:2.19.0
     container_name: opensearch-dashboards
     restart: "no"
     environment:
-      - OPENSEARCH_HOSTS=["http://opensearch:9200"]
-      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+      - 'OPENSEARCH_HOSTS=["https://opensearch:9200"]'
+      - OPENSEARCH_USERNAME=admin
+      - "OPENSEARCH_PASSWORD=Demo@123456"
+      - OPENSEARCH_SSL_VERIFICATION_MODE=none
     ports:
       - "5601:5601"
     depends_on:
       - opensearch
-

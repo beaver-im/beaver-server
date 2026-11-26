@@ -45,8 +45,14 @@ rules:
 
   opensearch:
     - name: OpenSearch 地址
-      old: "http://127.0.0.1:9200"
+      old: "https://127.0.0.1:9200"
       new: "REPLACE_ME_OPENSEARCH_ADDR"
+    - name: OpenSearch 用户名
+      old: "Username: admin"
+      new: "REPLACE_ME_OPENSEARCH_USERNAME_LINE"
+    - name: OpenSearch 密码
+      old: "Password: 'Demo@123456'"
+      new: "REPLACE_ME_OPENSEARCH_PASSWORD_LINE"
 
   # ========== 对象存储 / 邮件（生产环境若不用可忽略）==========
   minio:

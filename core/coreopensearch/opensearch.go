@@ -24,6 +24,7 @@ package coreopensearch
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -37,23 +38,33 @@ import (
 
 // Client 极简 OpenSearch HTTP 写入（扁平 JSON 文档，无 attributes 包装）。
 type Client struct {
-	baseURL string
-	http    *http.Client
+	baseURL  string
+	username string
+	password string
+	http     *http.Client
 }
 
-// New 创建客户端。addr 例：http://127.0.0.1:9200；空则返回 nil。
-func New(addr string) *Client {
+// New 创建客户端。addr 例：https://127.0.0.1:9200；空则返回 nil。
+// username/password 为空则不带 Basic Auth（仅用于无安全插件的环境）。
+// https 地址默认跳过证书校验（官方镜像自签证书）。
+func New(addr, username, password string) *Client {
 	addr = strings.TrimRight(strings.TrimSpace(addr), "/")
 	if addr == "" {
 		return nil
 	}
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	if strings.HasPrefix(strings.ToLower(addr), "https://") {
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true} //nolint:gosec // 本地/演示自签证书
+	}
 	beaverlog.New("opensearch").Info(model.LogMsg{
 		Text: "OpenSearch客户端就绪",
-		Data: map[string]any{"addr": addr},
+		Data: map[string]any{"addr": addr, "auth": username != ""},
 	})
 	return &Client{
-		baseURL: addr,
-		http:    &http.Client{Timeout: 5 * time.Second},
+		baseURL:  addr,
+		username: username,
+		password: password,
+		http:     &http.Client{Timeout: 5 * time.Second, Transport: transport},
 	}
 }
 
@@ -79,6 +90,9 @@ func (c *Client) IndexRaw(ctx context.Context, index string, body []byte) error 
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
+	if c.username != "" {
+		req.SetBasicAuth(c.username, c.password)
+	}
 
 	resp, err := c.http.Do(req)
 	if err != nil {
