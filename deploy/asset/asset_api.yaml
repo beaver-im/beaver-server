@@ -19,8 +19,6 @@ Redis:
   Password: '123456'
   DB: 0
 Etcd: 127.0.0.1:2379
-RocketMQ:
-  Addr: 127.0.0.1:9876
 
 FileMaxSize:
   image: 2

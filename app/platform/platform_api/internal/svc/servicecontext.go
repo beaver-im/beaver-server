@@ -67,7 +67,11 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	mysqlDb := coregorm.InitGorm(c.Mysql.DataSource)
 	client := coreredis.InitRedis(c.Redis.Addr, c.Redis.Password, c.Redis.Db)
 	rpcOpt := zrpc.WithUnaryClientInterceptor(zrpc_interceptor.ClientInfoInterceptor)
-	mqClient := corerocketmq.InitRocketMQ(c.RocketMQ.Addr)
+	mqClient := corerocketmq.InitRocketMQ(corerocketmq.Options{
+		Addr:      c.RocketMQ.Addr,
+		AccessKey: c.RocketMQ.AccessKey,
+		SecretKey: c.RocketMQ.SecretKey,
+	})
 	beaverlog.SetRocketMQ(mqClient)
 
 	return &ServiceContext{

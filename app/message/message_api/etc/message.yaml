@@ -41,8 +41,6 @@ GroupRpc:
     Hosts:
     - 127.0.0.1:2379
     Key: relationrpc.rpc
-RocketMQ:
-  Addr: 127.0.0.1:9876
 # 入站 S2S 机器票：本团队业务面共用一套凭据，票据受众统一 core:api。
 # 北向：JWKS 验网关 ES256 断言（公钥材料，可公开；轮换时 JWKS 可挂多 kid）。
 Assertion:

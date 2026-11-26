@@ -64,8 +64,6 @@ NotificationRpc:
     Hosts:
     - 127.0.0.1:2379
     Key: notificationrpc.rpc
-RocketMQ:
-  Addr: 127.0.0.1:9876
 
 # 入站 S2S 机器票：本团队业务面共用一套凭据，票据受众统一 core:api。
 # auth 秘钥签发端点在本服务：POST /beaver/api/account/auth_public/v1/issue（client_credentials）。

@@ -27,8 +27,6 @@ RedisConf:
   Addr: 127.0.0.1:6379
   Password: '123456'
   DB: 0
-RocketMQ:
-  Addr: 127.0.0.1:9876
 
 
 S2S:

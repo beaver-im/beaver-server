@@ -43,40 +43,76 @@ type Message struct {
 	Payload   map[string]interface{} `json:"payload"`   // 业务数据
 }
 
+// Options 连接 NameServer + ACL 凭据（与 broker plain_acl.yml 一致）。
+type Options struct {
+	Addr      string
+	AccessKey string
+	SecretKey string
+}
+
 // Client RocketMQ 客户端
 type Client struct {
 	Producer  rocketmq.Producer
 	Consumers []rocketmq.PushConsumer
+	addr      string
+	accessKey string
+	secretKey string
 }
 
-// NewClient 创建 RocketMQ 客户端
-func InitRocketMQ(addr string) *Client {
-	// 创建生产者
-	p, err := rocketmq.NewProducer(
-		producer.WithNameServer([]string{addr}),
+func (o Options) credentials() primitive.Credentials {
+	return primitive.Credentials{
+		AccessKey: o.AccessKey,
+		SecretKey: o.SecretKey,
+	}
+}
+
+func (c *Client) credentials() primitive.Credentials {
+	return primitive.Credentials{
+		AccessKey: c.accessKey,
+		SecretKey: c.secretKey,
+	}
+}
+
+func (c *Client) withCredConsumer(opts []consumer.Option) []consumer.Option {
+	if c.accessKey == "" {
+		return opts
+	}
+	return append(opts, consumer.WithCredentials(c.credentials()))
+}
+
+// InitRocketMQ 创建并启动 Producer；Consumer 通过 Register* 挂到同一 Client（共用 ACL）。
+func InitRocketMQ(opt Options) *Client {
+	client := &Client{
+		addr:      opt.Addr,
+		accessKey: opt.AccessKey,
+		secretKey: opt.SecretKey,
+	}
+
+	pOpts := []producer.Option{
+		producer.WithNameServer([]string{opt.Addr}),
 		producer.WithRetry(3),
-		producer.WithSendMsgTimeout(10*time.Second),
-	)
+		producer.WithSendMsgTimeout(10 * time.Second),
+	}
+	if opt.AccessKey != "" {
+		pOpts = append(pOpts, producer.WithCredentials(opt.credentials()))
+	}
+
+	p, err := rocketmq.NewProducer(pOpts...)
 	if err != nil {
 		logx.Errorf("创建 Producer 失败: %v", err)
 		return nil
 	}
 
-	err = p.Start()
-	if err != nil {
+	if err = p.Start(); err != nil {
 		logx.Errorf("启动 Producer 失败: %v", err)
 		return nil
 	}
 
-	client := &Client{
-		Producer: p,
-	}
-
-	logx.Infof("RocketMQ Producer 启动成功, Addr: %s", addr)
+	client.Producer = p
+	logx.Infof("RocketMQ Producer 启动成功, Addr: %s, ACL: %v", opt.Addr, opt.AccessKey != "")
 	return client
 }
 
-// generateMessageID 生成消息唯一ID
 func generateMessageID() string {
 	return uuid.New().String()
 }
@@ -112,7 +148,6 @@ func (c *Client) SendMessage(ctx context.Context, topic mqwsconst.TopicType, pay
 }
 
 // SendMessageWithKey 带 sharding key 发送，供 push 服务 Dispatcher 的点对点出口预留。
-// 一期 Locator 返回广播哨兵时不走这里；后续 DirectLocator 用 nodeId 作 key。
 func (c *Client) SendMessageWithKey(ctx context.Context, topic mqwsconst.TopicType, key string, payload map[string]interface{}) error {
 	if c == nil || c.Producer == nil {
 		return fmt.Errorf("RocketMQ 未初始化")
@@ -139,7 +174,6 @@ func (c *Client) SendMessageWithKey(ctx context.Context, topic mqwsconst.TopicTy
 }
 
 // SendRawJSON 发送顶层扁平 JSON（不加 Message 信封）。
-// 用于客户端日志等需原样透传到 OpenSearch 的场景，body 即文档本身。
 func (c *Client) SendRawJSON(ctx context.Context, topic mqwsconst.TopicType, v any) error {
 	if c == nil || c.Producer == nil {
 		return fmt.Errorf("RocketMQ 未初始化")
@@ -160,11 +194,17 @@ func (c *Client) SendRawJSON(ctx context.Context, topic mqwsconst.TopicType, v a
 
 // RegisterRawConsumer 消费原始 JSON body，不解析 Message 信封。
 func (c *Client) RegisterRawConsumer(group mqwsconst.GroupType, addr string, topic mqwsconst.TopicType, handler func(body []byte) error) error {
-	c2, err := rocketmq.NewPushConsumer(
+	if addr == "" {
+		addr = c.addr
+	}
+	opts := []consumer.Option{
 		consumer.WithGroupName(string(group)),
 		consumer.WithNameServer([]string{addr}),
 		consumer.WithConsumerModel(consumer.Clustering),
-	)
+	}
+	opts = c.withCredConsumer(opts)
+
+	c2, err := rocketmq.NewPushConsumer(opts...)
 	if err != nil {
 		return fmt.Errorf("创建 Consumer 失败: %v", err)
 	}
@@ -195,12 +235,18 @@ func (c *Client) RegisterConsumer(group mqwsconst.GroupType, addr string, topic 
 	if broadcast {
 		model = consumer.BroadCasting
 	}
+	if addr == "" {
+		addr = c.addr
+	}
 
-	c2, err := rocketmq.NewPushConsumer(
+	opts := []consumer.Option{
 		consumer.WithGroupName(string(group)),
 		consumer.WithNameServer([]string{addr}),
 		consumer.WithConsumerModel(model),
-	)
+	}
+	opts = c.withCredConsumer(opts)
+
+	c2, err := rocketmq.NewPushConsumer(opts...)
 	if err != nil {
 		return fmt.Errorf("创建 Consumer 失败: %v", err)
 	}
@@ -236,13 +282,18 @@ func (c *Client) RegisterConsumer(group mqwsconst.GroupType, addr string, topic 
 }
 
 // RegisterOrderlyConsumer 按队列串行消费，用于 im-realtime-chat 的同会话有序。
-// 毒消息由 handler 自行 ack（返回 nil），不得靠无限重试阻塞队列。
 func (c *Client) RegisterOrderlyConsumer(group mqwsconst.GroupType, addr string, topic mqwsconst.TopicType, handler func(msg *Message) error) error {
-	c2, err := rocketmq.NewPushConsumer(
+	if addr == "" {
+		addr = c.addr
+	}
+	opts := []consumer.Option{
 		consumer.WithGroupName(string(group)),
 		consumer.WithNameServer([]string{addr}),
 		consumer.WithConsumerModel(consumer.BroadCasting),
-	)
+	}
+	opts = c.withCredConsumer(opts)
+
+	c2, err := rocketmq.NewPushConsumer(opts...)
 	if err != nil {
 		return fmt.Errorf("创建有序 Consumer 失败: %v", err)
 	}

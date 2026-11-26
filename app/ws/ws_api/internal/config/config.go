@@ -52,7 +52,9 @@ type Config struct {
 	GroupRpc zrpc.RpcClientConf
 	ChatRpc  zrpc.RpcClientConf
 	RocketMQ struct {
-		Addr string
+		Addr      string
+		AccessKey string `json:",optional"`
+		SecretKey string `json:",optional"`
 	}
 	InstanceID string `json:",optional"`
 	WebSocket struct {

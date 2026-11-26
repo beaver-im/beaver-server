@@ -1,4 +1,4 @@
-﻿# 部署配置批量替换规则（模板）
+# 部署配置批量替换规则（模板）
 # 结构：rules -> 分组 -> 规则列表（与 config_prod.yaml 一致）
 #   - 带 key: 的规则是密钥，可用 ./gen_secrets.sh 重新生成
 #   - 密钥统一「带前缀短格式」：JWT = beaver-jwt-{user|open|admin}-{32hex}，
@@ -42,6 +42,12 @@ rules:
     - name: RocketMQ 地址
       old: "127.0.0.1:9876"
       new: "REPLACE_ME_ROCKETMQ_ADDR"
+    - name: RocketMQ AccessKey
+      old: "AccessKey: root"
+      new: "REPLACE_ME_ROCKETMQ_ACCESSKEY_LINE"
+    - name: RocketMQ SecretKey
+      old: "SecretKey: '123456'"
+      new: "REPLACE_ME_ROCKETMQ_SECRETKEY_LINE"
 
   opensearch:
     - name: OpenSearch 地址

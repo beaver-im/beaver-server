@@ -40,7 +40,9 @@ type Config struct {
 		Db       int
 	}
 	RocketMQ struct {
-		Addr string
+		Addr      string
+		AccessKey string `json:",optional"`
+		SecretKey string `json:",optional"`
 	}
 	// OpenSearch 仅用于客户端日志独立索引（与服务端本地日志分离）
 	OpenSearch struct {

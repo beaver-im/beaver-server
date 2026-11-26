@@ -59,7 +59,11 @@ type ServiceContext struct {
 func NewServiceContext(c config.Config) *ServiceContext {
 	mysqlDb := coregorm.InitGorm(c.Mysql.DataSource)
 	client := coreredis.InitRedis(c.Redis.Addr, c.Redis.Password, c.Redis.Db)
-	mqClient := corerocketmq.InitRocketMQ(c.RocketMQ.Addr)
+	mqClient := corerocketmq.InitRocketMQ(corerocketmq.Options{
+		Addr:      c.RocketMQ.Addr,
+		AccessKey: c.RocketMQ.AccessKey,
+		SecretKey: c.RocketMQ.SecretKey,
+	})
 	beaverlog.SetRocketMQ(mqClient)
 
 	commonconfig.Load(c.RemoteProxy)
