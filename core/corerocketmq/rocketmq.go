@@ -235,7 +235,7 @@ func (c *Client) RegisterConsumer(group mqwsconst.GroupType, addr string, topic 
 	return nil
 }
 
-// RegisterOrderlyConsumer 按队列串行消费，用于 im.realtime.chat 的同会话有序。
+// RegisterOrderlyConsumer 按队列串行消费，用于 im-realtime-chat 的同会话有序。
 // 毒消息由 handler 自行 ack（返回 nil），不得靠无限重试阻塞队列。
 func (c *Client) RegisterOrderlyConsumer(group mqwsconst.GroupType, addr string, topic mqwsconst.TopicType, handler func(msg *Message) error) error {
 	c2, err := rocketmq.NewPushConsumer(

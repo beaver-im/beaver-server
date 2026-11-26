@@ -1,6 +1,6 @@
 syntax = "v1"
 
-// 离线推送：入队 im.offline.push，由同进程 OfflineWorker 集群消费。
+// 离线推送：入队 im-offline-push，由同进程 OfflineWorker 集群消费。
 // Res.Accepted 只表示 MQ 已接收，不等于已送达客户端；幂等键 messageID 由调用方传入。
 
 type (

@@ -28,26 +28,26 @@ package mqwsconst
 type TopicType string
 
 const (
-	TopicRealtimeChat TopicType = "im.realtime.chat"
-	TopicRealtimeSync TopicType = "im.realtime.sync"
-	TopicRealtimeBot  TopicType = "im.realtime.bot"
-	TopicOfflinePush  TopicType = "im.offline.push"
-	TopicAgentTask    TopicType = "im.agent.task"
-	TopicAgentDone    TopicType = "im.agent.done"
-	TopicWorkflowTask TopicType = "im.workflow.task"
-	TopicPlatformLogs TopicType = "im.platform.logs"
+	TopicRealtimeChat TopicType = "im-realtime-chat"
+	TopicRealtimeSync TopicType = "im-realtime-sync"
+	TopicRealtimeBot  TopicType = "im-realtime-bot"
+	TopicOfflinePush  TopicType = "im-offline-push"
+	TopicAgentTask    TopicType = "im-agent-task"
+	TopicAgentDone    TopicType = "im-agent-done"
+	TopicWorkflowTask TopicType = "im-workflow-task"
+	TopicPlatformLogs TopicType = "im-platform-logs"
 )
 
 type GroupType string
 
-// ConsumerGroup 与 Topic 一对一镜像，后缀 .cg（consumer group）。
+// ConsumerGroup 与 Topic 一对一镜像，后缀 -cg（consumer group）。
 const (
-	GroupRealtimeChat GroupType = "im.realtime.chat.cg"
-	GroupRealtimeSync GroupType = "im.realtime.sync.cg"
-	GroupRealtimeBot  GroupType = "im.realtime.bot.cg"
-	GroupOfflinePush  GroupType = "im.offline.push.cg"
-	GroupAgentTask    GroupType = "im.agent.task.cg"
-	GroupAgentDone    GroupType = "im.agent.done.cg"
-	GroupWorkflowTask GroupType = "im.workflow.task.cg"
-	GroupPlatformLogs GroupType = "im.platform.logs.cg"
+	GroupRealtimeChat GroupType = "im-realtime-chat-cg"
+	GroupRealtimeSync GroupType = "im-realtime-sync-cg"
+	GroupRealtimeBot  GroupType = "im-realtime-bot-cg"
+	GroupOfflinePush  GroupType = "im-offline-push-cg"
+	GroupAgentTask    GroupType = "im-agent-task-cg"
+	GroupAgentDone    GroupType = "im-agent-done-cg"
+	GroupWorkflowTask GroupType = "im-workflow-task-cg"
+	GroupPlatformLogs GroupType = "im-platform-logs-cg"
 )

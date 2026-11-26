@@ -54,7 +54,7 @@ services:
     depends_on:
       - redis
 
-  # namesrv + broker 拆成两个容器，官方 command 启动，三者同 rocketmq-net 用服务名互通
+  # namesrv + broker 拆成两个容器，官方 command 启动，同默认 network 用服务名互通
   # brokerIP1=10.0.24.6 是客户端从 namesrv 拿到的地址，须为宿主机可达 IP
   rocketmq-namesrv:
     image: apache/rocketmq:5.3.1
@@ -67,8 +67,6 @@ services:
     command: sh mqnamesrv
     volumes:
       - ./rocketmq/namesrv/logs:/home/rocketmq/logs
-    networks:
-      - rocketmq-net
 
   rocketmq-broker:
     image: apache/rocketmq:5.3.1
@@ -86,8 +84,6 @@ services:
       - ./rocketmq/broker/conf/broker.conf:/home/rocketmq/conf/broker.conf
     depends_on:
       - rocketmq-namesrv
-    networks:
-      - rocketmq-net
 
   # 一次性创建 8 个新 Topic + 8 个新 ConsumerGroup（push 从 notification_rpc 剥离后）
   # mqadmin 不在镜像 PATH，必须用完整路径（已实测 command -v mqadmin 为空）
@@ -99,27 +95,25 @@ services:
     restart: on-failure
     entrypoint: >
       sh -c "sleep 10 &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im.realtime.chat &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im.realtime.sync &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im.realtime.bot &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im.offline.push &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im.agent.task &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im.agent.done &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im.workflow.task &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im.platform.logs &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im.realtime.chat.cg &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im.realtime.sync.cg &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im.realtime.bot.cg &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im.offline.push.cg &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im.agent.task.cg &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im.agent.done.cg &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im.workflow.task.cg &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im.platform.logs.cg"
-    networks:
-      - rocketmq-net
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-realtime-chat &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-realtime-sync &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-realtime-bot &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-offline-push &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-agent-task &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-agent-done &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-workflow-task &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-platform-logs &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-realtime-chat-cg &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-realtime-sync-cg &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-realtime-bot-cg &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-offline-push-cg &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-agent-task-cg &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-agent-done-cg &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-workflow-task-cg &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-platform-logs-cg"
 
   # ===== 日志存储（扁平 JSON → OpenSearch；经 RocketMQ 解耦，无 OTel）=====
-  # 客户端 Track / 服务端 beaverlog → topic im.platform.logs → Consumer → 索引 beaver-logs
+  # 客户端 Track / 服务端 beaverlog → topic im-platform-logs → Consumer → 索引 beaver-logs
   # 靠 projectName（beaver-desktop / beaver-server）区分，Dashboards 建索引模式 beaver-logs*
   opensearch:
     image: opensearchproject/opensearch:2.19.0
@@ -151,6 +145,3 @@ services:
     depends_on:
       - opensearch
 
-networks:
-  rocketmq-net:
-    driver: bridge
