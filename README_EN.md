@@ -1,147 +1,170 @@
 # 🦫 Beaver IM - Enterprise-Grade Instant Messaging Platform
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.1.1-blue.svg)](VERSION)
-[![Go](https://img.shields.io/badge/go-1.21+-blue.svg)](https://golang.org/)
-[![Go-Zero](https://img.shields.io/badge/Go--Zero-v1.6.0+-green.svg)](https://github.com/zeromicro/go-zero)
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![Coverage](https://img.shields.io/badge/coverage-85%25-brightgreen.svg)]()
-[![Stars](https://img.shields.io/badge/stars-50+-yellow.svg)](https://github.com/wsrh8888/beaver-server/stargazers)
+[![Version](https://img.shields.io/badge/version-3.0.2-blue.svg)](VERSION)
+[![Go](https://img.shields.io/badge/go-1.26.8-blue.svg)](https://golang.org/)
+[![Go-Zero](https://img.shields.io/badge/Go--Zero-v1.7.4-green.svg)](https://github.com/zeromicro/go-zero)
+[![QQ Group](https://img.shields.io/badge/QQ-1013328597%2B-blue.svg)](https://qm.qq.com/q/82rbf7QBzO)
 
-> 🚀 **Enterprise-Grade Instant Messaging Platform** - Built with Go-Zero microservices, supporting mobile (Flutter), desktop (Electron), and web clients with real-time communication capabilities.
+> **Beaver IM server** - Go-Zero microservices backing the Flutter mobile app, Electron desktop app and admin console, with REST / WebSocket / gRPC and S2S HTTP views.
 
-**Current Version: [2.1.1](VERSION)** (see [`VERSION`](VERSION) at repository root)
+**Current version: [3.0.2](VERSION)** (see [`VERSION`](VERSION) at the repository root; last verified 2026-11-26).
 
 [English](README_EN.md) | [中文](README.md)
+
+> For development and AI collaboration, read the [Chinese engineering handbook](docs/README.md) first. `.api` / `.proto` files are the source of truth for contracts; goctl generates the wiring. For older docs and examples, the current source code and handbook take precedence.
 
 ---
 
 ## 🌟 Key Features
 
-### 🔐 **Enterprise Security**
-- **Multi-factor Authentication** - Email verification, SMS codes, biometric support
-- **End-to-End Encryption** - Message encryption in transit and at rest
-- **Role-Based Access Control** - Granular permissions and admin management
-- **Audit Logging** - Comprehensive security event tracking
-
-### 💬 **Advanced Messaging**
-- **Real-time Communication** - WebSocket-based instant messaging
-- **Multi-format Support** - Text, images, files, voice messages, emojis
-- **Message Status** - Read receipts, typing indicators, delivery confirmation
-- **Message Search** - Full-text search across conversations
-- **Message Recall** - Time-limited message deletion
-
-### 👥 **Social Features**
-- **Contact Management** - QR code scanning, contact import/export
-- **Group Management** - Create, manage, and moderate group chats
-- **Friend Requests** - Approval workflow with custom messages
-- **User Profiles** - Rich profile information with avatars
-
-### 🏗️ **Microservices Architecture**
-- **15+ Microservices** - Scalable, maintainable service decomposition
-- **High Availability** - Multi-instance deployment support
-- **Service Discovery** - ETCD-based service registration
-- **Load Balancing** - Intelligent request distribution
-- **Circuit Breaker** - Fault tolerance and resilience
-
-### 📱 **Cross-Platform Support**
-- **Mobile Apps** - iOS/Android via Flutter framework (Recommended)
-- **Desktop Apps** - Windows/macOS/Linux via Electron
-- **API Gateway** - RESTful APIs for third-party integration
+- 🔐 **Authentication** - phone / email / verification code / QR code / OAuth login; the gateway verifies external JWTs and signs an ES256 assertion, services verify it with a public JWKS; S2S machine tickets, device management and remote logout
+- 💬 **Messaging** - one-to-one and group chats, conversations and message history, read receipts, forwarding, WebSocket delivery and RocketMQ async pipelines
+- 👥 **Social** - friend requests and profiles, group creation and moderation, block list; circles and moments live in the separate `beaver-social` repo
+- 📁 **Files & Emoji** - uploads/downloads, emoji packs and favorites, with MinIO / Qiniu object storage
+- 📞 **Calls** - LiveKit-backed signaling and rooms (`beaver-call`)
+- 🔔 **Notifications & Push** - system notifications, interaction reminders, inbox and read state; a standalone `push_api` gateway with realtime / offline channels mapped to MQ topics
+- 🔄 **Sync** - `datasync` incremental multi-device sync for friends, groups, messages, emoji, notifications, circles and bots
+- 🏢 **Organization** - departments, employees, workbench, feedback / reports, client telemetry and release management in `platform`
+- 🤖 **AI & Knowledge** - digital partners / bots, knowledge sources and skills (`SKILL.md`), agent conversation sync (`beaver-server-ai` + open platform)
+- 📄 **Online Documents** - HTTP API and Yjs WebSocket in one `office_api` process (`beaver-server-online`)
+- 📊 **Operations** - client logs flow through RocketMQ into OpenSearch; OpenSearch authentication is enabled with Basic Auth support
+- 🛠️ **Admin** - user / organization / release admin endpoints in `backend_admin` (`beaver-server-backend`)
 
 ## 🛠️ Technology Stack
 
-### Backend Services
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **Go-Zero** | v1.6.0+ | Microservices framework |
-| **gRPC** | v1.58+ | Inter-service communication |
-| **WebSocket** | - | Real-time messaging |
-| **MySQL** | 8.0+ | Primary data storage |
-| **Redis** | 6.0+ | Caching & session management |
-| **ETCD** | 3.5+ | Service discovery & config |
-| **Docker** | 20.0+ | Containerization |
+| Area | Technology | Notes |
+|------|------------|-------|
+| Language / framework | Go 1.26.8, go-zero 1.7.4 | goctl is a separate tool; its version is not pinned in the repo (see handbook 1.1) |
+| Communication | gRPC, HTTP S2S, WebSocket, RocketMQ | RPC inside this repo; HTTP machine tickets across repos and for push |
+| Storage / search | MySQL 8.0, Redis 6.0, ETCD 3.5, OpenSearch | Split databases, cache, service discovery, log search |
+| Deployment | Docker Compose, build scripts | `deploy/<domain>/` and `docker/` |
+| Other | JWT (ES256 / JWKS), LiveKit, MinIO / Qiniu | Auth, calls, object storage |
 
-### Frontend Technologies
-| Platform | Framework | Features |
-|----------|-----------|----------|
-| **Mobile** | Flutter 3.x | Cross-platform mobile app (Recommended) |
-| **Desktop** | Electron + Vue 3 | Native desktop experience |
+## 🏗️ Architecture
 
-## 📊 Performance Metrics
-
-- **Message Latency**: < 100ms average
-- **Concurrent Users**: 10,000+ supported
-- **Message Throughput**: 100,000+ messages/second
-- **Uptime**: 99.9% availability
-- **Response Time**: < 200ms API response
-
-## 🏗️ Architecture Overview
+Clients (Flutter / Electron) reach the backend through `gateway_api :20800`. The gateway verifies external Beaver / Open / Admin tickets, signs an ES256 assertion, injects trusted identity headers and forwards by path. Services verify the assertion with JWKS; cross-service and cross-repo calls use S2S machine tickets and `machine` / `_public` views. WebSocket carries long-lived connections; RocketMQ carries async messages and push delivery. The admin console reaches `backend_admin` through the gateway.
 
 ```
-┌─────────────────┐    ┌─────────────────┐
-│   Mobile App    │    │  Desktop App    │
-│   (Flutter)     │    │   (Electron)    │
-└─────────┬───────┘    └─────────┬───────┘
-          │                      │
-          └──────────────────────┘
-                    │
-                    ┌─────────────┴─────────────┐
-                    │      API Gateway          │
-                    │      (Port: 20800)        │
-                    └─────────────┬─────────────┘
-                                  │
-        ┌─────────────────────────┼─────────────────────────┐
-        │                         │                         │
-┌───────▼────────┐    ┌───────────▼──────────┐    ┌────────▼────────┐
-│   Auth Service │    │   User Service       │    │  Friend Service │
-│   API:20100    │    │   API:20000          │    │  API:20200      │
-│   RPC:30100    │    │   RPC:30000          │    │  RPC:30200      │
-└────────────────┘    └──────────────────────┘    └─────────────────┘
-        │                         │                         │
-┌───────▼────────┐    ┌───────────▼──────────┐    ┌────────▼────────┐
-│   Chat Service │    │   Group Service      │    │   File Service  │
-│   API:20300    │    │   API:20500          │    │  API:20600      │
-│   RPC:30300    │    │   RPC:30500          │    │  RPC:30600      │
-└────────────────┘    └──────────────────────┘    └─────────────────┘
-        │                         │                         │
-┌───────▼────────┐    ┌───────────▼──────────┐    ┌────────▼────────┐
-│   WS Service   │    │   Emoji Service      │    │ Feedback Service│
-│   API:20400    │    │   API:20700          │    │  API:21400      │
-│   RPC:30400    │    │   RPC:30700          │    │  -              │
-└────────────────┘    └──────────────────────┘    └─────────────────┘
-        │
-        └─────────────────────────────────────────────────────────────┐
-                                                                      │
-                    ┌─────────────────────────────────────────────────┴─┐
-                    │              Data Layer                          │
-                    │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │
-                    │  │    MySQL    │  │    Redis    │  │    ETCD     │ │
-                    │  │   (8.0+)    │  │   (6.0+)    │  │   (3.5+)    │ │
-                    │  └─────────────┘  └─────────────┘  └─────────────┘ │
-                    └───────────────────────────────────────────────────┘
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│ Flutter app  │  │ Electron app │  │ Admin console│
+└──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+       └─────────────────┼─────────────────┘
+                         │
+              ┌──────────▼──────────┐
+              │  gateway_api :20800  │
+              └──────────▼──────────┘
+                         │
+   ┌─────────────────────┼─────────────────────┐
+   │                     │                     │
+account / relation   message / ws          asset / notification
+platform / datasync      push :20500        (RPC inside this repo only)
+   │                     │                     │
+   └─────────────────────┼─────────────────────┘
+                         │
+        ┌────────────────┴────────────────┐
+        │ MySQL · Redis · ETCD · OpenSearch │
+        └─────────────────────────────────┘
+
+  Cross-repo ──► social / call / open / office / agent / backend (HTTP machine views)
 ```
 
+### Service Ports
 
+[`server.md`](server.md) is the single port table; actual listeners are in each service's `etc/*.yaml`. The main repo has 9 business domains plus the standalone push service. Subrepos run single processes; old moment / circle / call_rpc / open_rpc / doc_rpc ports are no longer in use.
+
+| Service | API | RPC | Repo | Notes |
+|---------|----:|----:|------|-------|
+| gateway_api | 20800 | - | beaver-server | Client API gateway: ticket verification and forwarding |
+| account | 20100 | 30100 | beaver-server | Users + auth (merged) |
+| relation | 20200 | 30200 | beaver-server | Friends + groups (merged) |
+| message | 20300 | 30300 | beaver-server | Chat (renamed from chat) |
+| ws | 20400 | - | beaver-server | WebSocket connections |
+| push | 20500 | - | beaver-server | Standalone push gateway (S2S) |
+| asset | 20600 | 30600 | beaver-server | Files + emoji (merged) |
+| notification | 21000 | 31000 | beaver-server | Notifications |
+| platform | 21600 | 31100 | beaver-server | Org / feedback / telemetry / updates |
+| datasync | 21700 | - | beaver-server | Incremental sync |
+| call | 21800 | - | beaver-call | Calls (LiveKit, single process) |
+| open | 21900 | - | beaver-open | Open platform: API / portal / WS / MQ |
+| social | 22100 | - | beaver-social | Circles + moments (single process, two DBs) |
+| agent | 22300 | - | beaver-server-ai | AI / digital partners (Python, agent_api) |
+| office | 22400 | - | beaver-server-online | Online docs (HTTP + Yjs WS) |
+| backend_admin | 40000 | - | beaver-server-backend | Admin APIs (JWT / CORS) |
+
+## 📁 Project Structure
+
+```
+beaver-server/
+├── app/                    # 9 domains: account relation message asset
+│   │                       # notification platform datasync ws gateway (+ push)
+│   ├── account/            # account_api + account_rpc + account_models
+│   ├── relation/           # relation_api + relation_rpc + relation_models
+│   ├── message/            # message_api + message_rpc + message_models
+│   ├── asset/              # asset_api + asset_rpc + asset_models
+│   ├── notification/       # notification_api + notification_rpc + notification_models
+│   ├── platform/           # platform_api + platform_rpc + platform_models
+│   ├── datasync/           # datasync_api + datasync_models (no RPC)
+│   ├── ws/                 # ws_api (no RPC)
+│   ├── push/               # push_api (no RPC, no tables)
+│   └── gateway/            # gateway_api (custom proxy, no .api)
+├── common/                 # Shared constants, identity, response, middleware
+├── core/                   # MySQL / Redis / MQ / etcd / OpenSearch / push clients
+├── commonconfig/           # Shared config structs
+├── middleware/             # JWT and HTTP middleware
+├── remote/                 # Outbound clients for other repos, grouped by peer
+├── types/                  # Outbound request / response DTOs
+├── openevent/              # Public event publishing
+├── utils/                  # Logging, JWT, S2S, password, email helpers
+├── template/               # Repo-specific goctl templates
+├── database/               # DB seed data (not SQL migrations)
+├── deploy/                 # Compose and config per domain
+├── build/                  # Build / release / local start scripts
+├── docs/                   # Engineering handbook (Chinese, 13 chapters)
+├── main.go                 # DB init tool only: go run main.go -db
+└── server.md               # Service port reference
+```
+
+## 🚀 Quick Start
+
+See the [backend docs](https://wsrh8888.github.io/beaver-docs/backend/) and [deployment guide](https://wsrh8888.github.io/beaver-docs/backend/deploy/build-scripts.html), plus the local handbook chapter [7 Configuration & Deployment](docs/07-deploy/README.md).
+
+Initialize the local database (MySQL connection must be configured first; `main.go` is **a DB init tool, not a service entry point**):
+
+```bash
+go run main.go -db
+```
+
+Build and orchestration scripts live in `build/` and `deploy/<domain>/`. `VERSION` is used by the build scripts for image tags.
 
 ## 📚 Documentation & Resources
 
-- 📖 **Comprehensive Documentation**: [https://wsrh8888.github.io/beaver-docs/](https://wsrh8888.github.io/beaver-docs/)
-- 🎥 **Video Tutorials**: [Bilibili Channel](https://space.bilibili.com/269553626/lists)
-- 📱 **Demo APK**: [Beaver IM Android Demo](https://github.com/wsrh8888/beaver-docs/releases/download/lastest/latest.apk)
-- 💬 **QQ Group**: [1013328597](https://qm.qq.com/q/82rbf7QBzO)
+- 📖 [Engineering handbook](docs/README.md) (Chinese: architecture, contracts, boundaries, identity, data, deployment, decisions)
+- 📖 [Full documentation](https://wsrh8888.github.io/beaver-docs/)
+- 📝 [Changelog](CHANGELOG.md) · [Update notes](update.md)
+- 🎥 [Video tutorials](https://space.bilibili.com/269553626/lists)
+- 📱 [Android demo APK](https://github.com/wsrh8888/beaver-docs/releases/download/lastest/latest.apk)
+- 💬 [QQ Group: 1013328597](https://qm.qq.com/q/82rbf7QBzO)
 
 ## 🔗 Related Projects
 
-| Project | Repository | Description |
-|---------|------------|-------------|
-| **beaver-server** | [GitHub](https://github.com/wsrh8888/beaver-server) \| [Gitee](https://gitee.com/dawwdadfrf/beaver-server) | Backend microservices (this repo) |
-| **beaver-flutter** | [GitHub](https://github.com/wsrh8888/beaver-flutter) \| [Gitee](https://gitee.com/dawwdadfrf/beaver-flutter) | Mobile (Flutter, recommended) |
-| **beaver-desktop** | [GitHub](https://github.com/wsrh8888/beaver-desktop) \| [Gitee](https://gitee.com/dawwdadfrf/beaver-desktop) | Desktop (Electron) |
-| **beaver-manager** | [GitHub](https://github.com/wsrh8888/beaver-manager) \| [Gitee](https://gitee.com/dawwdadfrf/beaver-manager) | Admin management system |
-| **beaver-open** | [GitHub](https://github.com/wsrh8888/beaver-open) \| [Gitee](https://gitee.com/dawwdadfrf/beaver-open) | Open platform |
-| **beaver-oauth** | [GitHub](https://github.com/wsrh8888/beaver-oauth) \| [Gitee](https://gitee.com/dawwdadfrf/beaver-oauth) | OAuth authorization |
+All repositories now live under the GitHub `beaver-im` organization. `beaver-server-package/` and `beaver-desktop-package/` are only local container directories for subrepos, not repositories themselves.
 
+| Group | Project | Repository | Description |
+|-------|---------|------------|-------------|
+| **Main** | beaver-server | [GitHub](https://github.com/beaver-im/beaver-server) | Backend monorepo (this repo) |
+| **Clients** | beaver-flutter | [GitHub](https://github.com/beaver-im/beaver-flutter) | Mobile app (Flutter, recommended) |
+| | beaver-desktop | [GitHub](https://github.com/beaver-im/beaver-desktop) | Desktop app (Electron) |
+| | beaver-manager | [GitHub](https://github.com/beaver-im/beaver-manager) | Admin console |
+| | beaver-oauth | [GitHub](https://github.com/beaver-im/beaver-oauth) | OAuth login |
+| **Server subpackages** | beaver-server-ai | [GitHub](https://github.com/beaver-im/beaver-server-ai) | AI agent (Python) |
+| | beaver-server-backend | [GitHub](https://github.com/beaver-im/beaver-server-backend) | Admin APIs (`backend_admin`) |
+| | beaver-server-call | [GitHub](https://github.com/beaver-im/beaver-server-call) | Calls (LiveKit) |
+| | beaver-server-online | [GitHub](https://github.com/beaver-im/beaver-server-online) | Online docs (`office_api`) |
+| | beaver-server-open | [GitHub](https://github.com/beaver-im/beaver-server-open) | Open platform / bots |
+| | beaver-server-social | [GitHub](https://github.com/beaver-im/beaver-server-social) | Circles and moments (`social_api`) |
+| **Client subpackages** | beaver-desktop-ai | [GitHub](https://github.com/beaver-im/beaver-desktop-ai) | External desktop AI capability pack (Vite / TS) |
+| | beaver-desktop-online | [GitHub](https://github.com/beaver-im/beaver-desktop-online) | External desktop online-docs capability pack (Vite / TS / Vue) |
 
 ## 📱 Feature Showcase
 
@@ -196,79 +219,15 @@
   <img src="./static/mobile/statement.jpg" width="200" alt="Statement"/>
 </div>
 
-## 📁 Project Structure
-
-```
-beaver-server/
-├── app/                          # Microservices applications
-│   ├── auth/                     # Authentication service
-│   │   ├── auth_api/            # HTTP API layer
-│   │   └── auth_rpc/            # gRPC service layer
-│   ├── chat/                     # Chat service
-│   │   ├── chat_api/            # HTTP API layer
-│   │   ├── chat_rpc/            # gRPC service layer
-│   │   └── chat_models/         # Data models
-│   ├── dictionary/               # Dictionary service
-│   │   ├── dictionary_api/      # HTTP API layer
-│   │   └── dictionary_rpc/      # gRPC service layer
-│   ├── feedback/                 # Feedback service
-│   │   ├── feedback_api/        # HTTP API layer
-│   │   └── feedback_models/     # Data models
-│   ├── file/                     # File management service
-│   │   ├── file_api/            # HTTP API layer
-│   │   ├── file_rpc/            # gRPC service layer
-│   │   └── file_models/         # Data models
-│   ├── friend/                   # Friend management service
-│   │   ├── friend_api/          # HTTP API layer
-│   │   ├── friend_rpc/          # gRPC service layer
-│   │   └── friend_models/       # Data models
-│   ├── gateway/                  # API gateway
-│   ├── group/                    # Group management service
-│   │   ├── group_api/           # HTTP API layer
-│   │   ├── group_rpc/           # gRPC service layer
-│   │   └── group_models/        # Data models
-│   ├── moment/                   # Moments service
-│   │   ├── moment_api/          # HTTP API layer
-│   │   └── moment_models/       # Data models
-│   ├── user/                     # User management service
-│   │   ├── user_api/            # HTTP API layer
-│   │   ├── user_rpc/            # gRPC service layer
-│   │   └── user_models/         # Data models
-│   └── ws/                       # WebSocket service
-│       └── ws_api/              # HTTP API layer
-├── common/                       # Shared components
-│   ├── middleware/              # HTTP/gRPC middleware
-│   ├── models/                  # Shared data models
-│   ├── response/                # Response utilities
-│   └── validator/               # Request validation
-├── core/                        # Core configurations
-│   ├── etcd.go                 # ETCD client
-│   ├── gorm.go                 # Database connection
-│   └── redis.go                # Redis client
-├── static/                      # Static assets
-├── template/                    # Code generation templates
-└── utils/                       # Utility functions
-```
-
 ## 🤝 Contributing
 
-We welcome contributions from the community! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-### How to Contribute
-
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/AmazingFeature`)
-3. **Commit** your changes (`git commit -m 'Add some AmazingFeature'`)
-4. **Push** to the branch (`git push origin feature/AmazingFeature`)
-5. **Open** a Pull Request
-
-### Contribution Areas
-
-- 🐛 **Bug Reports** - Help us identify and fix issues
-- 💡 **Feature Requests** - Suggest new features and improvements
-- 📝 **Documentation** - Improve documentation and examples
-- 🔧 **Code Contributions** - Submit code improvements and new features
-- 🧪 **Testing** - Help with testing and quality assurance
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## 📄 License & Legal Disclaimer
 
@@ -286,20 +245,14 @@ Contact: [751135385@qq.com](mailto:751135385@qq.com)
 
 ## ⭐ Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=wsrh8888/beaver-server&type=Date)](https://star-history.com/#wsrh8888/beaver-server&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=beaver-im/beaver-server&type=Date)](https://star-history.com/#beaver-im/beaver-server&Date)
 
 ## ☕ Buy the Author a Coffee
-
-If this project helps you, welcome to buy the author a coffee ☕
 
 <div align="center">
   <img src="./static/sponsor/wechat.jpg" width="200" alt="WeChat Sponsor QR Code"/>
   <img src="./static/sponsor/zhifubao.jpg" width="200" alt="Alipay Sponsor QR Code"/>
 </div>
-
-## ⭐ Support the Project
-
-If this project helps you, please give us a ⭐ Star on GitHub!
 
 ---
 
