@@ -22,6 +22,8 @@ S2S:
   # 换票端点 client_credentials 注册表：键 = 调用方服务名（= 其 yaml 的 Name），一个二进制一枚凭据。
   # 键即身份：调用方装配时用 c.Name 作为 client_id，所以改服务名 = 改身份，注册表要同步。
   # ClientSecret 是凭据，非签名密钥；与各调用方 RemoteProxy.Push.ClientSecret 一一对应。
+  # 键名带 _rpc 只表示调用方是 rpc 服务进程（如 notification_rpc 的 gRPC handler 异步投递实时帧），
+  # 不代表 push 会走 gRPC：本注册表只用于 HTTP 换票，出站调用恒为 /beaver/api/push/... 的 HTTP S2S。
   Clients:
     account:
       ClientSecret: beaver-s2s-push-account-95079e2b6e526c5f8286edd787be4681

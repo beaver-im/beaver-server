@@ -12,6 +12,10 @@ RemoteProxy:
   Agent:
     BaseURL: http://127.0.0.1:22300
     ClientSecret: beaver-s2s-ai-server-4a19e36992084ffb826d7bb8d3f56717
+  # Push A 主体推送中台：client_credentials 换票（auth_public/v1/issue），凭据非签名密钥。
+  Push:
+    BaseURL: http://127.0.0.1:20500
+    ClientSecret: beaver-s2s-push-messagerpc-2fa3d077761fea3271455594c128092a
 Name: message_rpc
 ListenOn: 0.0.0.0:30300
 Etcd:
@@ -79,3 +83,6 @@ Push:
     TeamID: ""
     BundleID: ""
     Production: false
+
+S2S:
+  Secret: beaver-s2s-core-b0db00321ca84fc783a2ba81505e82b1

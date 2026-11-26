@@ -19,7 +19,7 @@ assert_version_not_published() {
 
 assert_version_not_published
 
-# 定义模块列表（与 app/、deploy/、Dockerfile 保持一致，服务合并后共 15 个）
+# 定义模块列表（与 app/、deploy/、Dockerfile 保持一致，服务合并后共 16 个）
 modules=(
     # ==================== RPC 服务 ====================
     "account_rpc"
@@ -37,6 +37,7 @@ modules=(
     "message_api"
     "notification_api"
     "platform_api"
+    "push_api"
     "relation_api"
     "ws_api"
 )

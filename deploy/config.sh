@@ -10,7 +10,7 @@
 # 产物结构（与 deploy/ 平级一致，start/stop/update 按子目录找 docker-compose.yaml）：
 #   dist/
 #     start.sh  stop.sh  update.sh
-#     account/ asset/ datasync/ gateway/ message/ notification/ platform/ relation/ ws/
+#     account/ asset/ datasync/ gateway/ message/ notification/ platform/ push/ relation/ ws/
 #       gateway/ 断言三件套由 config 的 assertion 段（KID/JWKS/PRIVATE_KEY）在打包时写出
 #     config.yaml   ← 规则文件副本；用户只改 config_prod.yaml 的 new 即可出完整 dist
 
@@ -191,11 +191,11 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
 fi
 
 # ============================================================================
-# 第一步：构建 dist 产物骨架（脚本 + 9 个服务目录 + 规则文件副本）
+# 第一步：构建 dist 产物骨架（脚本 + 10 个服务目录 + 规则文件副本）
 # ============================================================================
 DIST_DIR="$SCRIPT_DIR/dist"
 BUILD_SCRIPTS=(start.sh stop.sh update.sh)
-SERVICE_DIRS=(account asset datasync gateway message notification platform relation ws)
+SERVICE_DIRS=(account asset datasync gateway message notification platform push relation ws)
 
 echo ""
 echo "🧹 清理旧产物: $DIST_DIR"

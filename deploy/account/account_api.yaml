@@ -5,6 +5,10 @@ RemoteProxy:
   Open:
     BaseURL: http://127.0.0.1:21900
     ClientSecret: beaver-s2s-open-server-256bf11a40d14dfda744da14969a5a1a
+  # Push A 主体推送中台：client_credentials 换票（auth_public/v1/issue），凭据非签名密钥。
+  Push:
+    BaseURL: http://127.0.0.1:20500
+    ClientSecret: beaver-s2s-push-account-95079e2b6e526c5f8286edd787be4681
 Name: account
 Host: 0.0.0.0
 Port: 20100
@@ -63,6 +67,8 @@ NotificationRpc:
 RocketMQ:
   Addr: 127.0.0.1:9876
 
+# 入站 S2S 机器票：本团队业务面共用一套凭据，票据受众统一 core:api。
+# auth 秘钥签发端点在本服务：POST /beaver/api/account/auth_public/v1/issue（client_credentials）。
 # 北向：JWKS 验网关 ES256 断言（公钥材料，可公开；轮换时 JWKS 可挂多 kid）。
 Assertion:
   Issuer: beaver-gateway

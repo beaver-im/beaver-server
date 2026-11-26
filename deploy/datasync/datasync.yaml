@@ -68,6 +68,8 @@ RemoteProxy:
   Agent:
     BaseURL: http://127.0.0.1:22300
     ClientSecret: beaver-s2s-ai-server-4a19e36992084ffb826d7bb8d3f56717
+  # S2S 出站：社交服务（beaver-social），client_credentials 换票后调其同步接口。
+  # BaseURL 指向社交服务的标准 .api 地址，须与该服务自身的 S2S Secret/Clients 配置成对。
   Social:
     BaseURL: http://127.0.0.1:22100
     ClientSecret: beaver-s2s-social-server-d336db23e7bc49b5a89f4c587384cd16

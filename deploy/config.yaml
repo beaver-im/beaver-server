@@ -90,6 +90,9 @@ rules:
     - name: AI（ai_api + agent_api 同端口）地址
       old: "http://127.0.0.1:22300"
       new: "REPLACE_ME_AI_BASEURL"
+    - name: 推送 push_api 地址
+      old: "http://127.0.0.1:20500"
+      new: "REPLACE_ME_PUSH_BASEURL"
 
   # ========== JWT 用户票签名 ==========
   # 三类外部票密钥各自独立，靠 claims.Audience 分平面；网关按 AuthBeaver/AuthOpen/AuthAdmin 段分别验签。
@@ -162,6 +165,39 @@ rules:
         key: CORE_AGENT
         old: "beaver-s2s-core-agent-931a68bae0ea4eeeba4059dbda5b359b"
         new: "REPLACE_ME_CORE_AGENT"
+      # push 团队签发：push_api 的 S2S.Clients 注册表，按调用方进程名一一登记
+      - name: push 签发给 account（account 访问 push）
+        key: PUSH_ACCOUNT
+        old: "beaver-s2s-push-account-95079e2b6e526c5f8286edd787be4681"
+        new: "REPLACE_ME_PUSH_ACCOUNT"
+      - name: push 签发给 asset（asset 访问 push）
+        key: PUSH_ASSET
+        old: "beaver-s2s-push-asset-f296a87e54ef131369e9d7a2da9a3bfc"
+        new: "REPLACE_ME_PUSH_ASSET"
+      - name: push 签发给 message（message 访问 push）
+        key: PUSH_MESSAGE
+        old: "beaver-s2s-push-message-c9de861f26fb9c24c129d413f353b1e0"
+        new: "REPLACE_ME_PUSH_MESSAGE"
+      - name: push 签发给 message_rpc（message_rpc 以 HTTP 调用方访问 push）
+        key: PUSH_MESSAGE_RPC
+        old: "beaver-s2s-push-messagerpc-2fa3d077761fea3271455594c128092a"
+        new: "REPLACE_ME_PUSH_MESSAGE_RPC"
+      - name: push 签发给 notification（notification 访问 push）
+        key: PUSH_NOTIFICATION
+        old: "beaver-s2s-push-notification-aee82d3318d2da0987e846746adfa0b3"
+        new: "REPLACE_ME_PUSH_NOTIFICATION"
+      - name: push 签发给 notification_rpc（notification_rpc 以 HTTP 调用方访问 push）
+        key: PUSH_NOTIFICATION_RPC
+        old: "beaver-s2s-push-notificationrpc-a04f81421876659b9a76b51248b79a84"
+        new: "REPLACE_ME_PUSH_NOTIFICATION_RPC"
+      - name: push 签发给 relation（relation 访问 push）
+        key: PUSH_RELATION
+        old: "beaver-s2s-push-relation-460e79851f3441d2c7f0b6e298a99aa4"
+        new: "REPLACE_ME_PUSH_RELATION"
+      - name: push 签发给 ws（ws 访问 push）
+        key: PUSH_WS
+        old: "beaver-s2s-push-ws-e3d2104f2473ca03000c47462b52d2c0"
+        new: "REPLACE_ME_PUSH_WS"
 
     # open 团队签发
     open:

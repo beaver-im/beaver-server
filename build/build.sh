@@ -35,6 +35,7 @@ declare -A BIN_PATHS=(
     [platform_rpc]="platform_rpc/platformrpc"
     [relation_api]="relation_api/relation"
     [relation_rpc]="relation_rpc/relationrpc"
+    [push_api]="push_api/push"
     [ws_api]="ws_api/ws"
 )
 bin_path="${BIN_PATHS[$module_name]}"

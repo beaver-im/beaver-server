@@ -61,6 +61,10 @@ RUN go build -ldflags="-s -w" -o relation_api/relation app/relation/relation_api
 # relation_rpc
 RUN go build -ldflags="-s -w" -o relation_rpc/relationrpc app/relation/relation_rpc/relationrpc.go
 
+# ==================== PUSH 相关服务 ====================
+# push_api
+RUN go build -ldflags="-s -w" -o push_api/push app/push/push_api/push.go
+
 # ==================== WS 相关服务 ====================
 # ws_api
 RUN go build -ldflags="-s -w" -o ws_api/ws app/ws/ws_api/ws.go
