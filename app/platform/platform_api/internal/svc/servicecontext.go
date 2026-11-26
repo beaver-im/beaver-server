@@ -22,36 +22,81 @@
 package svc
 
 import (
-	"beaver/app/file/file_rpc/file"
-	"beaver/app/file/file_rpc/types/file_rpc"
-	platformcli "beaver/app/platform/platform_rpc/platform"
+	"errors"
+
+	"beaver/app/asset/asset_rpc/client/file"
+	assettypes "beaver/app/asset/asset_rpc/pb"
 	"beaver/app/platform/platform_api/internal/config"
+	"beaver/app/platform/platform_api/internal/middleware"
+	platformcli "beaver/app/platform/platform_rpc/platform"
 	"beaver/common/zrpc_interceptor"
 	"beaver/core/coregorm"
+	"beaver/core/coreopensearch"
 	"beaver/core/coreredis"
+	"beaver/core/corerocketmq"
+	orgseed "beaver/database/org"
+	"beaver/utils/beaverlog"
+	"beaver/utils/beaverlog/model"
 
 	"github.com/go-redis/redis"
+	"github.com/zeromicro/go-zero/rest"
 	"github.com/zeromicro/go-zero/zrpc"
 	"gorm.io/gorm"
 )
+
+type InstanceView struct {
+	OrgID   string
+	OrgName string
+	ErrMsg  string
+}
 
 type ServiceContext struct {
 	Config      config.Config
 	DB          *gorm.DB
 	Redis       *redis.Client
-	FileRpc     file_rpc.FileClient
+	FileRpc     assettypes.FileClient
 	PlatformRpc platformcli.Platform
+	RocketMQ    *corerocketmq.Client
+	OpenSearch  *coreopensearch.Client
+	Instance    InstanceView
+	// JwtS2s 由 .api 的 @server 声明接线（用户票 / 机器票分开挂）。
+	JwtS2s rest.Middleware
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
 	mysqlDb := coregorm.InitGorm(c.Mysql.DataSource)
 	client := coreredis.InitRedis(c.Redis.Addr, c.Redis.Password, c.Redis.Db)
 	rpcOpt := zrpc.WithUnaryClientInterceptor(zrpc_interceptor.ClientInfoInterceptor)
+	mqClient := corerocketmq.InitRocketMQ(c.RocketMQ.Addr)
+	beaverlog.SetRocketMQ(mqClient)
+
 	return &ServiceContext{
 		Config:      c,
 		DB:          mysqlDb,
 		Redis:       client,
 		FileRpc:     file.NewFile(zrpc.MustNewClient(c.FileRpc, rpcOpt)),
 		PlatformRpc: platformcli.NewPlatform(zrpc.MustNewClient(c.PlatformRpc, rpcOpt)),
+		RocketMQ:    mqClient,
+		OpenSearch:  coreopensearch.New(c.OpenSearch.Addr, c.OpenSearch.Username, c.OpenSearch.Password),
+		Instance:    loadInstance(mysqlDb),
+		JwtS2s:      middleware.NewJwtS2sMiddleware(c).Handle,
+	}
+}
+
+func loadInstance(orgDB *gorm.DB) InstanceView {
+	orgInfo, err := orgseed.Load(orgDB)
+	if err != nil {
+		beaverlog.New("service-context").Error(model.LogMsg{
+			Text: "加载组织失败",
+			Data: map[string]any{"err": err.Error()},
+		})
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return InstanceView{ErrMsg: "组织尚未初始化"}
+		}
+		return InstanceView{ErrMsg: "查询组织失败"}
+	}
+	return InstanceView{
+		OrgID:   orgInfo.OrgID,
+		OrgName: orgInfo.OrgName,
 	}
 }

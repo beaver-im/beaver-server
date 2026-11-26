@@ -21,7 +21,11 @@
 
 package config
 
-import "github.com/zeromicro/go-zero/zrpc"
+import (
+	"beaver/commonconfig"
+
+	"github.com/zeromicro/go-zero/zrpc"
+)
 
 type Config struct {
 	zrpc.RpcServerConf
@@ -33,8 +37,11 @@ type Config struct {
 		Password string
 		Db       int
 	}
-	RocketMQ struct {
-		Addr string
-	}
 	UserRpc zrpc.RpcClientConf
+	// RemoteProxy 唯一出站注册表：push_api 地址与 S2S 机器票凭据在此登记。
+	RemoteProxy commonconfig.RemoteProxy `json:",optional"`
+	// S2S 入站机器票：受众 core:api，同团队业务面共用一套凭据。
+	S2S struct {
+		Secret string `json:",optional"`
+	}
 }

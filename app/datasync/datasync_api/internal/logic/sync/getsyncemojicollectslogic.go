@@ -1,0 +1,155 @@
+/*
+ * Copyright (c) 2024-2026 Beaver IM Team
+ * SPDX-License-Identifier: MIT
+ * Project: beaver-server
+ * https://github.com/wsrh8888/beaver-server
+ *
+ * 中文：
+ * 本文件为海狸 IM（Beaver IM）开源项目源代码。
+ * 版权所有 © 2024-2026 Beaver IM Team，基于 MIT 协议授权。
+ * 禁止删除、篡改或替换本文件头部版权与许可声明。
+ * 使用与商业授权说明：https://wsrh8888.github.io/beaver-docs/community/license.html
+ *
+ * English:
+ * This file is part of the Beaver IM open-source project.
+ * Copyright (c) 2024-2026 Beaver IM Team. Licensed under the MIT License.
+ * Do not remove, alter, or replace this copyright and license header.
+ * Usage & commercial licensing: https://wsrh8888.github.io/beaver-docs/community/license.html
+ *
+ * beaver-server-header-v1
+ */
+
+package logic
+
+import (
+	"context"
+	"time"
+
+	assettypes "beaver/app/asset/asset_rpc/pb"
+	"beaver/app/datasync/datasync_api/internal/svc"
+	"beaver/app/datasync/datasync_api/internal/types"
+	beaverlog "beaver/utils/beaverlog"
+	"beaver/utils/beaverlog/model"
+)
+
+type GetSyncEmojiCollectsLogic struct {
+	ctx    context.Context
+	svcCtx *svc.ServiceContext
+	logger *beaverlog.Logger
+}
+
+// 获取用户表情收藏的版本信息
+func NewGetSyncEmojiCollectsLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetSyncEmojiCollectsLogic {
+	return &GetSyncEmojiCollectsLogic{
+		ctx:    ctx,
+		svcCtx: svcCtx,
+		logger: beaverlog.New("get_sync_emoji_collects", ctx),
+	}
+}
+
+func (l *GetSyncEmojiCollectsLogic) GetSyncEmojiCollects(req *types.GetSyncEmojiCollectsReq) (resp *types.GetSyncEmojiCollectsRes, err error) {
+	// 初始化结果变量
+	emojiCollectVersions := make([]types.EmojiCollectVersionItem, 0)
+	emojiPackageCollectVersions := make([]types.EmojiPackageCollectVersionItem, 0)
+	emojiPackageVersions := make([]types.EmojiPackageVersionItem, 0)
+	emojiPackageContentVersions := make([]types.EmojiPackageContentVersionItem, 0)
+
+	// 1. 获取用户收藏的表情版本信息
+	emojiCollectResp, err := l.svcCtx.EmojiRpc.GetUserEmojiCollects(l.ctx, &assettypes.GetUserEmojiCollectsReq{
+		UserId: req.UserID,
+		Since:  req.Since,
+	})
+	if err != nil {
+		l.logger.Error(model.LogMsg{Text: "获取用户收藏表情版本信息失败", Data: map[string]any{"userId": req.UserID, "since": req.Since, "err": err.Error()}})
+		return nil, err
+	}
+
+	// 转换用户收藏的表情数据（使用收藏记录ID）
+	if emojiCollectResp.EmojiCollectVersions != nil {
+		for _, item := range emojiCollectResp.EmojiCollectVersions {
+			emojiCollectVersions = append(emojiCollectVersions, types.EmojiCollectVersionItem{
+				EmojiCollectID: item.EmojiCollectId,
+				Version:        item.Version,
+			})
+		}
+	}
+
+	// 2. 获取用户收藏的表情包版本信息
+	emojiPackageCollectResp, err := l.svcCtx.EmojiRpc.GetUserEmojiPackageCollects(l.ctx, &assettypes.GetUserEmojiPackageCollectsReq{
+		UserId: req.UserID,
+		Since:  req.Since,
+	})
+	if err != nil {
+		l.logger.Error(model.LogMsg{Text: "获取用户收藏表情包版本信息失败", Data: map[string]any{"userId": req.UserID, "since": req.Since, "err": err.Error()}})
+		return nil, err
+	}
+
+	// 转换用户收藏的表情包数据（使用收藏记录ID）
+	if emojiPackageCollectResp.EmojiPackageCollectVersions != nil {
+		for _, item := range emojiPackageCollectResp.EmojiPackageCollectVersions {
+			emojiPackageCollectVersions = append(emojiPackageCollectVersions, types.EmojiPackageCollectVersionItem{
+				PackageCollectID: item.PackageCollectId,
+				Version:          item.Version,
+			})
+		}
+	}
+
+	// 3. 获取表情包基础数据版本信息
+	emojiPackagesResp, err := l.svcCtx.EmojiRpc.GetEmojiPackages(l.ctx, &assettypes.GetEmojiPackagesReq{
+		UserId: req.UserID,
+		Since:  req.Since,
+	})
+	if err != nil {
+		l.logger.Error(model.LogMsg{Text: "获取表情包基础数据版本信息失败", Data: map[string]any{"userId": req.UserID, "since": req.Since, "err": err.Error()}})
+		return nil, err
+	}
+
+	// 转换表情包数据
+	if emojiPackagesResp.EmojiPackageVersions != nil {
+		for _, item := range emojiPackagesResp.EmojiPackageVersions {
+			emojiPackageVersions = append(emojiPackageVersions, types.EmojiPackageVersionItem{
+				PackageID: item.PackageId,
+				Version:   item.Version,
+			})
+		}
+	}
+
+	// 4. 获取表情包内容版本信息
+	emojiPackageContentsResp, err := l.svcCtx.EmojiRpc.GetEmojiPackageContents(l.ctx, &assettypes.GetEmojiPackageContentsReq{
+		UserId: req.UserID,
+		Since:  req.Since,
+	})
+	if err != nil {
+		l.logger.Error(model.LogMsg{Text: "获取表情包内容版本信息失败", Data: map[string]any{"userId": req.UserID, "since": req.Since, "err": err.Error()}})
+		return nil, err
+	}
+
+	// 转换表情包内容数据
+	if emojiPackageContentsResp.EmojiPackageContentVersions != nil {
+		for _, item := range emojiPackageContentsResp.EmojiPackageContentVersions {
+			emojiPackageContentVersions = append(emojiPackageContentVersions, types.EmojiPackageContentVersionItem{
+				PackageID: item.PackageId,
+				Version:   item.Version,
+			})
+		}
+	}
+
+	l.logger.Info(model.LogMsg{
+		Text: "表情收藏同步完成",
+		Data: map[string]interface{}{
+			"userId":          req.UserID,
+			"emojiCollects":   len(emojiCollectVersions),
+			"packageCollects": len(emojiPackageCollectVersions),
+			"packages":        len(emojiPackageVersions),
+			"packageContents": len(emojiPackageContentVersions),
+		},
+	})
+
+	return &types.GetSyncEmojiCollectsRes{
+		EmojiCollectVersions:        emojiCollectVersions,
+		EmojiPackageCollectVersions: emojiPackageCollectVersions,
+		EmojiPackageVersions:        emojiPackageVersions,
+		EmojiPackageContentVersions: emojiPackageContentVersions,
+		ServerTimestamp:             time.Now().UnixMilli(),
+	}, nil
+}

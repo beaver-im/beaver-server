@@ -22,14 +22,20 @@
 package main
 
 import (
+	"beaver/common/zrpc_interceptor"
 	"flag"
 	"fmt"
 
 	"beaver/app/platform/platform_rpc/internal/config"
-	"beaver/app/platform/platform_rpc/internal/server"
+	adminServer "beaver/app/platform/platform_rpc/internal/server/admin"
+	appServer "beaver/app/platform/platform_rpc/internal/server/app"
+	feedbackServer "beaver/app/platform/platform_rpc/internal/server/feedback"
+	reportServer "beaver/app/platform/platform_rpc/internal/server/report"
+	workbenchServer "beaver/app/platform/platform_rpc/internal/server/workbench"
+	orgServer "beaver/app/platform/platform_rpc/internal/server/org"
 	"beaver/app/platform/platform_rpc/internal/svc"
-	"beaver/app/platform/platform_rpc/types/platform_rpc"
-	"beaver/utils/logger"
+	platform_rpc "beaver/app/platform/platform_rpc/pb"
+	"beaver/utils/beaverlog"
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/service"
@@ -45,17 +51,25 @@ func main() {
 
 	var c config.Config
 	conf.MustLoad(*configFile, &c)
-	logger.Init("platform_rpc")
+	beaverlog.InitFromConf(c.RpcServerConf.ServiceConf)
 	ctx := svc.NewServiceContext(c)
 
 	s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {
-		platform_rpc.RegisterPlatformServer(grpcServer, server.NewPlatformServer(ctx))
+		platform_rpc.RegisterAdminServer(grpcServer, adminServer.NewAdminServer(ctx))
+		platform_rpc.RegisterAppServer(grpcServer, appServer.NewAppServer(ctx))
+		platform_rpc.RegisterFeedbackServer(grpcServer, feedbackServer.NewFeedbackServer(ctx))
+		platform_rpc.RegisterReportServer(grpcServer, reportServer.NewReportServer(ctx))
+		platform_rpc.RegisterWorkbenchServer(grpcServer, workbenchServer.NewWorkbenchServer(ctx))
+		platform_rpc.RegisterOrgServer(grpcServer, orgServer.NewOrgServer(ctx))
 
 		if c.Mode == service.DevMode || c.Mode == service.TestMode {
 			reflection.Register(grpcServer)
 		}
 	})
 	defer s.Stop()
+
+	// 还原 HTTP 面验签后的身份结论，rpc logic 只从 context 取。
+	s.AddUnaryInterceptors(zrpc_interceptor.IdentityServerInterceptor)
 
 	fmt.Printf("Starting rpc server at %s...\n", c.ListenOn)
 	s.Start()

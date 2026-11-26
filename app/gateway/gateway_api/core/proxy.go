@@ -24,23 +24,26 @@ package core
 import (
 	"beaver/app/gateway/gateway_api/types"
 	"beaver/common/etcd"
-	"beaver/utils/jwts"
-	utils "beaver/utils/list"
-	"beaver/utils/logger"
-	"beaver/utils/logger/model"
+	"beaver/common/traceid"
+	"beaver/utils/assertion"
+	beaverlog "beaver/utils/beaverlog"
+	"beaver/utils/beaverlog/model"
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"regexp"
 	"strings"
 	"time"
-
-	"github.com/zeromicro/go-zero/core/logx"
 )
 
-var gatewayLog = logger.New("proxy")
+// apiGwLogger 网关 API 代理包级日志器（用于无 ctx 的辅助函数）
+var apiGwLogger = beaverlog.New("gateway_api_proxy")
 
 type BaseResponse struct {
 	Code int    `json:"code"`
@@ -54,177 +57,223 @@ func writeErrorResponse(res http.ResponseWriter, msg string, statusCode int, uui
 	response := BaseResponse{Code: 1, Msg: msg}
 	byteData, _ := json.Marshal(response)
 	res.Write(byteData)
-	logx.Info("response: ", "唯一标识: ", uuid, string(byteData))
+	apiGwLogger.Info(model.LogMsg{Text: "响应输出", Data: map[string]interface{}{"uuid": uuid, "body": string(byteData)}})
 
 }
 
+// Proxy 做外部票验签 + 身份头规范化 + 网关断言注入 + 服务发现反向代理。
+// 业务用 JWKS 验网关公钥（北向）或本团队 S2S（东西向）；身份由断言载荷重建。
 type Proxy struct {
 	Config types.Config
+	auth   authMatcher // 预编译的公开/鉴权正则，NewProxy 装配
+	signer *assertion.Signer
 }
 
-func (p Proxy) auth(req *http.Request) (ok bool, errMsg string) {
-	path := req.URL.Path
-
-	// 1. 公开接口，无需鉴权
-	if utils.InListByRegex(p.Config.PublicList, path) {
-		return true, ""
-	}
-
-	// 2. 自定义鉴权，透传到下游服务 middleware 处理
-	if utils.InListByRegex(p.Config.CustomAuthList, path) {
-		return true, ""
-	}
-
-	// 3. open oauth_secret：Gateway 校验 App-Id / App-Secret 请求头
-	if strings.HasPrefix(path, "/api/open/oauth_secret/") {
-		return p.oauthSecretAuth(req)
-	}
-
-	// 4. open_api：Gateway 默认不鉴权，各接口 logic 自行校验；仅 Beaver JWT 路由例外
-	if isOpenApiPassThrough(path) {
-		return true, ""
-	}
-
-	// 5. 统一 JWT 鉴权
-	if !p.jwtAuth(req) {
-		return false, "网关鉴权失败"
-	}
-	return true, ""
-}
-
-func (p Proxy) oauthSecretAuth(req *http.Request) (bool, string) {
-	appID := req.Header.Get("App-Id")
-	if appID == "" {
-		return false, "缺少 App-Id 请求头"
-	}
-
-	appSecret := req.Header.Get("App-Secret")
-	if appSecret == "" {
-		return false, "缺少 App-Secret 请求头"
-	}
-	return true, ""
-}
-
-var openApiJwtRoutes = []string{
-	`/api/open/oauth/v1/h5_authcode`,
-	`/api/open/oauth/v1/qrcode_scan`,
-	`/api/open/oauth/v1/qrcode_confirm`,
-	`/api/open/oauth/v1/qrcode_cancel`,
-}
-
-func isOpenApiPassThrough(path string) bool {
-	if !strings.HasPrefix(path, "/api/open/") {
-		return false
-	}
-	if utils.InListByRegex(openApiJwtRoutes, path) {
-		return false
-	}
-	return true
-}
-
-// jwtAuth JWT认证（普通用户）
-func (p Proxy) jwtAuth(req *http.Request) bool {
-	// 获取token
-	token := getToken(req)
-	if token == "" {
-		logx.Error("token为空")
-		return false
-	}
-
-	// 直接解析JWT（避免HTTP调用）
-	claims, err := jwts.ParseToken(token, p.Config.Auth.AccessSecret)
+// NewProxy 用配置构造代理，预编译鉴权正则并装配断言签发器；任一失败即返回错误，调用方须 fail-fast。
+func NewProxy(config types.Config) (*Proxy, error) {
+	matcher, err := compileAuthMatcher(config)
 	if err != nil {
-		logx.Errorf("JWT解析失败: %v", err)
-		return false
+		return nil, err
 	}
-
-	// 设置用户ID和设备ID到请求头
-	req.Header.Set("Beaver-User-Id", claims.UserID)
-
-	// 从请求头获取设备ID
-	deviceId := req.Header.Get("deviceId")
-	if deviceId != "" {
-		req.Header.Set("Beaver-Device-Id", deviceId)
+	if len(config.PublicPatterns) == 0 {
+		apiGwLogger.Error(model.LogMsg{Text: "gateway.yaml 未配置 PublicPatterns，登录等公开端点会被要求带票"})
 	}
-	version := req.Header.Get("version")
-	if version != "" {
-		req.Header.Set("Version", version)
+	a := config.Assertion
+	signer, err := assertion.NewSigner(
+		a.KeyID,
+		a.Issuer,
+		a.ClientID,
+		time.Duration(a.TTLSeconds)*time.Second,
+		a.PrivateKeyPEM,
+		a.PrivateKeyFile,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("网关断言签发器: %w", err)
 	}
+	return &Proxy{Config: config, auth: matcher, signer: signer}, nil
+}
 
-	logx.Infof("JWT验证成功: 用户=%s, 设备=%s", claims.UserID, deviceId)
+type statusRecorder struct {
+	http.ResponseWriter
+	status int
+	body   bytes.Buffer
+}
 
-	return true
+func (r *statusRecorder) WriteHeader(code int) {
+	r.status = code
+	r.ResponseWriter.WriteHeader(code)
+}
+
+func (r *statusRecorder) Write(b []byte) (int, error) {
+	if r.status == 0 {
+		r.status = http.StatusOK
+	}
+	_, _ = r.body.Write(b)
+	return r.ResponseWriter.Write(b)
+}
+
+// Hijack 透传到底层 Writer，否则 ReverseProxy 无法升级 WebSocket（会回 502）。
+func (r *statusRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	hj, ok := r.ResponseWriter.(http.Hijacker)
+	if !ok {
+		return nil, nil, fmt.Errorf("response writer does not support hijacking")
+	}
+	return hj.Hijack()
+}
+
+func (r *statusRecorder) Flush() {
+	if f, ok := r.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
+	}
+}
+
+func isWebSocketRequest(req *http.Request) bool {
+	return strings.EqualFold(req.Header.Get("Upgrade"), "websocket")
+}
+
+func bodyForLog(raw []byte) any {
+	if len(raw) == 0 {
+		return nil
+	}
+	const maxLogBody = 8 << 10 // 8KB，避免大文件/大包打爆日志
+	truncated := false
+	if len(raw) > maxLogBody {
+		raw = raw[:maxLogBody]
+		truncated = true
+	}
+	var obj any
+	if err := json.Unmarshal(raw, &obj); err == nil {
+		if truncated {
+			return map[string]any{"data": obj, "truncated": true}
+		}
+		return obj
+	}
+	s := string(raw)
+	if truncated {
+		return s + "...(truncated)"
+	}
+	return s
 }
 
 func (p Proxy) ServeHTTP(res http.ResponseWriter, req *http.Request) {
-	uuid := getUuid(req)
+	// 签发方 JWKS 公开端点（OIDC 同款）；不鉴权。业务也可静态挂同一份 JWKS。
+	if req.URL.Path == "/.well-known/jwks.json" && (req.Method == http.MethodGet || req.Method == http.MethodHead) {
+		raw, err := p.signer.JWKS()
+		if err != nil {
+			http.Error(res, "jwks unavailable", http.StatusInternalServerError)
+			return
+		}
+		res.Header().Set("Content-Type", "application/json")
+		res.Header().Set("Cache-Control", "public, max-age=60")
+		res.WriteHeader(http.StatusOK)
+		if req.Method == http.MethodGet {
+			_, _ = res.Write(raw)
+		}
+		return
+	}
+
+	start := time.Now()
+	clientUuid := traceid.ClientUuidFromHeaders(req.Header)
+	serverTrace := ensureServerTraceId(res, req)
+	ctx := traceid.WithContext(req.Context(), serverTrace, clientUuid)
+
+	lg := beaverlog.New("proxy", ctx)
+	rec := &statusRecorder{ResponseWriter: res, status: http.StatusOK}
+	clientIP := getClientIP(req)
+	method := req.Method
+	path := req.URL.Path
+
+	var reqBody []byte
+	if req.Body != nil {
+		reqBody, _ = io.ReadAll(req.Body)
+		_ = req.Body.Close()
+		req.Body = io.NopCloser(bytes.NewReader(reqBody))
+		req.ContentLength = int64(len(reqBody))
+	}
+
+	finish := func(text string, level string, extra map[string]any) {
+		data := map[string]any{
+			"method":   method,
+			"path":     path,
+			"clientIp": clientIP,
+			"status":   rec.status,
+			"duration": time.Since(start).String(),
+			"req":      bodyForLog(reqBody),
+			"resp":     bodyForLog(rec.body.Bytes()),
+		}
+		if q := req.URL.RawQuery; q != "" {
+			data["query"] = q
+		}
+		for k, v := range extra {
+			data[k] = v
+		}
+		msg := model.LogMsg{Text: text, Data: data}
+		switch level {
+		case "warn":
+			lg.Warn(msg)
+		case "error":
+			lg.Error(msg)
+		default:
+			lg.Info(msg)
+		}
+	}
 
 	// 限流检查
 	if p.Config.Limit.Enable {
-		clientIP := getClientIP(req)
 		if !p.rateLimitCheck(clientIP) {
-			gatewayLog.Warn(model.LogMsg{
-				Text: "请求频率过高",
-				Data: map[string]interface{}{
-					"clientIp": clientIP,
-					"path":     req.URL.Path,
-					"uuid":     uuid,
-				},
-			})
-			writeErrorResponse(res, "请求频率过高", http.StatusTooManyRequests, uuid)
+			writeErrorResponse(rec, "请求频率过高", http.StatusTooManyRequests, serverTrace)
+			finish("请求频率过高", "warn", nil)
 			return
 		}
 	}
 
-	token := getToken(req)
-	req.Header.Set("Token", token)
-	ok, authErrMsg := p.auth(req)
-	if !ok {
-		gatewayLog.Warn(model.LogMsg{
-			Text: "网关鉴权失败",
-			Data: map[string]interface{}{
-				"path": req.URL.Path,
-				"uuid": uuid,
-				"msg":  authErrMsg,
-			},
-		})
-		writeErrorResponse(res, authErrMsg, http.StatusUnauthorized, uuid)
+	// 鉴权流水线：剥客户端身份头 → 外部票按路由组验 → 写身份头 → 注入网关 ES256 断言。
+	// 鉴权失败直接 401，不进入服务发现与转发。东西向不经网关。
+	kind, err := p.authenticate(req)
+	if err != nil {
+		writeAuthError(rec, err.Error())
+		finish("网关鉴权失败", "warn", map[string]any{"reason": err.Error()})
+		return
+	}
+	if err := p.injectGatewayAssertion(req, kind); err != nil {
+		writeErrorResponse(rec, "身份断言注入失败", http.StatusInternalServerError, serverTrace)
+		finish("身份断言注入失败", "error", map[string]any{"reason": err.Error()})
 		return
 	}
 
-	// 匹配路由
-	regex, _ := regexp.Compile(`/api/(.*?)/`)
+	// 匹配路由：标准路径为 /{team}/{surface}/{service}/{group}/v1/{action}，
+	// 取第 3 段 service；surface 只接受 api / admin。
+	regex := regexp.MustCompile(`^/[^/]+/(?:api|admin)/([^/]+)/`)
 
 	addrList := regex.FindStringSubmatch(req.URL.Path)
 	if len(addrList) != 2 {
-		writeErrorResponse(res, "请求不匹配", http.StatusBadRequest, uuid)
+		writeErrorResponse(rec, "请求不匹配", http.StatusBadRequest, serverTrace)
+		finish("请求不匹配", "warn", nil)
 		return
 	}
 
 	service := addrList[1]
-
+	// 服务映射：service 段 → 完整 etcd 服务名（如 user→account_api），未命中默认 {service}_api。
+	if mapped, ok := p.Config.ServiceAlias[service]; ok {
+		service = mapped
+	} else {
+		service += "_api"
+	}
 	// 增加重试机制
 	var addr string
 	for i := 0; i < 3; i++ {
-		addr = etcd.GetServiceAddr(p.Config.Etcd, service+"_api")
+		addr = etcd.GetServiceAddr(p.Config.Etcd, service)
 		if addr != "" {
 			break
 		}
-		logx.Errorf("第%d次获取服务地址失败: %s_api", i+1, service)
+		lg.Error(model.LogMsg{Text: "获取服务地址失败", Data: map[string]interface{}{"attempt": i + 1, "service": service}})
 		time.Sleep(100 * time.Millisecond)
 	}
 
 	if addr == "" {
-		gatewayLog.Error(model.LogMsg{
-			Text: "服务不可用",
-			Data: map[string]interface{}{
-				"service": service + "_api",
-				"path":    req.URL.Path,
-				"uuid":    uuid,
-			},
-		})
-		logx.Errorf("未匹配到服务: %s_api", service)
-		writeErrorResponse(res, "服务暂时不可用", http.StatusServiceUnavailable, uuid)
+		writeErrorResponse(rec, "服务暂时不可用", http.StatusServiceUnavailable, serverTrace)
+		finish("服务不可用", "error", map[string]any{"service": service})
+		lg.Error(model.LogMsg{Text: "未匹配到服务", Data: map[string]interface{}{"service": service}})
 		return
 	}
 
@@ -241,23 +290,29 @@ func (p Proxy) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 		if clientIP := getClientIP(req); clientIP != "" {
 			req.Header.Set("ClientIp", clientIP)
 		}
+		// 只透传服务端 X-Request-Id；客户端 Uuid 原样保留，互不覆盖
+		if id := req.Header.Get(traceid.HeaderRequestID); id != "" {
+			req.Header.Set(traceid.HeaderRequestID, id)
+		}
 	}
 
-	reverseProxy.ServeHTTP(res, req)
-}
-
-func getToken(req *http.Request) string {
-	token := req.Header.Get("Token")
-	if token == "" {
-		token = req.URL.Query().Get("token")
+	// WebSocket 必须走原始 ResponseWriter：避免缓冲响应体，并保证 Hijack 可用
+	out := http.ResponseWriter(rec)
+	if isWebSocketRequest(req) {
+		out = res
 	}
-	return token
+	reverseProxy.ServeHTTP(out, req)
+	if isWebSocketRequest(req) && rec.status == http.StatusOK {
+		rec.status = http.StatusSwitchingProtocols
+	}
+	finish("网关请求完成", "info", map[string]any{"service": service})
 }
 
-func getUuid(req *http.Request) string {
-	uuid := req.Header.Get("Uuid")
-
-	return uuid
+// ensureServerTraceId Gateway 入口始终生成服务端 trace，与客户端 Uuid 无关。
+func ensureServerTraceId(res http.ResponseWriter, req *http.Request) string {
+	id := traceid.New()
+	traceid.AttachServerTrace(res, req, id)
+	return id
 }
 
 // getClientIP 获取客户端真实IP

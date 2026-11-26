@@ -1,0 +1,151 @@
+syntax = "v1"
+
+// ==================== 认证接口：网关 JwtS2s（C端用户票注入可信身份头）====================
+type (
+	LogoutReq {
+		UserID string `header:"Beaver-User-Id"` // 当前用户ID（网关注入的可信身份头）
+		DeviceID string `header:"deviceId"`
+	}
+	LogoutRes  {}
+)
+
+type (
+	QrcodeScanReq {
+		UserID string `header:"Beaver-User-Id"` // 当前用户ID（网关注入的可信身份头）
+		Token     string `json:"token"`
+		AuthToken string `header:"Token"`
+	}
+	QrcodeScanRes  {}
+)
+
+type (
+	GetDevicesReq {
+		UserID string `header:"Beaver-User-Id"` // 当前用户ID（网关注入的可信身份头）
+	}
+	GetDevicesRes {
+		Devices []DeviceInfo `json:"devices"`
+	}
+	DeviceInfo {
+		DeviceID        string `json:"deviceId"`
+		DeviceType      string `json:"deviceType"`
+		DeviceOS        string `json:"deviceOs"`
+		DeviceModel     string `json:"deviceModel"`
+		DeviceOSVersion string `json:"deviceOsVersion"`
+		DeviceName      string `json:"deviceName"`
+		LastLoginTime   string `json:"lastLoginTime"`
+		IsOnline        bool   `json:"isOnline"`
+		LastLoginIP     string `json:"lastLoginIp"`
+	}
+)
+
+type (
+	KickDeviceReq {
+		UserID string `header:"Beaver-User-Id"` // 当前用户ID（网关注入的可信身份头）
+		DeviceID string `json:"deviceId"`
+	}
+	KickDeviceRes  {}
+)
+
+type (
+	UpdatePasswordReq {
+		UserID string `header:"Beaver-User-Id"` // 当前用户ID（网关注入的可信身份头）
+		OldPassword string `json:"oldPassword"`
+		NewPassword string `json:"newPassword"`
+	}
+	UpdatePasswordRes  {}
+)
+
+// ==================== 认证域保护面：C 端 + 队间机器视图 ====================
+// 统一 JwtS2s 保护链路；含凭据/设备维护能力。
+// 队间端点与 C 端同在 auth URL group，共用同一 @server 生成目录。
+type (
+	VerifyPasswordReq {
+		UserID   string `json:"userId,optional"`
+		Account  string `json:"account,optional"`
+		Type     string `json:"type,optional"`
+		Password string `json:"password,optional"`
+	}
+	VerifyPasswordRes {
+		Valid    bool   `json:"valid,optional"`
+		UserID   string `json:"userId,optional"`
+		NickName string `json:"nickName,optional"`
+	}
+)
+
+type (
+	CreateCredentialReq {
+		UserID   string `json:"userId,optional"`
+		Password string `json:"password,optional"`
+	}
+	CreateCredentialRes {
+		Success bool `json:"success,optional"`
+	}
+)
+
+type (
+	ListUserDevicesReq {
+		UserID string `json:"userId,optional"`
+	}
+	ListUserDevicesRes {
+		List []UserDeviceItem `json:"list,optional"`
+	}
+)
+
+type (
+	ResetUserPasswordReq {
+		UserID      string `json:"userId,optional"`
+		NewPassword string `json:"newPassword,optional"`
+	}
+	ResetUserPasswordRes {
+		Success bool `json:"success,optional"`
+	}
+)
+
+// ==================== 认证域保护面：C 端 + 队间机器视图 ====================
+// 统一 JwtS2s 保护链路；含凭据/设备维护能力。
+// 队间端点与 C 端同在 auth URL group，共用同一 @server 生成目录。
+@server (
+	group: auth
+	middleware: JwtS2s
+)
+service account {
+	@doc "用户登出"
+	@handler logout
+	post /beaver/api/account/auth/v1/logout (LogoutReq) returns (LogoutRes)
+
+	@doc "扫码登录-确认扫码（移动端，Header Token）"
+	@handler qrcodeScan
+	post /beaver/api/account/auth/v1/qrcode_scan (QrcodeScanReq) returns (QrcodeScanRes)
+
+	@doc "获取登录设备列表"
+	@handler getDevices
+	get /beaver/api/account/auth/v1/devices (GetDevicesReq) returns (GetDevicesRes)
+
+	@doc "强制下线指定设备"
+	@handler kickDevice
+	post /beaver/api/account/auth/v1/kick_device (KickDeviceReq) returns (KickDeviceRes)
+
+	@doc "修改密码（需验证旧密码）"
+	@handler updatePassword
+	post /beaver/api/account/auth/v1/update_password (UpdatePasswordReq) returns (UpdatePasswordRes)
+
+	@doc "校验账号密码（开放平台 / 管理端代登录）"
+	@handler verifyPassword
+	post /beaver/api/account/auth/v1/verify_password (VerifyPasswordReq) returns (VerifyPasswordRes)
+
+	@doc "创建账号密码凭据"
+	@handler createCredential
+	post /beaver/api/account/auth/v1/create_credential (CreateCredentialReq) returns (CreateCredentialRes)
+
+	@doc "查指定用户的登录设备"
+	@handler listUserDevices
+	post /beaver/api/account/auth/v1/devices (ListUserDevicesReq) returns (ListUserDevicesRes)
+
+	@doc "重置指定用户密码（无需旧密码）"
+	@handler resetUserPassword
+	post /beaver/api/account/auth/v1/reset_password (ResetUserPasswordReq) returns (ResetUserPasswordRes)
+
+
+
+
+}

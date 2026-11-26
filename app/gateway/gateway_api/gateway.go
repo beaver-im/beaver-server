@@ -24,7 +24,7 @@ package main
 import (
 	"beaver/app/gateway/gateway_api/core"
 	"beaver/app/gateway/gateway_api/types"
-	"beaver/utils/logger"
+	"beaver/utils/beaverlog"
 	"flag"
 	"fmt"
 	"net/http"
@@ -45,9 +45,11 @@ func main() {
 
 	conf.MustLoad(*configFile, &config)
 	logx.SetUp(config.Log)
-	logger.Init("gateway_api")
-	proxy := core.Proxy{
-		Config: config,
+	beaverlog.Init(config.Name)
+	proxy, err := core.NewProxy(config)
+	if err != nil {
+		fmt.Printf("网关鉴权正则配置错误: %v\n", err)
+		os.Exit(1)
 	}
 
 	// 创建带有CORS设置的多路复用器
@@ -55,7 +57,7 @@ func main() {
 	n.Use(negroni.HandlerFunc(corsMiddleware))
 	n.UseHandler(proxy)
 
-	err := http.ListenAndServe(config.Addr, n)
+	err = http.ListenAndServe(config.Addr, n)
 	if err != nil {
 		fmt.Printf("HTTP服务启动失败: %v\n", err)
 		os.Exit(1)
@@ -67,6 +69,7 @@ func corsMiddleware(w http.ResponseWriter, r *http.Request, next http.HandlerFun
 	w.Header().Set("Access-Control-Allow-Origin", "*") // 设置允许的源域名
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, HEAD")
 	w.Header().Set("Access-Control-Allow-Headers", "*")
+	w.Header().Set("Access-Control-Expose-Headers", "X-Request-Id, Uuid")
 
 	// 如果是预检请求，直接返回
 	if r.Method == http.MethodOptions {

@@ -22,6 +22,7 @@
 package config
 
 import (
+	"beaver/commonconfig"
 	"github.com/zeromicro/go-zero/rest"
 	"github.com/zeromicro/go-zero/zrpc"
 )
@@ -40,11 +41,18 @@ type Config struct {
 	}
 	FriendRpc       zrpc.RpcClientConf
 	GroupRpc        zrpc.RpcClientConf
-	CircleRpc       zrpc.RpcClientConf
 	UserRpc         zrpc.RpcClientConf
 	ChatRpc         zrpc.RpcClientConf
-	MomentRpc       zrpc.RpcClientConf
 	EmojiRpc        zrpc.RpcClientConf
 	DatasyncRpc     zrpc.RpcClientConf
 	NotificationRpc zrpc.RpcClientConf
+	// RemoteProxy 出站 S2S 端点注册表：只登记其它团队（social / agent）的入口。
+	// 本面只做增量同步，不承接 A 主体业务能力，也不对外提供业务门面。
+	RemoteProxy commonconfig.RemoteProxy `json:",optional"`
+	// Assertion 北向：用 JWKS 验网关 ES256 断言（iss + kid），不是共享 HMAC。
+	Assertion commonconfig.AssertionVerify `json:",optional"`
+	// S2S 入站机器票：东西向本团队业务面共用一套凭据，票据受众统一 core:api。
+	S2S struct {
+		Secret string `json:",optional"`
+	}
 }

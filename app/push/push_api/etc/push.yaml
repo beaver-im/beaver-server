@@ -1,0 +1,43 @@
+Name: push
+Host: 0.0.0.0
+Port: 20500
+Log:
+  Encoding: json
+  TimeFormat: 2006-01-02T15:04:05
+  Stat: false
+Etcd: 127.0.0.1:2379
+
+RocketMQ:
+  Addr: 127.0.0.1:9876
+
+# 入站 S2S 机器票：业务服务经 JwtS2s 调用推送面，受众 core:api。
+# 北向：JWKS 验网关 ES256 断言（公钥材料，可公开）；JwtS2s 强制要求，缺失则拒绝启动。
+Assertion:
+  Issuer: beaver-gateway
+  JWKS: |
+    {"keys":[{"alg":"ES256","crv":"P-256","kid":"gateway-2026-11","kty":"EC","use":"sig","x":"46Jx5dTVRu4EQsot-rtD1lBS302SYrVJ7EJsHblRtig","y":"wEbsT3a7M4uWO7nZLxM4tHCx9-QN-MnZAOn1jyqC6Zw"}]}
+S2S:
+  # Secret 签发/校验 core:api 机器票；本服务自签自验，不对外披露。
+  Secret: beaver-s2s-core-b0db00321ca84fc783a2ba81505e82b1
+  # 换票端点 client_credentials 注册表：键 = 调用方服务名（= 其 yaml 的 Name），一个二进制一枚凭据。
+  # 键即身份：调用方装配时用 c.Name 作为 client_id，所以改服务名 = 改身份，注册表要同步。
+  # ClientSecret 是凭据，非签名密钥；与各调用方 RemoteProxy.Push.ClientSecret 一一对应。
+  # 键名带 _rpc 只表示调用方是 rpc 服务进程（如 notification_rpc 的 gRPC handler 异步投递实时帧），
+  # 不代表 push 会走 gRPC：本注册表只用于 HTTP 换票，出站调用恒为 /beaver/api/push/... 的 HTTP S2S。
+  Clients:
+    account:
+      ClientSecret: beaver-s2s-push-account-95079e2b6e526c5f8286edd787be4681
+    asset:
+      ClientSecret: beaver-s2s-push-asset-f296a87e54ef131369e9d7a2da9a3bfc
+    message:
+      ClientSecret: beaver-s2s-push-message-c9de861f26fb9c24c129d413f353b1e0
+    message_rpc:
+      ClientSecret: beaver-s2s-push-messagerpc-2fa3d077761fea3271455594c128092a
+    notification:
+      ClientSecret: beaver-s2s-push-notification-aee82d3318d2da0987e846746adfa0b3
+    notification_rpc:
+      ClientSecret: beaver-s2s-push-notificationrpc-a04f81421876659b9a76b51248b79a84
+    relation:
+      ClientSecret: beaver-s2s-push-relation-460e79851f3441d2c7f0b6e298a99aa4
+    ws:
+      ClientSecret: beaver-s2s-push-ws-e3d2104f2473ca03000c47462b52d2c0

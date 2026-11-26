@@ -24,9 +24,10 @@ package main
 import (
 	"beaver/app/platform/platform_api/internal/config"
 	"beaver/app/platform/platform_api/internal/handler"
+	"beaver/app/platform/platform_api/internal/logic"
 	"beaver/app/platform/platform_api/internal/svc"
 	"beaver/common/etcd"
-	"beaver/utils/logger"
+	"beaver/utils/beaverlog"
 	"flag"
 	"fmt"
 
@@ -41,13 +42,26 @@ func main() {
 
 	var c config.Config
 	conf.MustLoad(*configFile, &c)
-	logger.Init("platform_api")
+	beaverlog.InitFromConf(c.RestConf.ServiceConf)
 
 	server := rest.MustNewServer(c.RestConf)
 	defer server.Stop()
 
 	ctx := svc.NewServiceContext(c)
 	handler.RegisterHandlers(server, ctx)
+
+	// 客户端日志 / 服务端 beaverlog：RocketMQ → OpenSearch（索引 beaver-logs）
+	if ctx.RocketMQ != nil && ctx.OpenSearch != nil {
+		go func() {
+			if err := logic.NewClientLogConsumerLogic(ctx).StartConsumer(); err != nil {
+				fmt.Printf("客户端日志 Consumer 启动失败: %v\n", err)
+				return
+			}
+			fmt.Println("客户端日志 Consumer 已启动: topic=beaver_logs → index=beaver-logs")
+		}()
+	} else {
+		fmt.Println("跳过客户端日志 Consumer: RocketMQ 或 OpenSearch 未配置")
+	}
 
 	etcd.DeliveryAddress(c.Etcd, c.Name+"_api", fmt.Sprintf("%s:%d", c.Host, c.Port))
 

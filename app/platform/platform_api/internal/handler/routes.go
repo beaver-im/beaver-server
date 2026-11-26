@@ -25,7 +25,10 @@ package handler
 import (
 	"net/http"
 
+	admin "beaver/app/platform/platform_api/internal/handler/admin"
 	feedback "beaver/app/platform/platform_api/internal/handler/feedback"
+	instance_public "beaver/app/platform/platform_api/internal/handler/instance_public"
+	org "beaver/app/platform/platform_api/internal/handler/org"
 	track_public "beaver/app/platform/platform_api/internal/handler/track_public"
 	update_public "beaver/app/platform/platform_api/internal/handler/update_public"
 	workbench "beaver/app/platform/platform_api/internal/handler/workbench"
@@ -36,14 +39,206 @@ import (
 
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.JwtS2s},
+			[]rest.Route{
+				{
+					// 队间：查询后台操作日志
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/admin_query_logs",
+					Handler: admin.AdminQueryLogsHandler(serverCtx),
+				},
+				{
+					// 队间：创建应用
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/create_app",
+					Handler: admin.CreateAppHandler(serverCtx),
+				},
+				{
+					// 队间：创建应用架构
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/create_architecture",
+					Handler: admin.CreateArchitectureHandler(serverCtx),
+				},
+				{
+					// 队间：创建版本
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/create_version",
+					Handler: admin.CreateVersionHandler(serverCtx),
+				},
+				{
+					// 队间：创建工作台应用
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/create_workbench_app",
+					Handler: admin.CreateWorkbenchAppHandler(serverCtx),
+				},
+				{
+					// 队间：删除用户反馈
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/delete_feedback",
+					Handler: admin.DeleteFeedbackHandler(serverCtx),
+				},
+				{
+					// 队间：删除版本
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/delete_version",
+					Handler: admin.DeleteVersionHandler(serverCtx),
+				},
+				{
+					// 队间：删除工作台应用
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/delete_workbench_app",
+					Handler: admin.DeleteWorkbenchAppHandler(serverCtx),
+				},
+				{
+					// 队间：查询单条内容举报
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/get_content_report",
+					Handler: admin.GetContentReportHandler(serverCtx),
+				},
+				{
+					// 队间：查询单条用户反馈
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/get_feedback",
+					Handler: admin.GetFeedbackHandler(serverCtx),
+				},
+				{
+					// 队间：查询单条工作台应用
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/get_workbench_app",
+					Handler: admin.GetWorkbenchAppHandler(serverCtx),
+				},
+				{
+					// 队间：处理用户反馈
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/handle_feedback",
+					Handler: admin.HandleFeedbackHandler(serverCtx),
+				},
+				{
+					// 队间：按应用查询版本（按架构分组）
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/list_app_versions",
+					Handler: admin.ListAppVersionsHandler(serverCtx),
+				},
+				{
+					// 队间：分页查询应用
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/list_apps",
+					Handler: admin.ListAppsHandler(serverCtx),
+				},
+				{
+					// 队间：分页查询应用架构
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/list_architectures",
+					Handler: admin.ListArchitecturesHandler(serverCtx),
+				},
+				{
+					// 队间：分页查询内容举报
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/list_content_reports",
+					Handler: admin.ListContentReportsHandler(serverCtx),
+				},
+				{
+					// 队间：分页查询用户反馈
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/list_feedback",
+					Handler: admin.ListFeedbackHandler(serverCtx),
+				},
+				{
+					// 队间：查询发布策略
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/list_release_policies",
+					Handler: admin.ListReleasePoliciesHandler(serverCtx),
+				},
+				{
+					// 队间：分页查询版本
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/list_versions",
+					Handler: admin.ListVersionsHandler(serverCtx),
+				},
+				{
+					// 队间：分页查询工作台应用
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/list_workbench_apps",
+					Handler: admin.AdminListWorkbenchAppsHandler(serverCtx),
+				},
+				{
+					// 队间：更新应用架构
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/update_architecture",
+					Handler: admin.UpdateArchitectureHandler(serverCtx),
+				},
+				{
+					// 队间：批量处理内容举报
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/update_content_reports",
+					Handler: admin.UpdateContentReportsHandler(serverCtx),
+				},
+				{
+					// 队间：更新工作台应用
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/update_workbench_app",
+					Handler: admin.UpdateWorkbenchAppHandler(serverCtx),
+				},
+				{
+					// 队间：新增或更新发布策略
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/admin/v1/upsert_release_policy",
+					Handler: admin.UpsertReleasePolicyHandler(serverCtx),
+				},
+			}...,
+		),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.JwtS2s},
+			[]rest.Route{
+				{
+					// 提交用户反馈
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/platform/feedback/v1/submit_feedback",
+					Handler: feedback.SubmitFeedbackHandler(serverCtx),
+				},
+			}...,
+		),
+	)
+
+	server.AddRoutes(
 		[]rest.Route{
 			{
-				// 提交用户反馈
-				Method:  http.MethodPost,
-				Path:    "/api/platform/feedback/v1/submit_feedback",
-				Handler: feedback.SubmitFeedbackHandler(serverCtx),
+				// 查询当前组织
+				Method:  http.MethodGet,
+				Path:    "/beaver/api/platform/instance_public/v1/instance",
+				Handler: instance_public.GetInstanceHandler(serverCtx),
 			},
 		},
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.JwtS2s},
+			[]rest.Route{
+				{
+					// 部门树，节点带直属成员人数
+					Method:  http.MethodGet,
+					Path:    "/beaver/api/platform/org/v1/department_tree",
+					Handler: org.DepartmentTreeHandler(serverCtx),
+				},
+				{
+					// 成员列表，可按部门过滤
+					Method:  http.MethodGet,
+					Path:    "/beaver/api/platform/org/v1/member_list",
+					Handler: org.ListMemberHandler(serverCtx),
+				},
+				{
+					// 查询当前组织
+					Method:  http.MethodGet,
+					Path:    "/beaver/api/platform/org/v1/organization",
+					Handler: org.GetOrganizationHandler(serverCtx),
+				},
+			}...,
+		),
 	)
 
 	server.AddRoutes(
@@ -51,8 +246,8 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			{
 				// 记录客户端日志
 				Method:  http.MethodPost,
-				Path:    "/api/platform/track_public/v1/log",
-				Handler: track_public.LogEventsHandler(serverCtx),
+				Path:    "/beaver/api/platform/track_public/v1/track",
+				Handler: track_public.TrackHandler(serverCtx),
 			},
 		},
 	)
@@ -62,26 +257,29 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			{
 				// 获取最新版本
 				Method:  http.MethodPost,
-				Path:    "/api/platform/update_public/v1/latest",
+				Path:    "/beaver/api/platform/update_public/v1/latest",
 				Handler: update_public.GetLatestVersionHandler(serverCtx),
 			},
 			{
 				// 上报版本信息
 				Method:  http.MethodPost,
-				Path:    "/api/platform/update_public/v1/report",
+				Path:    "/beaver/api/platform/update_public/v1/report",
 				Handler: update_public.ReportVersionHandler(serverCtx),
 			},
 		},
 	)
 
 	server.AddRoutes(
-		[]rest.Route{
-			{
-				// 获取工作台应用列表（仅上架，按分类分组）
-				Method:  http.MethodGet,
-				Path:    "/api/platform/v1/list_workbench",
-				Handler: workbench.ListWorkbenchAppsHandler(serverCtx),
-			},
-		},
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.JwtS2s},
+			[]rest.Route{
+				{
+					// 获取工作台应用列表（仅上架，按分类分组）
+					Method:  http.MethodGet,
+					Path:    "/beaver/api/platform/workbench/v1/list_workbench",
+					Handler: workbench.ListWorkbenchAppsHandler(serverCtx),
+				},
+			}...,
+		),
 	)
 }

@@ -3,3 +3,21 @@ package.lock.json
 static/*
 *.exe
 .rocketmq_client_go
+logs/
+
+# 压测本地配置（含密码，勿提交）
+scripts/stress/.env
+scripts/stress/accounts.json
+scripts/stress/friends.json
+scripts/stress/**/report.json
+scripts/stress/data/
+
+.gen_doc_api_new
+.gen_doc_rpc_new
+.gen_doc_api_tmp
+.gen_doc_tmp
+.tmpgen
+config_prod.yaml
+
+# 部署产物包（含明文密码/密钥，由 deploy/config.sh 构建）
+deploy/dist/

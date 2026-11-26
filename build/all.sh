@@ -19,59 +19,45 @@ assert_version_not_published() {
 
 assert_version_not_published
 
-# 定义模块列表
+# 定义模块列表（与 app/、deploy/、Dockerfile 保持一致，服务合并后共 16 个）
 modules=(
     # ==================== RPC 服务 ====================
-    "user_rpc"
-    "auth_rpc"
-    "group_rpc"
-    "circle_rpc"
-    "friend_rpc"
-    "chat_rpc"
-    "file_rpc"
-    "emoji_rpc"
-    "moment_rpc"
+    "account_rpc"
+    "asset_rpc"
+    "message_rpc"
     "notification_rpc"
     "platform_rpc"
-    "call_rpc"
-    "open_rpc"
-    
+    "relation_rpc"
+
     # ==================== API 服务 ====================
-    "auth_api"
-    "chat_api"
+    "account_api"
+    "asset_api"
     "datasync_api"
-    "emoji_api"
-    "file_api"
-    "friend_api"
-    "group_api"
-    "circle_api"
-    "moment_api"
+    "gateway_api"
+    "message_api"
     "notification_api"
     "platform_api"
-    "user_api"
+    "push_api"
+    "relation_api"
     "ws_api"
-    "gateway_api"
-    "call_api"
-    "open_api"
-    "open_portal"
-    
-    # ==================== ADMIN 服务 ====================
-    "backend_admin"
-    "gateway_admin"
 )
 
-# 在当前路径执行 docker build
-docker build -t beaver_server .
+# 在仓库根目录执行 docker build（不依赖调用方当前工作目录）
+docker build -t beaver_server -f "$ROOT_DIR/Dockerfile" "$ROOT_DIR"
+
+# 记录失败模块，避免某个模块推送失败但仍报告整体成功
+FAIL_FLAG="$(mktemp)"
+trap 'rm -f "$FAIL_FLAG"' EXIT
 
 # 并发构建函数
 build_module() {
     local module_name="$1"
     echo "🚀 开始构建: $module_name"
-    ./build/build.sh "$module_name"
-    if [ $? -eq 0 ]; then
+    if bash "$ROOT_DIR/build/build.sh" "$module_name"; then
         echo "✅ 打包镜像成功: $module_name"
     else
-        echo "❌ 打包镜像失败: $module_name"
+        echo "❌ 打包镜像失败: $module_name" >&2
+        echo "$module_name" >> "$FAIL_FLAG"
     fi
     echo "----------------------------------------"
 }
@@ -95,4 +81,9 @@ done
 # 等待所有后台任务完成
 wait
 
-echo "🎉 所有模块构建完成！"
+if [ -s "$FAIL_FLAG" ]; then
+    echo "❌ 以下模块构建/推送失败：$(tr '\n' ' ' < "$FAIL_FLAG")" >&2
+    exit 1
+fi
+
+echo "🎉 所有模块构建并推送完成！"

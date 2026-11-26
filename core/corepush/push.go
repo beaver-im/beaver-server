@@ -41,8 +41,10 @@ import (
 	"sync"
 	"time"
 
+	beaverlog "beaver/utils/beaverlog"
+	"beaver/utils/beaverlog/model"
+
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/zeromicro/go-zero/core/logx"
 )
 
 const (
@@ -104,14 +106,20 @@ func NewPushSender(cfg Config) *PushSender {
 	s := &PushSender{cfg: cfg}
 	if cfg.Enabled && cfg.FCM.Enabled {
 		if c, err := newFCMClient(cfg.FCM.ProjectID, cfg.FCM.CredentialsFile); err != nil {
-			logx.Errorf("FCM 初始化失败: %v", err)
+			beaverlog.New("push").Error(model.LogMsg{
+				Text: "FCM初始化失败",
+				Data: map[string]any{"err": err.Error()},
+			})
 		} else {
 			s.fcm = c
 		}
 	}
 	if cfg.Enabled && cfg.APNs.Enabled {
 		if c, err := newAPNsClient(cfg.APNs); err != nil {
-			logx.Errorf("APNs 初始化失败: %v", err)
+			beaverlog.New("push").Error(model.LogMsg{
+				Text: "APNs初始化失败",
+				Data: map[string]any{"err": err.Error()},
+			})
 		} else {
 			s.apns = c
 		}
@@ -124,14 +132,25 @@ func (s *PushSender) Enabled() bool {
 	return s != nil && s.cfg.Enabled && (s.fcm != nil || s.apns != nil)
 }
 
-// SendToTokens 向指定 Token 列表发通知（chat_rpc 经 AuthRpc 拉取 Token 后调用）。
+// SendToToken 单设备发送并返回错误，供离线 Pipeline 的 ChannelPlugin 使用。
+func (s *PushSender) SendToToken(ctx context.Context, tok PushToken, msg Message) error {
+	if !s.Enabled() {
+		return nil
+	}
+	return s.sendToToken(ctx, tok, msg)
+}
+
+// SendToTokens 向指定 Token 列表发通知（push 服务离线 Pipeline 独占调用）。
 func (s *PushSender) SendToTokens(ctx context.Context, tokens []PushToken, msg Message) {
 	if !s.Enabled() {
 		return
 	}
 	for _, tok := range tokens {
 		if err := s.sendToToken(ctx, tok, msg); err != nil {
-			logx.Errorf("推送失败: deviceId=%s, err=%v", tok.DeviceID, err)
+			beaverlog.New("push").Error(model.LogMsg{
+				Text: "推送失败",
+				Data: map[string]any{"deviceID": tok.DeviceID, "err": err.Error()},
+			})
 		}
 	}
 }

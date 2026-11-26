@@ -22,23 +22,23 @@
 package chat_message
 
 import (
+	pushcli "beaver/remote/push"
 	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 
-	"beaver/app/chat/chat_models"
-	"beaver/app/group/group_rpc/types/group_rpc"
+	chattypes "beaver/app/message/message_rpc/pb"
+	relationtypes "beaver/app/relation/relation_rpc/pb"
 	ws_conn "beaver/app/ws/ws_api/internal/logic/websocket/conn"
 	"beaver/app/ws/ws_api/internal/svc"
 	"beaver/app/ws/ws_api/internal/types"
 	type_struct "beaver/app/ws/ws_api/types"
-	mqwsconst "beaver/common/const/mqwsconst"
+	"beaver/common/const/chattypeconst"
 	"beaver/common/wsEnum/wsCommandConst"
 	"beaver/common/wsEnum/wsTypeConst"
+	"beaver/utils/beaverlog/model"
 	"beaver/utils/conversation"
-
-	"github.com/zeromicro/go-zero/core/logx"
 )
 
 func HandleTypingSend(
@@ -75,16 +75,31 @@ func HandleTypingSend(
 			},
 			"conversationId": body.ConversationID,
 		}
-		if err := svcCtx.RocketMQ.SendMessage(ctx, mqwsconst.MqTopicWs, payload); err != nil {
-			logx.Errorf("推送 typing 通知失败: sender=%s, target=%s, error=%v", req.UserID, peerID, err)
+		if err := pushcli.SendRealtimeApi(ctx, "sync", payload); err != nil {
+			logger.Error(model.LogMsg{
+				Text: "推送typing通知失败",
+				Data: map[string]any{"sender": req.UserID, "target": peerID, "err": err.Error()},
+			})
 		}
 	}
 	return nil
 }
 
 func getTypingPeerIDs(ctx context.Context, svcCtx *svc.ServiceContext, currentUserID, conversationID string) ([]string, error) {
-	convType, userIDs := conversation.ParseConversationWithType(conversationID)
-	if convType == 1 {
+	// 会话类型以会话元数据为准，不从会话ID前缀推断
+	convRes, err := svcCtx.ChatRpc.GetConversationsListByIds(ctx, &chattypes.GetConversationsListByIdsReq{
+		ConversationIds: []string{conversationID},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("查询会话类型失败: %w", err)
+	}
+	if len(convRes.Conversations) == 0 {
+		return nil, fmt.Errorf("会话不存在")
+	}
+	convType := int(convRes.Conversations[0].Type)
+
+	if chattypeconst.IsP2P(convType) {
+		userIDs := conversation.ParseConversationIDs(convType, conversationID)
 		var peers []string
 		for _, uid := range userIDs {
 			if uid != currentUserID {
@@ -92,13 +107,13 @@ func getTypingPeerIDs(ctx context.Context, svcCtx *svc.ServiceContext, currentUs
 			}
 		}
 		if len(peers) == 0 {
-			return nil, fmt.Errorf("无效的私聊会话")
+			return nil, fmt.Errorf("无效的两人会话")
 		}
 		return peers, nil
 	}
 
-	groupID := conversation.GetTargetIDByConversation(conversationID, currentUserID)
-	membersRes, err := svcCtx.GroupRpc.GetGroupMembers(ctx, &group_rpc.GetGroupMembersReq{
+	groupID := conversation.GetTargetIDByConversation(convType, conversationID, currentUserID)
+	membersRes, err := svcCtx.GroupRpc.GetGroupMembers(ctx, &relationtypes.GetGroupMembersReq{
 		GroupID: groupID,
 	})
 	if err != nil {
@@ -112,14 +127,15 @@ func getTypingPeerIDs(ctx context.Context, svcCtx *svc.ServiceContext, currentUs
 		}
 	}
 	if len(peers) == 0 {
-		var userConversations []chat_models.ChatUserConversation
-		if err := svcCtx.DB.Where("conversation_id = ? AND user_id <> ?", conversationID, currentUserID).
-			Find(&userConversations).Error; err != nil {
+		// 群成员为空时的兜底：会话成员属 message 库，走 message_rpc，不再直连
+		memberRes, err := svcCtx.ChatRpc.GetConversationMemberIDs(ctx, &chattypes.GetConversationMemberIDsReq{
+			ConversationId: conversationID,
+			ExcludeUserId:  currentUserID,
+		})
+		if err != nil {
 			return nil, err
 		}
-		for _, uc := range userConversations {
-			peers = append(peers, uc.UserID)
-		}
+		peers = append(peers, memberRes.UserIds...)
 	}
 	return peers, nil
 }

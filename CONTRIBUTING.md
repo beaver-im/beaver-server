@@ -51,7 +51,7 @@ What actually happened
 
 ## Environment
 - OS: [e.g. Windows 10, macOS 12.0]
-- Go Version: [e.g. 1.21.0]
+- Go Version: [e.g. 1.26.8]
 - Database: [e.g. MySQL 8.0]
 - Redis: [e.g. 6.0]
 
@@ -91,7 +91,7 @@ We welcome code contributions! Here's how to get started:
 
 ### Prerequisites
 
-- Go >= 1.21
+- Go >= 1.26（以 [go.mod](go.mod) 为准，当前为 1.26.8）
 - MySQL >= 8.0
 - Redis >= 6.0
 - ETCD >= 3.5
@@ -117,10 +117,10 @@ go mod tidy
 
 4. **Start development environment**
 ```bash
-# Start infrastructure services
-docker-compose -f build/docker-compose.yaml up -d
+# Start infrastructure services（事实源：docker/docker-compose.yml，含 MySQL / Redis / ETCD / MQ 等）
+docker-compose -f docker/docker-compose.yml up -d
 
-# Initialize database
+# 本地开发建库辅助（不是总服务启动器，也不是生产共库部署）
 go run main.go -db
 ```
 
@@ -135,7 +135,7 @@ go test ./...
 
 - Follow [Effective Go](https://golang.org/doc/effective_go.html)
 - Use `gofmt` for code formatting
-- Run `golint` to check code quality
+- Use `go vet ./...` for static checks（本仓未配置 `golint`，不再推荐）
 - Follow naming conventions:
   - `camelCase` for variables and functions
   - `PascalCase` for exported names
@@ -145,21 +145,27 @@ go test ./...
 
 ```
 app/
-├── service_name/
-│   ├── service_api/          # HTTP API layer
-│   │   ├── internal/
-│   │   │   ├── handler/      # HTTP handlers
-│   │   │   ├── logic/        # Business logic
-│   │   │   ├── svc/          # Service context
-│   │   │   └── types/        # Request/response types
-│   │   └── etc/              # Configuration files
-│   └── service_rpc/          # gRPC service layer
-│       ├── internal/
-│       │   ├── logic/        # Business logic
-│       │   ├── server/       # gRPC server
-│       │   └── svc/          # Service context
-│       └── etc/              # Configuration files
+└── <domain>/                       # 业务域，如 account / message / relation
+    ├── <domain>_api/               # HTTP 服务进程
+    │   ├── api/                    # .api 契约（事实源，goctl 生成）
+    │   ├── internal/
+    │   │   ├── config/             # 配置结构
+    │   │   ├── handler/            # HTTP handler（goctl 生成）
+    │   │   ├── logic/              # 业务逻辑扩展点
+    │   │   ├── middleware/         # 中间件
+    │   │   ├── svc/                # ServiceContext
+    │   │   └── types/              # 请求/响应类型（goctl 生成）
+    │   └── etc/                    # 运行配置
+    ├── <domain>_rpc/               # RPC 服务进程
+    │   ├── internal/{config,logic,server,svc}/
+    │   ├── client/                 # 本仓跨域 RPC 客户端
+    │   ├── pb/                     # goctl 生成的 pb
+    │   └── etc/
+    └── <domain>_models/            # 本域独占库的数据模型（不得跨库引用）
 ```
+
+各域独占数据库、物理隔离部署；跨域调用走 RPC 或 remote，不连对方库。
+目录细则见 [工程目录](docs/directory.md)。
 
 ### Error Handling
 
@@ -170,11 +176,40 @@ app/
 
 ### Logging
 
+业务日志统一走 `utils/beaverlog` 包装器，不直接用 `logx`。logger 挂在 logic 上，构造时传入 ctx：
+
 ```go
-// Use structured logging
-logx.Info("user registered", logx.Field("user_id", userID))
-logx.Error("failed to send message", logx.Field("error", err))
+import (
+	"context"
+
+	beaverlog "beaver/utils/beaverlog"
+	"beaver/utils/beaverlog/model"
+)
+
+type AuthTokenLogic struct {
+	ctx    context.Context
+	svcCtx *svc.ServiceContext
+	logger *beaverlog.Logger
+}
+
+func NewAuthTokenLogic(ctx context.Context, svcCtx *svc.ServiceContext) *AuthTokenLogic {
+	return &AuthTokenLogic{
+		ctx:    ctx,
+		svcCtx: svcCtx,
+		logger: beaverlog.New("auth_token", ctx),
+	}
+}
+
+// Text 为中文短语（不带空格）；结构化字段放 Data。
+// user_id / traceId 等公参由 logger 从 ctx 自动抽取，不要手写进日志。
+l.logger.Error(model.LogMsg{
+	Text: "秘钥签发被拒",
+	Data: map[string]any{"clientID": req.ClientID},
+})
 ```
+
+API 为 `logger.Info / Warn / Error(model.LogMsg{Text, Data})`。禁止把令牌、请求头、完整聊天内容或
+未脱敏配置写进日志。细则见 [5.4 错误与日志](docs/05-runtime/04-错误与日志.md)。
 
 ### Testing
 
@@ -251,8 +286,10 @@ git rebase upstream/main
 ```bash
 go test ./...
 go vet ./...
-golint ./...
 ```
+
+测试以本仓实际存在的 `_test.go` 为准，不虚构覆盖；批量生成、构建、部署需按任务授权执行，
+验证口径见 [8.2 验证矩阵](docs/08-workflow/02-验证矩阵.md)。
 
 3. **Check formatting**
 ```bash
@@ -374,4 +411,10 @@ Contributors will be recognized in:
 
 ---
 
-Thank you for contributing to Beaver IM! 🦫 
+Thank you for contributing to Beaver IM! 🦫
+
+## 本仓当前工程规范
+
+上文贡献流程通用；涉及契约、目录、命令与工具版本时，以 [中文工程手册](docs/README.md)、
+[工程目录](docs/directory.md) 与 [实施/验证清单](docs/08-workflow/README.md) 及真实源码为准。
+`.api` / `.proto` 是接口事实源，goctl 生成接线；生成、构建、启动、部署须在任务授权范围内。

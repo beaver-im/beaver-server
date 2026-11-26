@@ -21,20 +21,33 @@
 
 package mqwsconst
 
-// RocketMQ Topic 类型（用于 WebSocket 推送）
+// 一套 RocketMQ 集群，靠 Topic / ConsumerGroup 隔离。
+// 实时用户侧三个 Topic 仅由 push 服务生产；离线 Topic 仅由 push 服务生产并消费。
+// 编排与日志 Topic 不经 push 服务。
+
 type TopicType string
 
-// RocketMQ Topic 常量
 const (
-	// MqTopicWs WebSocket 推送专用 Topic
-	MqTopicWs TopicType = "ws_push_topic"
+	TopicRealtimeChat TopicType = "im-realtime-chat"
+	TopicRealtimeSync TopicType = "im-realtime-sync"
+	TopicRealtimeBot  TopicType = "im-realtime-bot"
+	TopicOfflinePush  TopicType = "im-offline-push"
+	TopicAgentTask    TopicType = "im-agent-task"
+	TopicAgentDone    TopicType = "im-agent-done"
+	TopicWorkflowTask TopicType = "im-workflow-task"
+	TopicPlatformLogs TopicType = "im-platform-logs"
 )
 
-// RocketMQ Consumer Group 类型
 type GroupType string
 
-// RocketMQ Consumer Group 常量
+// ConsumerGroup 与 Topic 一对一镜像，后缀 -cg（consumer group）。
 const (
-	// MqGroupWs WS API 消费者组
-	MqGroupWs GroupType = "ws_api_consumer_group"
+	GroupRealtimeChat GroupType = "im-realtime-chat-cg"
+	GroupRealtimeSync GroupType = "im-realtime-sync-cg"
+	GroupRealtimeBot  GroupType = "im-realtime-bot-cg"
+	GroupOfflinePush  GroupType = "im-offline-push-cg"
+	GroupAgentTask    GroupType = "im-agent-task-cg"
+	GroupAgentDone    GroupType = "im-agent-done-cg"
+	GroupWorkflowTask GroupType = "im-workflow-task-cg"
+	GroupPlatformLogs GroupType = "im-platform-logs-cg"
 )

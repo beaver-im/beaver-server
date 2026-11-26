@@ -2,7 +2,7 @@ services:
   mysql:
     image: docker.m.daocloud.io/library/mysql:5.7
     container_name: mysql
-    restart: always
+    restart: "no"
     ports:
       - "3306:3306"
     privileged: true
@@ -42,7 +42,7 @@ services:
   livekit:
     image: docker.m.daocloud.io/livekit/livekit-server:latest
     container_name: livekit
-    restart: always
+    restart: "no"
     command: --config /etc/livekit.yaml
     volumes:
       # 遵循你 ./目录:/容器内目录 的映射习惯
@@ -53,11 +53,10 @@ services:
       - "50000-50050:50000-50050/udp" # WebRTC 媒体流
     depends_on:
       - redis
-
   rocketmq-namesrv:
     image: apache/rocketmq:5.3.1
     container_name: rocketmq-namesrv
-    restart: always
+    restart: "no"
     ports:
       - "9876:9876"
     environment:
@@ -69,22 +68,22 @@ services:
   rocketmq-broker:
     image: apache/rocketmq:5.3.1
     container_name: rocketmq-broker
-    restart: always
+    restart: "no"
     ports:
-      - "10909:10909"
       - "10911:10911"
-      - "10912:10912"
     environment:
       - NAMESRV_ADDR=rocketmq-namesrv:9876
-      - JAVA_OPT_EXT=-Xms512m -Xmx512m
+      - JAVA_OPT_EXT=-Xms256m -Xmx256m
     command: sh mqbroker -c /home/rocketmq/conf/broker.conf
     volumes:
       - ./rocketmq/broker/logs:/home/rocketmq/logs
       - ./rocketmq/broker/store:/home/rocketmq/store
-      - ./rocketmq/broker/conf/broker-cluster.conf:/home/rocketmq/conf/broker.conf
+      - ./rocketmq/broker/conf/broker.conf:/home/rocketmq/conf/broker.conf
     depends_on:
       - rocketmq-namesrv
 
+  # 一次性创建 8 个新 Topic + 8 个新 ConsumerGroup（push 从 notification_rpc 剥离后）
+  # mqadmin 不在镜像 PATH，必须用完整路径（已实测 command -v mqadmin 为空）
   rocketmq-init:
     image: apache/rocketmq:5.3.1
     container_name: rocketmq-init
@@ -92,15 +91,46 @@ services:
       - rocketmq-broker
     restart: on-failure
     entrypoint: >
-      sh -c "sleep 10 && mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t ws_push_topic"
+      sh -c "sleep 10 &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-realtime-chat &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-realtime-sync &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-realtime-bot &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-offline-push &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-agent-task &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-agent-done &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-workflow-task &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-platform-logs &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-realtime-chat-cg &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-realtime-sync-cg &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-realtime-bot-cg &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-offline-push-cg &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-agent-task-cg &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-agent-done-cg &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-workflow-task-cg &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-platform-logs-cg"
 
-  rocketmq-console:
-    image: apacherocketmq/rocketmq-dashboard:latest
-    container_name: rocketmq-console
-    restart: always
-    ports:
-      - "8080:8080"
+  opensearch:
+    image: opensearchproject/opensearch:2.19.0
+    container_name: opensearch
+    restart: "no"
     environment:
-      - JAVA_OPTS=-Drocketmq.namesrv.addr=rocketmq-namesrv:9876 -Dcom.rocketmq.sendMessageWithVIPChannel=false
+      - discovery.type=single-node
+      - "OPENSEARCH_INITIAL_ADMIN_PASSWORD=Demo@123456"
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - ./opensearch:/usr/share/opensearch/data
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.19.0
+    container_name: opensearch-dashboards
+    restart: "no"
+    environment:
+      - 'OPENSEARCH_HOSTS=["https://opensearch:9200"]'
+      - OPENSEARCH_USERNAME=admin
+      - "OPENSEARCH_PASSWORD=Demo@123456"
+      - OPENSEARCH_SSL_VERIFICATION_MODE=none
+    ports:
+      - "5601:5601"
     depends_on:
-      - rocketmq-namesrv
+      - opensearch

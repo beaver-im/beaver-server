@@ -1,0 +1,54 @@
+# RemoteProxy 唯一出站注册表：push_api 地址与 S2S 机器票凭据在此登记。
+RemoteProxy:
+  Push:
+    BaseURL: http://127.0.0.1:20500
+    ClientSecret: beaver-s2s-push-ws-e3d2104f2473ca03000c47462b52d2c0
+Name: ws
+Host: 0.0.0.0
+Port: 20400
+Mysql:
+  DataSource: root:123456@tcp(127.0.0.1:3306)/beaver_message?charset=utf8mb4&parseTime=True&loc=Local
+Redis:
+  Addr: 127.0.0.1:6379
+  Password: '123456'
+  DB: 0
+Log:
+  Encoding: json
+  TimeFormat: 2006-01-02T15:04:05
+  Stat: false
+Auth:
+  AccessSecret: beaver-jwt-user-5a99dd68227b4aa4bca260349995d485
+# 入站 S2S 机器票：本团队业务面共用一套凭据，票据受众统一 core:api。
+# 北向：JWKS 验网关 ES256 断言（公钥材料，可公开；轮换时 JWKS 可挂多 kid）。
+Assertion:
+  Issuer: beaver-gateway
+  JWKS: |
+    {"keys":[{"alg":"ES256","crv":"P-256","kid":"gateway-2026-11","kty":"EC","use":"sig","x":"46Jx5dTVRu4EQsot-rtD1lBS302SYrVJ7EJsHblRtig","y":"wEbsT3a7M4uWO7nZLxM4tHCx9-QN-MnZAOn1jyqC6Zw"}]}
+S2S:
+  Secret: beaver-s2s-core-b0db00321ca84fc783a2ba81505e82b1
+Etcd: 127.0.0.1:2379
+GroupRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: relationrpc.rpc
+ChatRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: messagerpc.rpc
+RocketMQ:
+  Addr: 127.0.0.1:9876
+# WebSocket配置
+WebSocket:
+  # 心跳配置(单位:秒)
+  PongWait: 300      # 读取超时时间，增加到5分钟
+  WriteWait: 10      # 写入超时时间
+  PingPeriod: 240    # 心跳发送间隔(应小于PongWait)，设置为4分钟
+  MaxMessageSize: 1048576  # 最大消息大小(字节), 1MB
+  
+  # 应用级心跳配置
+  AppHeartbeatInterval: 480  # 应用级心跳间隔(秒)，设置为8分钟
+

@@ -25,10 +25,16 @@ import (
 	"errors"
 	"sort"
 	"strings"
+
+	"beaver/common/const/chattypeconst"
 )
 
+// 会话类型（chatType）的唯一真相源是 ChatConversationMeta.Type。
+// 本包只负责会话ID的构造与解析，绝不从会话ID前缀推断类型——
+// 前缀仅用于定位ID里实体段的位置，类型必须由调用方从数据里读出来传进来。
+
 /**
- * @description: 生成会话Id
+ * @description: 生成两人会话Id
  */
 func GenerateConversation(userIds []string) (string, error) {
 	if len(userIds) == 1 {
@@ -42,89 +48,55 @@ func GenerateConversation(userIds []string) (string, error) {
 }
 
 /**
- * @description: 解析会话Id
+ * @description: 按会话类型解析会话ID中的实体ID（已去掉类型前缀）
+ * @param chatType: 会话类型，必须来自 ChatConversationMeta.Type
+ * @param conversationID: 会话ID
+ * @return: 实体ID列表。两人会话返回两个用户ID，群聊/圈子返回一个业务ID
  */
-func ParseConversation(conversationID string) []string {
-	if strings.Contains(conversationID, "_") {
-		return strings.Split(conversationID, "_")
+func ParseConversationIDs(chatType int, conversationID string) []string {
+	if conversationID == "" {
+		return nil
 	}
-	return []string{conversationID}
+
+	body := conversationID
+	switch {
+	case chattypeconst.IsP2P(chatType):
+		body = strings.TrimPrefix(conversationID, "private_")
+	case chatType == chattypeconst.Group:
+		body = strings.TrimPrefix(conversationID, "group_")
+	case chatType == chattypeconst.Circle:
+		body = strings.TrimPrefix(conversationID, "circle_")
+	}
+
+	if body == "" {
+		return nil
+	}
+	return strings.Split(body, "_")
 }
 
 /**
- * @description: 获取会话类型
- * @return: 1: 私聊 2: 群聊 3: 圈子
+ * @description: 从会话ID中提取对应的目标ID（对方UID或群组/圈子ID）
+ * @param chatType: 会话类型，必须来自 ChatConversationMeta.Type
+ * @param conversationID: 会话ID
+ * @param currentUserID: 当前用户ID（两人会话用于区分对端）
+ * @return: targetId (对方UID或群组/圈子UUID)
  */
-func GetConversationType(conversationID string) int {
-	// 优先检查前缀：circle_ 圈子，group_ 群聊，private_ 私聊
-	if strings.HasPrefix(conversationID, "circle_") {
-		return 3
-	}
-	if strings.HasPrefix(conversationID, "group_") {
-		return 2
-	}
-	if strings.HasPrefix(conversationID, "private_") {
-		return 1
-	}
-	// 如果没有前缀，则根据是否包含下划线判断
-	// 包含下划线且不是 circle_ / group_ / private_ 前缀的，通常是私聊（userId1_userId2格式）
-	if strings.Contains(conversationID, "_") {
-		return 1
-	}
-	// 不包含下划线的，通常是群聊（直接是group的UUID）
-	return 2
-}
-
-/**
- * @description: 解析会话ID并返回类型和用户IDs
- * @return: conversationType (1:私聊 2:群聊 3:圈子), userIds ([]string)
- */
-func ParseConversationWithType(conversationID string) (int, []string) {
-	conversationType := GetConversationType(conversationID)
-	userIds := ParseConversation(conversationID)
-
-	// 对于私聊，如果是带前缀的格式 (private_userId1_userId2)，移除前缀
-	if conversationType == 1 && len(userIds) >= 3 && userIds[0] == "private" {
-		userIds = userIds[1:]
+func GetTargetIDByConversation(chatType int, conversationID string, currentUserID string) string {
+	ids := ParseConversationIDs(chatType, conversationID)
+	if len(ids) == 0 {
+		return ""
 	}
 
-	// 对于群聊，如果是带前缀的格式 (group_uuid)，移除前缀
-	if conversationType == 2 && len(userIds) >= 2 && userIds[0] == "group" {
-		userIds = userIds[1:]
-	}
-
-	// 对于圈子，如果是带前缀的格式 (circle_uuid)，移除前缀
-	if conversationType == 3 && len(userIds) >= 2 && userIds[0] == "circle" {
-		userIds = userIds[1:]
-	}
-
-	return conversationType, userIds
-}
-
-/**
- * @description: 从会话ID中提取对应的目标ID（对方UID或群组ID）
- * @return: targetId (对方UID或群组UUID)
- */
-func GetTargetIDByConversation(conversationID string, currentUserID string) string {
-	convType, ids := ParseConversationWithType(conversationID)
-	if convType == 1 { // 私聊
+	if chattypeconst.IsP2P(chatType) {
 		if len(ids) == 2 {
 			if ids[0] == currentUserID {
 				return ids[1]
 			}
 			return ids[0]
 		}
-		if len(ids) == 1 {
-			return ids[0]
-		}
-	} else if convType == 2 { // 群聊
-		if len(ids) > 0 {
-			return ids[0]
-		}
-	} else if convType == 3 { // 圈子
-		if len(ids) > 0 {
-			return ids[0]
-		}
+		return ids[0]
 	}
-	return ""
+
+	// 群聊 / 圈子：去掉类型前缀后的第一个段就是业务ID
+	return ids[0]
 }

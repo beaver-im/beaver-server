@@ -1,10 +1,10 @@
 syntax = "v1"
 
-// ==================== 用户反馈（需登录，由 Gateway 鉴权并注入 Beaver-User-Id）====================
+// ==================== 用户反馈（需登录，middleware: JwtS2s 由本服务校验）====================
 
 type (
 	SubmitFeedbackReq {
-		UserID    string   `header:"Beaver-User-Id"`
+		UserID string `header:"Beaver-User-Id"` // 当前用户ID（网关注入的可信身份头）
 		Content   string   `json:"content"`
 		Type      int      `json:"type"`
 		FileNames []string `json:"fileNames,optional"`
@@ -14,9 +14,10 @@ type (
 
 @server (
 	group: feedback
+	middleware: JwtS2s
 )
 service platform {
 	@doc "提交用户反馈"
 	@handler SubmitFeedback
-	post /api/platform/feedback/v1/submit_feedback (SubmitFeedbackReq) returns (SubmitFeedbackRes)
+	post /beaver/api/platform/feedback/v1/submit_feedback (SubmitFeedbackReq) returns (SubmitFeedbackRes)
 }

@@ -1,0 +1,28 @@
+syntax = "v1"
+
+// 机器票换票端点：client_credentials → 受众 core:api 的 S2S 访问令牌。
+// 与其余公开端点同属「无网关身份鉴权」：group 段以 _public 结尾即放行，
+// 靠 client_secret 常量时间比对自身鉴权，不走 JwtS2s 身份闸门。
+// 请求/回包字段用 lowerCamel，与 types/remote/token.go 的 TokenRequest/TokenResponse 对齐。
+
+type (
+	AuthTokenReq {
+		GrantType    string `json:"grantType,optional"`
+		ClientID     string `json:"clientId"`
+		ClientSecret string `json:"clientSecret"`
+	}
+	AuthTokenRes {
+		AccessToken string `json:"accessToken"`
+		TokenType   string `json:"tokenType"`
+		ExpiresIn   int64  `json:"expiresIn"`
+	}
+)
+
+@server (
+	group: auth_public
+)
+service push {
+	@doc "机器票签发（client_credentials，靠 client_secret 自身鉴权，不走身份闸门）"
+	@handler authToken
+	post /beaver/api/push/auth_public/v1/issue (AuthTokenReq) returns (AuthTokenRes)
+}

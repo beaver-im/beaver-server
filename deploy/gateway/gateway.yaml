@@ -1,0 +1,64 @@
+Name: gateway
+Addr: 0.0.0.0:20800
+etcd: 127.0.0.1:2379
+ServiceAlias:
+  account: account_api
+  message: message_api
+  relation: relation_api
+  asset: asset_api
+  platform: platform_api
+  auth: account_api
+  user: account_api
+  chat: message_api
+  friend: relation_api
+  group: relation_api
+  file: asset_api
+  emoji: asset_api
+  circle: social_api
+  moment: social_api
+  org: platform_api
+  workbench: platform_api
+  ai: agent_api
+  call: call_api
+  doc: doc_api
+  backend: backend_admin
+Log:
+  Encoding: json
+  TimeFormat: 2006-01-02T15:04:05
+  Stat: false
+Limit:
+  Enable: true
+  Rate: 100
+  Burst: 200
+Auth:
+  AuthBeaver:
+    AccessSecret: beaver-jwt-user-5a99dd68227b4aa4bca260349995d485
+  AuthOpen:
+    AccessSecret: beaver-jwt-open-089b1407d2b0408dbef868f651750d4b
+  AuthAdmin:
+    AccessSecret: beaver-jwt-admin-b2135d16210e40058bc10319272bb994
+Assertion:
+  KeyID: gateway-2026-11
+  # 容器内路径；由 docker-compose 挂载同目录 gateway-assertion.pem
+  PrivateKeyFile: /etc/keys/gateway-assertion.pem
+  Issuer: beaver-gateway
+  ClientID: gateway
+  TTLSeconds: 300
+  DefaultAudience: core:api
+  Audiences:
+    beaver: core:api
+    beaver-open: open:api
+    beaver-social: social:internal
+    beaver-doc: doc:internal
+    beaver-call: call:internal
+    beaver-ai: ai:internal
+    beaver-admin/api: admin:internal
+PublicPatterns:
+  - ^/[^/]+/(?:api|admin)/[^/]+/[^/]+_public/v1/
+AuthRules:
+  - Pattern: ^/beaver/
+    Ticket: beaver
+  - Pattern: ^/beaver-open/
+    Ticket: open
+  - Pattern: ^/beaver-admin/
+    Ticket: admin

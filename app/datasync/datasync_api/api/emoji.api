@@ -1,0 +1,66 @@
+syntax = "v1"
+
+// 表情同步 API：表情收藏/表情包收藏/表情基础数据版本
+
+// 同步表情相关数据（用户收藏的表情和表情包）
+type (
+	GetSyncEmojiCollectsReq {
+		UserID string `header:"Beaver-User-Id"` // 当前用户ID（网关注入的可信身份头）
+		Since  int64  `json:"since,optional"` // 从这个时间戳之后开始同步，不传则同步所有
+	}
+	GetSyncEmojiCollectsRes {
+		EmojiCollectVersions        []EmojiCollectVersionItem        `json:"emojiCollectVersions"` // 用户收藏的表情变更摘要
+		EmojiPackageCollectVersions []EmojiPackageCollectVersionItem `json:"emojiPackageCollectVersions"` // 用户收藏的表情包变更摘要
+		EmojiPackageVersions        []EmojiPackageVersionItem        `json:"emojiPackageVersions"` // 表情包数据变更摘要
+		EmojiPackageContentVersions []EmojiPackageContentVersionItem `json:"emojiPackageContentVersions"` // 表情包内容变更摘要
+		ServerTimestamp             int64                            `json:"serverTimestamp"` // 服务端处理时间戳
+	}
+	EmojiCollectVersionItem {
+		EmojiCollectID string `json:"emojiCollectId"` // 收藏记录ID
+		Version        int64  `json:"version"` // 收藏版本号
+	}
+	EmojiPackageCollectVersionItem {
+		PackageCollectID string `json:"packageCollectId"` // 收藏记录ID
+		Version          int64  `json:"version"` // 收藏版本号
+	}
+	EmojiPackageVersionItem {
+		PackageID string `json:"packageId"` // 表情包ID
+		Version   int64  `json:"version"` // 表情包版本号
+	}
+	EmojiPackageContentVersionItem {
+		PackageID string `json:"packageId"` // 表情包ID
+		Version   int64  `json:"version"` // 表情包内容版本号
+	}
+)
+
+// 同步表情基础数据
+type (
+	GetSyncEmojisReq {
+		UserID string `header:"Beaver-User-Id"` // 当前用户ID（网关注入的可信身份头）
+		Since  int64  `json:"since,optional"` // 从这个时间戳之后开始同步，不传则同步所有
+	}
+	GetSyncEmojisRes {
+		EmojiVersions   []EmojiVersionItem `json:"emojiVersions"` // 表情基础数据摘要
+		ServerTimestamp int64              `json:"serverTimestamp"` // 服务端处理时间戳
+	}
+	EmojiVersionItem {
+		EmojiID string `json:"emojiId"` // 表情ID
+		Version int64  `json:"version"` // 表情版本号
+	}
+)
+
+@server (
+	middleware: JwtS2s
+	group: sync
+)
+service datasync {
+	@doc "获取用户表情收藏的版本信息"
+	@handler getSyncEmojiCollects
+	post /beaver/api/datasync/sync/v1/get_sync_emoji_collects (GetSyncEmojiCollectsReq) returns (GetSyncEmojiCollectsRes)
+
+	@doc "获取表情基础数据版本信息"
+	@handler getSyncEmojis
+	post /beaver/api/datasync/sync/v1/get_sync_emojis (GetSyncEmojisReq) returns (GetSyncEmojisRes)
+}
+
+// goctl api go -api datasync_api.api -dir . --home ../../../template

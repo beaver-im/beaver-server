@@ -24,7 +24,6 @@ package ws
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	ws_conn "beaver/app/ws/ws_api/internal/logic/websocket/conn"
@@ -34,65 +33,62 @@ import (
 	"beaver/app/ws/ws_api/internal/types"
 	type_struct "beaver/app/ws/ws_api/types"
 	"beaver/common/wsEnum/wsCommandConst"
+	beaverlog "beaver/utils/beaverlog"
+	"beaver/utils/beaverlog/model"
 
 	"github.com/gorilla/websocket"
-	"github.com/zeromicro/go-zero/core/logx"
 )
 
 func HandleWebSocketMessages(ctx context.Context, svcCtx *svc.ServiceContext, req *types.WsReq, deviceGroup string, r *http.Request, client *ws_conn.Client) {
+	// 入口挂一次公参（含 url/query/params + traceId），后续打日志只写 Text/Data
+	ctx = beaverlog.Attach(ctx, r, req.UserID, map[string]any{
+		"device_id":          req.DeviceID,
+		"client_remote_addr": client.Conn.RemoteAddr().String(),
+		"user_agent":         r.Header.Get("User-Agent"),
+	})
+	logger := beaverlog.New("ws_handle", ctx)
+
 	for {
 		_, p, err := client.Conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				fmt.Printf("WebSocket连接异常关闭, 用户: %s, 错误: %v\n", req.UserID, err)
+				logger.Error(model.LogMsg{
+					Text: "WebSocket连接异常关闭",
+					Data: map[string]interface{}{"err": err.Error()},
+				})
 			} else {
-				fmt.Printf("WebSocket连接正常关闭, 用户: %s\n", req.UserID)
+				logger.Info(model.LogMsg{Text: "WebSocket连接正常关闭"})
 			}
 			break
 		}
 
 		var wsMessage type_struct.WsMessage
 		if err = json.Unmarshal(p, &wsMessage); err != nil {
-			fmt.Printf("消息解析错误, 用户: %s, 错误: %s\n", req.UserID, err.Error())
+			logger.Error(model.LogMsg{
+				Text: "WS消息解析错误",
+				Data: map[string]interface{}{"err": err.Error()},
+			})
 			continue
 		}
 
 		if wsMessage.Command == "" {
-			if logBytes, err := json.Marshal(map[string]interface{}{
-				"userId":  req.UserID,
-				"content": json.RawMessage(p),
-				"source": map[string]string{
-					"platform":   req.Platform,
-					"deviceId":   req.DeviceID,
-					"remoteAddr": client.Conn.RemoteAddr().String(),
-					"userAgent":  r.Header.Get("User-Agent"),
-				},
-			}); err != nil {
-				logx.Errorf("WS 消息日志序列化失败, 用户: %s, 错误: %v", req.UserID, err)
-			} else {
-				logx.Infof("收到 WS 消息: %s", string(logBytes))
-			}
+			logger.Info(model.LogMsg{
+				Text: "收到WS消息",
+				Data: map[string]interface{}{"content": json.RawMessage(p)},
+			})
 			continue
 		}
 
 		cmd := wsCommandConst.Command(wsMessage.Command)
-		if logBytes, err := json.Marshal(map[string]interface{}{
-			"userId": req.UserID,
-			"content": map[string]interface{}{
-				"command": wsMessage.Command,
-				"content": wsMessage.Content,
+		logger.Info(model.LogMsg{
+			Text: "收到WS消息",
+			Data: map[string]interface{}{
+				"content": map[string]interface{}{
+					"command": wsMessage.Command,
+					"content": wsMessage.Content,
+				},
 			},
-			"source": map[string]string{
-				"platform":   req.Platform,
-				"deviceId":   req.DeviceID,
-				"remoteAddr": client.Conn.RemoteAddr().String(),
-				"userAgent":  r.Header.Get("User-Agent"),
-			},
-		}); err != nil {
-			logx.Errorf("WS 消息日志序列化失败, 用户: %s, 错误: %v", req.UserID, err)
-		} else {
-			logx.Infof("收到 WS 消息: %s", string(logBytes))
-		}
+		})
 
 		// 控制帧：PING/PONG 直接处理，不发 ACK
 		switch cmd {
@@ -103,7 +99,10 @@ func HandleWebSocketMessages(ctx context.Context, svcCtx *svc.ServiceContext, re
 			continue
 		case wsCommandConst.USER_PROFILE, wsCommandConst.NOTIFICATION, wsCommandConst.EMOJI:
 			// 仅服务端推送，客户端不应发送
-			logx.Infof("客户端不应发送此命令, 用户: %s, 命令: %s", req.UserID, cmd)
+			logger.Info(model.LogMsg{
+				Text: "客户端不应发送此命令",
+				Data: map[string]interface{}{"command": cmd},
+			})
 			continue
 		}
 
@@ -119,11 +118,17 @@ func HandleWebSocketMessages(ctx context.Context, svcCtx *svc.ServiceContext, re
 		case wsCommandConst.CHAT_MESSAGE:
 			handlerErr = chat_message.Handle(ctx, svcCtx, req, r, client, wsMessage.Content)
 		default:
-			logx.Infof("未支持的命令类型, 用户: %s, 命令: %s", req.UserID, wsMessage.Command)
+			logger.Info(model.LogMsg{
+				Text: "未支持的命令类型",
+				Data: map[string]interface{}{"command": wsMessage.Command},
+			})
 		}
 
 		if handlerErr != nil {
-			logx.Errorf("处理命令失败, 用户: %s, 命令: %s, 错误: %v", req.UserID, cmd, handlerErr)
+			logger.Error(model.LogMsg{
+				Text: "处理命令失败",
+				Data: map[string]interface{}{"command": cmd, "err": handlerErr.Error()},
+			})
 		}
 	}
 }

@@ -1,0 +1,35 @@
+# RemoteProxy 唯一出站注册表：push_api 地址与 S2S 机器票凭据在此登记。
+# 入站 S2S.Secret 是本服务自己的验票密钥；出站推送凭据只在此登记，二者职责不同。
+RemoteProxy:
+  Push:
+    BaseURL: http://127.0.0.1:20500
+    ClientSecret: beaver-s2s-push-notificationrpc-a04f81421876659b9a76b51248b79a84
+Name: notification_rpc
+ListenOn: 0.0.0.0:31000
+Etcd:
+  Hosts:
+  - 127.0.0.1:2379
+  Key: notificationrpc.rpc
+Mysql:
+  # 增加超时控制，避免长时间阻塞
+  DataSource: root:123456@tcp(127.0.0.1:3306)/beaver_notification?charset=utf8mb4&parseTime=True&loc=Local
+Log:
+  Encoding: json
+  TimeFormat: 2006-01-02T15:04:05
+  Stat: false
+UserRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: accountrpc.rpc
+RedisConf:
+  Addr: 127.0.0.1:6379
+  Password: '123456'
+  DB: 0
+RocketMQ:
+  Addr: 127.0.0.1:9876
+
+
+S2S:
+  Secret: beaver-s2s-core-b0db00321ca84fc783a2ba81505e82b1

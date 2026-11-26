@@ -25,17 +25,21 @@ import (
 	"fmt"
 	"os"
 
-	"beaver/app/chat/chat_rpc/chat"
-	"beaver/app/chat/chat_rpc/types/chat_rpc"
-	"beaver/app/group/group_rpc/group"
-	"beaver/app/group/group_rpc/types/group_rpc"
+	"beaver/app/message/message_rpc/chat"
+	"beaver/app/relation/relation_rpc/client/group"
+	"beaver/app/relation/relation_rpc/pb"
 	"beaver/app/ws/ws_api/internal/config"
+	"beaver/app/ws/ws_api/internal/middleware"
 	"beaver/common/zrpc_interceptor"
+	"beaver/commonconfig"
 	"beaver/core/coregorm"
 	"beaver/core/coreredis"
 	"beaver/core/corerocketmq"
+	pushcli "beaver/remote/push"
+	"beaver/utils/beaverlog"
 
 	"github.com/go-redis/redis"
+	"github.com/zeromicro/go-zero/rest"
 	"github.com/zeromicro/go-zero/zrpc"
 	"gorm.io/gorm"
 )
@@ -44,16 +48,22 @@ type ServiceContext struct {
 	Config     config.Config
 	Redis      *redis.Client
 	DB         *gorm.DB
-	GroupRpc   group_rpc.GroupClient
-	ChatRpc    chat_rpc.ChatClient
+	GroupRpc   pb.GroupClient
+	ChatRpc    chat.Chat
 	RocketMQ   *corerocketmq.Client
 	InstanceID string
+	// JwtS2s 由 .api 的 @server 声明接线，goctl 生成 WithMiddlewares 注入。
+	JwtS2s rest.Middleware
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
 	mysqlDb := coregorm.InitGorm(c.Mysql.DataSource)
 	client := coreredis.InitRedis(c.Redis.Addr, c.Redis.Password, c.Redis.Db)
 	mqClient := corerocketmq.InitRocketMQ(c.RocketMQ.Addr)
+	beaverlog.SetRocketMQ(mqClient)
+
+	commonconfig.Load(c.RemoteProxy)
+	pushcli.Init(c.Name, c.RemoteProxy.Push.ClientSecret)
 
 	return &ServiceContext{
 		DB:         mysqlDb,
@@ -63,6 +73,7 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		ChatRpc:    chat.NewChat(zrpc.MustNewClient(c.ChatRpc, zrpc.WithUnaryClientInterceptor(zrpc_interceptor.ClientInfoInterceptor))),
 		RocketMQ:   mqClient,
 		InstanceID: buildInstanceID(c.InstanceID),
+		JwtS2s:     middleware.NewJwtS2sMiddleware(c).Handle,
 	}
 }
 

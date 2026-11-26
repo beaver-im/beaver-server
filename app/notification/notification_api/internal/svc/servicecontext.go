@@ -22,18 +22,21 @@
 package svc
 
 import (
-	"beaver/app/auth/auth_rpc/auth"
+	"beaver/app/account/account_rpc/client/auth"
+	"beaver/app/account/account_rpc/client/user"
+	accttypes "beaver/app/account/account_rpc/pb"
 	"beaver/app/notification/notification_api/internal/config"
-	"beaver/app/user/user_rpc/types/user_rpc"
-	"beaver/app/user/user_rpc/user"
+	"beaver/app/notification/notification_api/internal/middleware"
+	"beaver/app/notification/notification_rpc/notification"
 	"beaver/common/zrpc_interceptor"
+	"beaver/commonconfig"
 	"beaver/core/coregorm"
 	"beaver/core/coreredis"
-
-	"beaver/core/corerocketmq"
 	versionPkg "beaver/core/version"
+	pushcli "beaver/remote/push"
 
 	"github.com/go-redis/redis"
+	"github.com/zeromicro/go-zero/rest"
 	"github.com/zeromicro/go-zero/zrpc"
 	"gorm.io/gorm"
 )
@@ -42,10 +45,12 @@ type ServiceContext struct {
 	Config     config.Config
 	DB         *gorm.DB
 	Redis      *redis.Client
-	UserRpc    user_rpc.UserClient
+	UserRpc    accttypes.UserClient
 	AuthRpc    auth.Auth
+	NotifyRpc  notification.Notification
 	VersionGen *versionPkg.VersionGenerator
-	RocketMQ   *corerocketmq.Client
+	// JwtS2s 由 .api 的 @server 声明接线（用户票 / 机器票分开挂）。
+	JwtS2s rest.Middleware
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
@@ -53,17 +58,17 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	client := coreredis.InitRedis(c.Redis.Addr, c.Redis.Password, c.Redis.Db)
 	versionGen := versionPkg.NewVersionGenerator(client, mysqlDb)
 
-	// 初始化 RocketMQ 客户端
-
-	mqClient := corerocketmq.InitRocketMQ(c.RocketMQ.Addr)
+	commonconfig.Load(c.RemoteProxy)
+	pushcli.Init(c.Name, c.RemoteProxy.Push.ClientSecret)
 
 	return &ServiceContext{
 		Config:     c,
 		DB:         mysqlDb,
 		Redis:      client,
-		UserRpc: user.NewUser(zrpc.MustNewClient(c.UserRpc, zrpc.WithUnaryClientInterceptor(zrpc_interceptor.ClientInfoInterceptor))),
-		AuthRpc: auth.NewAuth(zrpc.MustNewClient(c.AuthRpc, zrpc.WithUnaryClientInterceptor(zrpc_interceptor.ClientInfoInterceptor))),
+		UserRpc:    user.NewUser(zrpc.MustNewClient(c.UserRpc, zrpc.WithUnaryClientInterceptor(zrpc_interceptor.ClientInfoInterceptor))),
+		AuthRpc:    auth.NewAuth(zrpc.MustNewClient(c.AuthRpc, zrpc.WithUnaryClientInterceptor(zrpc_interceptor.ClientInfoInterceptor))),
+		NotifyRpc:  notification.NewNotification(zrpc.MustNewClient(c.NotificationRpc, zrpc.WithUnaryClientInterceptor(zrpc_interceptor.ClientInfoInterceptor))),
 		VersionGen: versionGen,
-		RocketMQ:   mqClient,
+		JwtS2s:     middleware.NewJwtS2sMiddleware(c).Handle,
 	}
 }

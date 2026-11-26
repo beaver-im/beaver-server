@@ -23,26 +23,53 @@ package types
 
 import "github.com/zeromicro/go-zero/core/logx"
 
+// Config 网关负责：验外部票 → 写可信身份头 → 签网关身份断言 → 转发。
+// 业务用 JWKS 验网关公钥（北向）或本团队 S2S.Secret（东西向）；网关不持有任何团队签发密钥。
 type Config struct {
-	Name       string
-	Addr       string `json:",optional"`
-	Etcd       string
-	Log        logx.LogConf
-	Prometheus PrometheusConfig
-	Limit          LimitConfig
-	Auth           AuthConfig
-	PublicList     []string `json:",optional"` // Gateway 不鉴权（含 *_public）
-	CustomAuthList []string `json:",optional"` // 透传，由下游服务 middleware 鉴权
+	Name string
+	Addr string `json:",optional"`
+	Etcd string
+	// ServiceAlias URL 前缀 → 实际服务名（服务合并后按旧前缀路由到合并服务）。
+	ServiceAlias map[string]string `json:",optional"`
+	Log          logx.LogConf
+	Limit        LimitConfig
+
+	Auth           AuthConfigs     `json:",optional"`
+	Assertion      AssertionConfig `json:",optional"`
+	PublicPatterns []string        `json:",optional"`
+	AuthRules      []AuthRule      `json:",optional"`
 }
 
+// AuthRule 一条鉴权平面规则：路径正则 → 外部票类型（beaver/open/admin/public）。
+type AuthRule struct {
+	Pattern string `json:",optional"`
+	Ticket  string `json:",optional"`
+}
+
+// AuthConfigs 三类外部票的验签密钥集合，按平面各占一段、三把独立。
+type AuthConfigs struct {
+	AuthBeaver AuthConfig `json:",optional"`
+	AuthOpen   AuthConfig `json:",optional"`
+	AuthAdmin  AuthConfig `json:",optional"`
+}
+
+// AuthConfig 单个平面的外部票验签密钥。
 type AuthConfig struct {
-	AccessSecret string
-	AccessExpire int
+	AccessSecret string `json:",optional"`
 }
 
-type PrometheusConfig struct {
-	Enable bool   `json:",default=false"`
-	Path   string `json:",default=/metrics"`
+// AssertionConfig 网关北向身份断言（ES256）签发配置。
+// 私钥只在网关（PrivateKeyFile 优先，其次 PrivateKeyPEM）；JWT 头带 KeyID，下游按 JWKS 选公钥。
+// Audiences 按路径选 aud，与各团队 S2S.Secret 无关。
+type AssertionConfig struct {
+	KeyID           string            `json:",optional"`
+	PrivateKeyFile  string            `json:",optional"`
+	PrivateKeyPEM   string            `json:",optional"`
+	Issuer          string            `json:",optional"`
+	ClientID        string            `json:",optional"`
+	TTLSeconds      int               `json:",optional"`
+	DefaultAudience string            `json:",optional"`
+	Audiences       map[string]string `json:",optional"`
 }
 
 type LimitConfig struct {

@@ -27,16 +27,16 @@ import (
 	"fmt"
 	"net/http"
 
-	"beaver/app/chat/chat_rpc/types/chat_rpc"
+	chat_rpc "beaver/app/message/message_rpc/pb"
 	ws_conn "beaver/app/ws/ws_api/internal/logic/websocket/conn"
 	"beaver/app/ws/ws_api/internal/svc"
 	"beaver/app/ws/ws_api/internal/types"
 	type_struct "beaver/app/ws/ws_api/types"
-	"beaver/utils/logger"
-	"beaver/utils/logger/model"
+	beaverlog "beaver/utils/beaverlog"
+	"beaver/utils/beaverlog/model"
 )
 
-var groupMsgLog = logger.New("group_msg_send")
+var groupMsgLog = beaverlog.New("group_msg_send")
 
 func HandleGroupMessageSend(
 	ctx context.Context,

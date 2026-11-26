@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package platform_rpc;
 
-option go_package = "./platform_rpc";
+option go_package = "./pb";
 
 // ==================== 管理后台：客户端日志 ====================
 
@@ -453,9 +453,53 @@ message ListEnabledWorkbenchAppsRes {
   repeated WorkbenchAppPublicItem list = 1; // array 上架应用列表
 }
 
-service platform {
-  rpc AdminQueryLogs(AdminQueryLogsReq) returns (AdminQueryLogsRes);
+// ==================== 组织（后台调整：新增、修改、删除）====================
 
+message CreateOrgDepartmentReq {
+  string parent_id = 1; // string 父部门 ID，必须已存在
+  string name = 2; // string 部门名
+}
+
+message CreateOrgDepartmentRes {
+  string dept_id = 1; // string 新部门 ID
+}
+
+message UpdateOrgDepartmentReq {
+  string dept_id = 1; // string 部门 ID
+  optional string parent_id = 2; // string 新父部门，不传则不改。根部门不能改父级
+  optional string name = 3; // string 新名称，不传则不改
+  optional int32 sort = 4; // int32 新排序，不传则不改
+}
+
+message UpdateOrgDepartmentRes {}
+
+message DeleteOrgDepartmentReq {
+  string dept_id = 1; // string 部门 ID
+}
+
+message DeleteOrgDepartmentRes {}
+
+message AddOrgMemberReq {
+  string user_id = 1; // string 已注册用户 ID
+  string dept_id = 2; // string 目标部门
+}
+
+message AddOrgMemberRes {}
+
+message RemoveOrgMemberReq {
+  string user_id = 1; // string 要移出的用户 ID。不能移出拥有者
+}
+
+message RemoveOrgMemberRes {}
+
+// （AI 业务 message 已随 AI 服务拆分至 beaver-ai 仓 ai_rpc.proto）
+// admin 域
+service admin {
+  rpc AdminQueryLogs(AdminQueryLogsReq) returns (AdminQueryLogsRes);
+}
+
+// app 域
+service app {
   rpc CreateApp(CreateAppReq) returns (CreateAppRes);
   rpc ListApps(ListAppsReq) returns (ListAppsRes);
   rpc CreateArchitecture(CreateArchitectureReq) returns (CreateArchitectureRes);
@@ -467,18 +511,27 @@ service platform {
   rpc ListAppVersions(ListAppVersionsReq) returns (ListAppVersionsRes);
   rpc UpsertReleasePolicy(UpsertReleasePolicyReq) returns (UpsertReleasePolicyRes);
   rpc ListReleasePolicies(ListReleasePoliciesReq) returns (ListReleasePoliciesRes);
+}
 
+// feedback 域
+service feedback {
   rpc SubmitFeedback(SubmitFeedbackReq) returns (SubmitFeedbackRes);
   rpc ListFeedback(ListFeedbackReq) returns (ListFeedbackRes);
   rpc GetFeedback(GetFeedbackReq) returns (GetFeedbackRes);
   rpc HandleFeedback(HandleFeedbackReq) returns (HandleFeedbackRes);
   rpc DeleteFeedback(DeleteFeedbackReq) returns (DeleteFeedbackRes);
+}
 
+// report 域
+service report {
   rpc SubmitContentReport(SubmitContentReportReq) returns (SubmitContentReportRes);
   rpc ListContentReports(ListContentReportsReq) returns (ListContentReportsRes);
   rpc GetContentReport(GetContentReportReq) returns (GetContentReportRes);
   rpc UpdateContentReports(UpdateContentReportsReq) returns (UpdateContentReportsRes);
+}
 
+// workbench 域
+service workbench {
   rpc CreateWorkbenchApp(CreateWorkbenchAppReq) returns (CreateWorkbenchAppRes);
   rpc UpdateWorkbenchApp(UpdateWorkbenchAppReq) returns (UpdateWorkbenchAppRes);
   rpc DeleteWorkbenchApp(DeleteWorkbenchAppReq) returns (DeleteWorkbenchAppRes);
@@ -487,4 +540,12 @@ service platform {
   rpc ListEnabledWorkbenchApps(ListEnabledWorkbenchAppsReq) returns (ListEnabledWorkbenchAppsRes);
 }
 
-// goctl rpc protoc platform_rpc.proto --go_out=./types --go-grpc_out=./types --zrpc_out=. --home ../../../template
+// org 域
+service org {
+  rpc CreateOrgDepartment(CreateOrgDepartmentReq) returns (CreateOrgDepartmentRes);
+  rpc UpdateOrgDepartment(UpdateOrgDepartmentReq) returns (UpdateOrgDepartmentRes);
+  rpc DeleteOrgDepartment(DeleteOrgDepartmentReq) returns (DeleteOrgDepartmentRes);
+  rpc AddOrgMember(AddOrgMemberReq) returns (AddOrgMemberRes);
+  rpc RemoveOrgMember(RemoveOrgMemberReq) returns (RemoveOrgMemberRes);
+}
+// goctl rpc protoc platform_rpc.proto --go_out=. --go-grpc_out=. --zrpc_out=. --home ../../../template

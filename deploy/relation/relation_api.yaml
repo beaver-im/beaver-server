@@ -1,0 +1,65 @@
+# RemoteProxy 唯一出站注册表：本仓出站到其它团队走各自标准 HTTP 契约 + 机器票 Bearer；
+# 外仓打 A 主体（Beaver）统一走 gateway_api 的 /beaver/api/... 标准契约，业务能力只有这一套 HTTP 契约；
+# 本仓出站不使用任何 /internal/* 私有端点，只走对端标准 .api 路径。
+RemoteProxy:
+  Open:
+    BaseURL: http://127.0.0.1:21900
+    ClientSecret: beaver-s2s-open-server-256bf11a40d14dfda744da14969a5a1a
+  # Push A 主体推送中台：client_credentials 换票（auth_public/v1/issue），凭据非签名密钥。
+  Push:
+    BaseURL: http://127.0.0.1:20500
+    ClientSecret: beaver-s2s-push-relation-460e79851f3441d2c7f0b6e298a99aa4
+Name: relation
+Host: 0.0.0.0
+Port: 20200
+Mysql:
+  DataSource: root:123456@tcp(127.0.0.1:3306)/beaver_relation?charset=utf8mb4&parseTime=True&loc=Local
+Redis:
+  Addr: 127.0.0.1:6379
+  Password: '123456'
+  DB: 0
+Log:
+  Mode: file
+  Path: logs/relation_api
+  Encoding: json
+  TimeFormat: 2006-01-02T15:04:05
+  KeepDays: 7
+  Stat: false
+Etcd: 127.0.0.1:2379
+Domain: http://192.168.3.4:20800
+UserRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: accountrpc.rpc
+# relation_rpc：friend + group 同进程（etcd relationrpc.rpc）
+RelationRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: relationrpc.rpc
+ChatRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: messagerpc.rpc
+NotificationRpc:
+  NonBlock: true
+  Etcd:
+    Hosts:
+    - 127.0.0.1:2379
+    Key: notificationrpc.rpc
+RocketMQ:
+  Addr: 127.0.0.1:9876
+# 入站 S2S 机器票：本团队业务面共用一套凭据，票据受众统一 core:api。
+# 北向：JWKS 验网关 ES256 断言（公钥材料，可公开；轮换时 JWKS 可挂多 kid）。
+Assertion:
+  Issuer: beaver-gateway
+  JWKS: |
+    {"keys":[{"alg":"ES256","crv":"P-256","kid":"gateway-2026-11","kty":"EC","use":"sig","x":"46Jx5dTVRu4EQsot-rtD1lBS302SYrVJ7EJsHblRtig","y":"wEbsT3a7M4uWO7nZLxM4tHCx9-QN-MnZAOn1jyqC6Zw"}]}
+S2S:
+  Secret: beaver-s2s-core-b0db00321ca84fc783a2ba81505e82b1
+

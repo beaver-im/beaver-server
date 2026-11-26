@@ -1,0 +1,56 @@
+/*
+ * Copyright (c) 2024-2026 Beaver IM Team
+ * SPDX-License-Identifier: MIT
+ * Project: beaver-server
+ * https://github.com/wsrh8888/beaver-server
+ *
+ * 中文：
+ * 本文件为海狸 IM（Beaver IM）开源项目源代码。
+ * 版权所有 © 2024-2026 Beaver IM Team，基于 MIT 协议授权。
+ * 禁止删除、篡改或替换本文件头部版权与许可声明。
+ * 使用与商业授权说明：https://wsrh8888.github.io/beaver-docs/community/license.html
+ *
+ * English:
+ * This file is part of the Beaver IM open-source project.
+ * Copyright (c) 2024-2026 Beaver IM Team. Licensed under the MIT License.
+ * Do not remove, alter, or replace this copyright and license header.
+ * Usage & commercial licensing: https://wsrh8888.github.io/beaver-docs/community/license.html
+ *
+ * beaver-server-header-v1
+ */
+
+package config
+
+import (
+	"beaver/commonconfig"
+
+	"github.com/zeromicro/go-zero/rest"
+	"github.com/zeromicro/go-zero/zrpc"
+)
+
+type Config struct {
+	rest.RestConf
+	Mysql struct {
+		DataSource string
+	}
+	Redis struct {
+		Addr     string
+		Password string
+		Db       int
+	}
+	Etcd     string
+	UserRpc   zrpc.RpcClientConf
+	ChatRpc   zrpc.RpcClientConf
+	FriendRpc zrpc.RpcClientConf
+	GroupRpc  zrpc.RpcClientConf
+	// Auth 用户 JWT 签名密钥，本服务独立签发并校验用户票：
+	// 本服务独立验用户票，不信任任何外部直接塞进来的 Beaver-User-Id。
+	// RemoteProxy 唯一出站注册表：push_api 地址与 S2S 机器票凭据在此登记。
+	RemoteProxy commonconfig.RemoteProxy `json:",optional"`
+	// Assertion 北向：用 JWKS 验网关 ES256 断言（iss + kid），不是共享 HMAC。
+	Assertion commonconfig.AssertionVerify `json:",optional"`
+	// S2S 入站机器票：东西向队间调用与本服务共用同一套路由，凭据受众统一 core:api。
+	S2S struct {
+		Secret string `json:",optional"`
+	}
+}

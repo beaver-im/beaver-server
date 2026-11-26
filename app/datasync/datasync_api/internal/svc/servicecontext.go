@@ -22,19 +22,22 @@
 package svc
 
 import (
-	"beaver/app/chat/chat_rpc/types/chat_rpc"
-	"beaver/app/circle/circle_rpc/types/circle_rpc"
+	accttypes "beaver/app/account/account_rpc/pb"
+	assettypes "beaver/app/asset/asset_rpc/pb"
 	"beaver/app/datasync/datasync_api/internal/config"
-	"beaver/app/emoji/emoji_rpc/types/emoji_rpc"
-	"beaver/app/friend/friend_rpc/types/friend_rpc"
-	"beaver/app/group/group_rpc/types/group_rpc"
-	"beaver/app/notification/notification_rpc/types/notification_rpc"
-	"beaver/app/user/user_rpc/types/user_rpc"
+	"beaver/app/datasync/datasync_api/internal/middleware"
+	chat_rpc "beaver/app/message/message_rpc/pb"
+	"beaver/app/notification/notification_rpc/notification"
+	"beaver/app/relation/relation_rpc/pb"
+	"beaver/commonconfig"
 	"beaver/core/coregorm"
 	"beaver/core/coreredis"
+	agentcli "beaver/remote/agent"
+	circle "beaver/remote/circle"
 	"time"
 
 	"github.com/go-redis/redis"
+	"github.com/zeromicro/go-zero/rest"
 	"github.com/zeromicro/go-zero/zrpc"
 	"gorm.io/gorm"
 )
@@ -43,28 +46,38 @@ type ServiceContext struct {
 	Config          config.Config
 	DB              *gorm.DB
 	Redis           *redis.Client
-	FriendRpc       friend_rpc.FriendClient
-	GroupRpc        group_rpc.GroupClient
-	CircleRpc       circle_rpc.CircleClient
-	UserRpc         user_rpc.UserClient
-	ChatRpc         chat_rpc.ChatClient
-	EmojiRpc        emoji_rpc.EmojiClient
-	NotificationRpc notification_rpc.NotificationClient
+	FriendRpc       pb.FriendClient
+	GroupRpc        pb.GroupClient
+	UserRpc         accttypes.UserClient
+	ConversationRpc chat_rpc.ConversationClient
+	MessageRpc      chat_rpc.MessageClient
+	EmojiRpc        assettypes.EmojiClient
+	NotificationRpc notification.Notification
+	// JwtS2s 由 .api 的 @server 声明接线，goctl 生成 WithMiddlewares 注入。
+	JwtS2s rest.Middleware
 }
 
 func NewServiceContext(c config.Config) *ServiceContext {
 	mysqlDb := coregorm.InitGorm(c.Mysql.DataSource)
 	client := coreredis.InitRedis(c.Redis.Addr, c.Redis.Password, c.Redis.Db)
+
+	// 装配跨仓对端的 S2S 出站客户端：circle=圈子服务（client_credentials 换票），
+	// agent=beaver-ai(py，S2S client_credentials 换 Bearer)。域名与凭据来自本服务 yaml。
+	commonconfig.Load(c.RemoteProxy)
+	circle.Init(c.Name, c.RemoteProxy.Social.ClientSecret)
+	agentcli.Init(c.Name, c.RemoteProxy.Agent.ClientSecret)
+
 	return &ServiceContext{
 		Config:          c,
 		DB:              mysqlDb,
 		Redis:           client,
-		FriendRpc:       friend_rpc.NewFriendClient(zrpc.MustNewClient(c.FriendRpc, zrpc.WithTimeout(time.Duration(c.FriendRpc.Timeout)*time.Millisecond)).Conn()),
-		GroupRpc:        group_rpc.NewGroupClient(zrpc.MustNewClient(c.GroupRpc, zrpc.WithTimeout(time.Duration(c.GroupRpc.Timeout)*time.Millisecond)).Conn()),
-		CircleRpc:       circle_rpc.NewCircleClient(zrpc.MustNewClient(c.CircleRpc, zrpc.WithTimeout(time.Duration(c.CircleRpc.Timeout)*time.Millisecond)).Conn()),
-		UserRpc:         user_rpc.NewUserClient(zrpc.MustNewClient(c.UserRpc, zrpc.WithTimeout(time.Duration(c.UserRpc.Timeout)*time.Millisecond)).Conn()),
-		ChatRpc:         chat_rpc.NewChatClient(zrpc.MustNewClient(c.ChatRpc, zrpc.WithTimeout(time.Duration(c.ChatRpc.Timeout)*time.Millisecond)).Conn()),
-		EmojiRpc:        emoji_rpc.NewEmojiClient(zrpc.MustNewClient(c.EmojiRpc, zrpc.WithTimeout(time.Duration(c.EmojiRpc.Timeout)*time.Millisecond)).Conn()),
-		NotificationRpc: notification_rpc.NewNotificationClient(zrpc.MustNewClient(c.NotificationRpc, zrpc.WithTimeout(time.Duration(c.NotificationRpc.Timeout)*time.Millisecond)).Conn()),
+		FriendRpc:       pb.NewFriendClient(zrpc.MustNewClient(c.FriendRpc, zrpc.WithTimeout(time.Duration(c.FriendRpc.Timeout)*time.Millisecond)).Conn()),
+		GroupRpc:        pb.NewGroupClient(zrpc.MustNewClient(c.GroupRpc, zrpc.WithTimeout(time.Duration(c.GroupRpc.Timeout)*time.Millisecond)).Conn()),
+		UserRpc:         accttypes.NewUserClient(zrpc.MustNewClient(c.UserRpc, zrpc.WithTimeout(time.Duration(c.UserRpc.Timeout)*time.Millisecond)).Conn()),
+		ConversationRpc: chat_rpc.NewConversationClient(zrpc.MustNewClient(c.ChatRpc, zrpc.WithTimeout(time.Duration(c.ChatRpc.Timeout)*time.Millisecond)).Conn()),
+		MessageRpc:      chat_rpc.NewMessageClient(zrpc.MustNewClient(c.ChatRpc, zrpc.WithTimeout(time.Duration(c.ChatRpc.Timeout)*time.Millisecond)).Conn()),
+		EmojiRpc:        assettypes.NewEmojiClient(zrpc.MustNewClient(c.EmojiRpc, zrpc.WithTimeout(time.Duration(c.EmojiRpc.Timeout)*time.Millisecond)).Conn()),
+		NotificationRpc: notification.NewNotification(zrpc.MustNewClient(c.NotificationRpc, zrpc.WithTimeout(time.Duration(c.NotificationRpc.Timeout)*time.Millisecond))),
+		JwtS2s:          middleware.NewJwtS2sMiddleware(c).Handle,
 	}
 }

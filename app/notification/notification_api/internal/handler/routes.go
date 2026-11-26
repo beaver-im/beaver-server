@@ -25,6 +25,10 @@ package handler
 import (
 	"net/http"
 
+	event "beaver/app/notification/notification_api/internal/handler/event"
+	inbox "beaver/app/notification/notification_api/internal/handler/inbox"
+	push "beaver/app/notification/notification_api/internal/handler/push"
+	read "beaver/app/notification/notification_api/internal/handler/read"
 	"beaver/app/notification/notification_api/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
@@ -32,61 +36,94 @@ import (
 
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
-		[]rest.Route{
-			{
-				// 按事件ID删除单个通知
-				Method:  http.MethodPost,
-				Path:    "/api/notification/v1/deleteNotification",
-				Handler: deleteNotificationHandler(serverCtx),
-			},
-			{
-				// 按ID拉取通知事件明细（数据库同步）
-				Method:  http.MethodPost,
-				Path:    "/api/notification/v1/getEventsByIds",
-				Handler: getEventsByIdsHandler(serverCtx),
-			},
-			{
-				// 按ID拉取收件箱明细（数据库同步）
-				Method:  http.MethodPost,
-				Path:    "/api/notification/v1/getInboxByIds",
-				Handler: getInboxByIdsHandler(serverCtx),
-			},
-			{
-				// 按分类拉取通知已读游标（数据库同步）
-				Method:  http.MethodPost,
-				Path:    "/api/notification/v1/getReadCursors",
-				Handler: getReadCursorsHandler(serverCtx),
-			},
-			{
-				// 获取未读汇总（红点）
-				Method:  http.MethodPost,
-				Path:    "/api/notification/v1/getUnreadSummary",
-				Handler: getUnreadSummaryHandler(serverCtx),
-			},
-			{
-				// 按分类标记所有通知为已读
-				Method:  http.MethodPost,
-				Path:    "/api/notification/v1/markReadByCategory",
-				Handler: markReadByCategoryHandler(serverCtx),
-			},
-			{
-				// 按分类游标标记已读（高效批量，高级用法）
-				Method:  http.MethodPost,
-				Path:    "/api/notification/v1/markReadByCursor",
-				Handler: markReadByCursorHandler(serverCtx),
-			},
-			{
-				// 按事件ID标记单个通知已读
-				Method:  http.MethodPost,
-				Path:    "/api/notification/v1/markReadByEvent",
-				Handler: markReadByEventHandler(serverCtx),
-			},
-			{
-				// 注册或更新离线推送 Token（FCM/APNs）
-				Method:  http.MethodPost,
-				Path:    "/api/notification/v1/register_push_token",
-				Handler: registerPushTokenHandler(serverCtx),
-			},
-		},
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.JwtS2s},
+			[]rest.Route{
+				{
+					// 按ID拉取通知事件明细（数据库同步）
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/notification/event/v1/get_events_by_ids",
+					Handler: event.GetEventsByIdsHandler(serverCtx),
+				},
+			}...,
+		),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.JwtS2s},
+			[]rest.Route{
+				{
+					// 按事件ID删除单个通知
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/notification/inbox/v1/delete_notification",
+					Handler: inbox.DeleteNotificationHandler(serverCtx),
+				},
+				{
+					// 按ID拉取收件箱明细（数据库同步）
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/notification/inbox/v1/get_inbox_by_ids",
+					Handler: inbox.GetInboxByIdsHandler(serverCtx),
+				},
+			}...,
+		),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.JwtS2s},
+			[]rest.Route{
+				{
+					// 队间：投递通知事件
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/notification/push/v1/push_event",
+					Handler: push.PushEventHandler(serverCtx),
+				},
+				{
+					// 注册或更新离线推送 Token（FCM/APNs）
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/notification/push/v1/register_push_token",
+					Handler: push.RegisterPushTokenHandler(serverCtx),
+				},
+			}...,
+		),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.JwtS2s},
+			[]rest.Route{
+				{
+					// 按分类拉取通知已读游标（数据库同步）
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/notification/read/v1/get_read_cursors",
+					Handler: read.GetReadCursorsHandler(serverCtx),
+				},
+				{
+					// 获取未读汇总（红点）
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/notification/read/v1/get_unread_summary",
+					Handler: read.GetUnreadSummaryHandler(serverCtx),
+				},
+				{
+					// 按分类标记所有通知为已读
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/notification/read/v1/mark_read_by_category",
+					Handler: read.MarkReadByCategoryHandler(serverCtx),
+				},
+				{
+					// 按分类游标标记已读（高效批量，高级用法）
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/notification/read/v1/mark_read_by_cursor",
+					Handler: read.MarkReadByCursorHandler(serverCtx),
+				},
+				{
+					// 按事件ID标记单个通知已读
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/notification/read/v1/mark_read_by_event",
+					Handler: read.MarkReadByEventHandler(serverCtx),
+				},
+			}...,
+		),
 	)
 }

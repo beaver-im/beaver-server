@@ -1,0 +1,45 @@
+syntax = "v1"
+
+// 推送 API：注册或更新离线推送 Token（FCM/APNs）
+
+type (
+	RegisterPushTokenReq {
+		UserID string `header:"Beaver-User-Id"` // 当前用户ID（网关注入的可信身份头）
+		DeviceID     string `header:"deviceId"`
+		PushToken    string `json:"pushToken"`
+		PushPlatform string `json:"pushPlatform"`
+	}
+	RegisterPushTokenRes  {}
+)
+
+type (
+	PushEventReq {
+		EventType   string   `json:"eventType,optional"` // 必填：friend_request/moment_like/group_join/...
+		Category    string   `json:"category,optional"` // 必填：social/moment/group/system
+		FromUserID  string   `json:"fromUserId,optional"` // 触发方
+		TargetID    string   `json:"targetId,optional"` // 目标对象ID
+		TargetType  string   `json:"targetType,optional"` // 目标类型：moment/group/user/other
+		PayloadJSON string   `json:"payloadJson,optional"` // 扩展数据JSON
+		ToUserIDs   []string `json:"toUserIds,optional"` // 接收人列表
+		DedupHash   string   `json:"dedupHash,optional"` // 幂等/合并用
+	}
+	PushEventRes {
+		EventID string `json:"eventId,optional"` // 生成的事件ID
+		Version int64  `json:"version,optional"` // 事件版本（全局序列）
+	}
+)
+
+@server (
+	middleware: JwtS2s
+	group: push
+)
+service notification {
+	@doc "注册或更新离线推送 Token（FCM/APNs）"
+	@handler registerPushToken
+	post /beaver/api/notification/push/v1/register_push_token (RegisterPushTokenReq) returns (RegisterPushTokenRes)
+
+	@doc "队间：投递通知事件"
+	@handler pushEvent
+	post /beaver/api/notification/push/v1/push_event (PushEventReq) returns (PushEventRes)
+
+}

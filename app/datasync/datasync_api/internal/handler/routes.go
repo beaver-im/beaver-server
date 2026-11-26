@@ -25,6 +25,7 @@ package handler
 import (
 	"net/http"
 
+	sync "beaver/app/datasync/datasync_api/internal/handler/sync"
 	"beaver/app/datasync/datasync_api/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
@@ -32,109 +33,174 @@ import (
 
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
-		[]rest.Route{
-			{
-				// 获取所有需要更新的用户版本信息
-				Method:  http.MethodPost,
-				Path:    "/api/datasync/v1/getSyncAllUsers",
-				Handler: getSyncAllUsersHandler(serverCtx),
-			},
-			{
-				// 获取所有需要更新的会话元信息版本
-				Method:  http.MethodPost,
-				Path:    "/api/datasync/v1/getSyncChatConversations",
-				Handler: getSyncChatConversationsHandler(serverCtx),
-			},
-			{
-				// 获取所有需要更新的聊天消息版本
-				Method:  http.MethodPost,
-				Path:    "/api/datasync/v1/getSyncChatMessages",
-				Handler: getSyncChatMessagesHandler(serverCtx),
-			},
-			{
-				// 获取所有需要更新的用户会话设置版本
-				Method:  http.MethodPost,
-				Path:    "/api/datasync/v1/getSyncChatUserConversations",
-				Handler: getSyncChatUserConversationsHandler(serverCtx),
-			},
-			{
-				// 获取所有需要更新的已删除消息ID列表
-				Method:  http.MethodPost,
-				Path:    "/api/datasync/v1/getSyncDeletedMessages",
-				Handler: getSyncDeletedMessagesHandler(serverCtx),
-			},
-			{
-				// 获取用户表情收藏的版本信息
-				Method:  http.MethodPost,
-				Path:    "/api/datasync/v1/getSyncEmojiCollects",
-				Handler: getSyncEmojiCollectsHandler(serverCtx),
-			},
-			{
-				// 获取表情基础数据版本信息
-				Method:  http.MethodPost,
-				Path:    "/api/datasync/v1/getSyncEmojis",
-				Handler: getSyncEmojisHandler(serverCtx),
-			},
-			{
-				// 获取所有需要更新的好友验证版本
-				Method:  http.MethodPost,
-				Path:    "/api/datasync/v1/getSyncFriendVerifies",
-				Handler: getSyncFriendVerifiesHandler(serverCtx),
-			},
-			{
-				// 获取所有需要更新的好友版本
-				Method:  http.MethodPost,
-				Path:    "/api/datasync/v1/getSyncFriends",
-				Handler: getSyncFriendsHandler(serverCtx),
-			},
-			{
-				// 获取所有需要更新的群组信息版本
-				Method:  http.MethodPost,
-				Path:    "/api/datasync/v1/getSyncGroupInfo",
-				Handler: getSyncGroupInfoHandler(serverCtx),
-			},
-			{
-				// 获取所有需要更新的圈子信息版本
-				Method:  http.MethodPost,
-				Path:    "/api/datasync/v1/getSyncCircleInfo",
-				Handler: getSyncCircleInfoHandler(serverCtx),
-			},
-			{
-				// 获取所有需要更新的群成员版本
-				Method:  http.MethodPost,
-				Path:    "/api/datasync/v1/getSyncGroupMembers",
-				Handler: getSyncGroupMembersHandler(serverCtx),
-			},
-			{
-				// 获取所有需要更新的入群申请版本
-				Method:  http.MethodPost,
-				Path:    "/api/datasync/v1/getSyncGroupRequests",
-				Handler: getSyncGroupRequestsHandler(serverCtx),
-			},
-			{
-				// 获取所有需要同步的消息媒体状态
-				Method:  http.MethodPost,
-				Path:    "/api/datasync/v1/getSyncMessageMedias",
-				Handler: getSyncMessageMediasHandler(serverCtx),
-			},
-			{
-				// 获取通知事件版本摘要
-				Method:  http.MethodPost,
-				Path:    "/api/datasync/v1/getSyncNotificationEvents",
-				Handler: getSyncNotificationEventsHandler(serverCtx),
-			},
-			{
-				// 获取通知收件箱版本摘要
-				Method:  http.MethodPost,
-				Path:    "/api/datasync/v1/getSyncNotificationInboxes",
-				Handler: getSyncNotificationInboxesHandler(serverCtx),
-			},
-			{
-				// 获取通知已读游标版本摘要
-				Method:  http.MethodPost,
-				Path:    "/api/datasync/v1/getSyncNotificationReadCursors",
-				Handler: getSyncNotificationReadCursorsHandler(serverCtx),
-			},
-		},
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.JwtS2s},
+			[]rest.Route{
+				{
+					// 获取通知事件版本摘要
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/datasync/sync/v1/get_sync_notification_events",
+					Handler: sync.GetSyncNotificationEventsHandler(serverCtx),
+				},
+				{
+					// 获取通知收件箱版本摘要
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/datasync/sync/v1/get_sync_notification_inboxes",
+					Handler: sync.GetSyncNotificationInboxesHandler(serverCtx),
+				},
+				{
+					// 获取通知已读游标版本摘要
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/datasync/sync/v1/get_sync_notification_read_cursors",
+					Handler: sync.GetSyncNotificationReadCursorsHandler(serverCtx),
+				},
+			}...,
+		),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.JwtS2s},
+			[]rest.Route{
+				{
+					// 获取 Agent 会话版本摘要（增量/全量游标）
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/datasync/sync/v1/get_sync_agent_conversations",
+					Handler: sync.GetSyncAgentConversationsHandler(serverCtx),
+				},
+			}...,
+		),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.JwtS2s},
+			[]rest.Route{
+				{
+					// 获取所有需要更新的用户版本信息
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/datasync/sync/v1/get_sync_all_users",
+					Handler: sync.GetSyncAllUsersHandler(serverCtx),
+				},
+			}...,
+		),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.JwtS2s},
+			[]rest.Route{
+				{
+					// 获取所有需要更新的好友验证版本
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/datasync/sync/v1/get_sync_friend_verifies",
+					Handler: sync.GetSyncFriendVerifiesHandler(serverCtx),
+				},
+				{
+					// 获取所有需要更新的好友版本
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/datasync/sync/v1/get_sync_friends",
+					Handler: sync.GetSyncFriendsHandler(serverCtx),
+				},
+			}...,
+		),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.JwtS2s},
+			[]rest.Route{
+				{
+					// 获取所有需要更新的群组信息版本
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/datasync/sync/v1/get_sync_group_info",
+					Handler: sync.GetSyncGroupInfoHandler(serverCtx),
+				},
+				{
+					// 获取所有需要更新的群成员版本
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/datasync/sync/v1/get_sync_group_members",
+					Handler: sync.GetSyncGroupMembersHandler(serverCtx),
+				},
+				{
+					// 获取所有需要更新的入群申请版本
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/datasync/sync/v1/get_sync_group_requests",
+					Handler: sync.GetSyncGroupRequestsHandler(serverCtx),
+				},
+			}...,
+		),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.JwtS2s},
+			[]rest.Route{
+				{
+					// 获取所有需要更新的会话元信息版本
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/datasync/sync/v1/get_sync_chat_conversations",
+					Handler: sync.GetSyncChatConversationsHandler(serverCtx),
+				},
+				{
+					// 获取所有需要更新的聊天消息版本
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/datasync/sync/v1/get_sync_chat_messages",
+					Handler: sync.GetSyncChatMessagesHandler(serverCtx),
+				},
+				{
+					// 获取所有需要更新的用户会话设置版本
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/datasync/sync/v1/get_sync_chat_user_conversations",
+					Handler: sync.GetSyncChatUserConversationsHandler(serverCtx),
+				},
+				{
+					// 获取所有需要更新的已删除消息ID列表
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/datasync/sync/v1/get_sync_deleted_messages",
+					Handler: sync.GetSyncDeletedMessagesHandler(serverCtx),
+				},
+				{
+					// 获取所有需要同步的消息媒体状态
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/datasync/sync/v1/get_sync_message_medias",
+					Handler: sync.GetSyncMessageMediasHandler(serverCtx),
+				},
+			}...,
+		),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.JwtS2s},
+			[]rest.Route{
+				{
+					// 获取所有需要更新的圈子信息版本
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/datasync/sync/v1/get_sync_circle_info",
+					Handler: sync.GetSyncCircleInfoHandler(serverCtx),
+				},
+			}...,
+		),
+	)
+
+	server.AddRoutes(
+		rest.WithMiddlewares(
+			[]rest.Middleware{serverCtx.JwtS2s},
+			[]rest.Route{
+				{
+					// 获取用户表情收藏的版本信息
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/datasync/sync/v1/get_sync_emoji_collects",
+					Handler: sync.GetSyncEmojiCollectsHandler(serverCtx),
+				},
+				{
+					// 获取表情基础数据版本信息
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/datasync/sync/v1/get_sync_emojis",
+					Handler: sync.GetSyncEmojisHandler(serverCtx),
+				},
+			}...,
+		),
 	)
 }

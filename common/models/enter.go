@@ -29,7 +29,7 @@ import (
 )
 
 type Model struct {
-	Id        uint       `gorm:"primaryKey;autoIncrement" json:"id"` // 自增主键
+	ID        uint       `gorm:"primaryKey;autoIncrement" json:"id"` // 自增主键
 	CreatedAt CustomTime `json:"createdAt"`
 	UpdatedAt CustomTime `json:"updatedAt"`
 }
@@ -41,15 +41,8 @@ const layout = "2006-01-02 15:04:05"
 func (ct *CustomTime) UnmarshalJSON(b []byte) error {
 	s := strings.Trim(string(b), `"`)
 
-	// 先尝试RFC3339格式（兼容带T和时区的数据）
-	t, err := time.Parse(time.RFC3339Nano, s)
-	if err == nil {
-		*ct = CustomTime(t)
-		return nil
-	}
-
-	// 可选：保留对旧格式的兼容
-	t, err = time.Parse("2006-01-02 15:04:05", s)
+	// 唯一合法格式与 MarshalJSON 输出一致。
+	t, err := time.Parse(layout, s)
 	if err == nil {
 		*ct = CustomTime(t)
 		return nil

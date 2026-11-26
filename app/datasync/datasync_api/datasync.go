@@ -26,7 +26,7 @@ import (
 	"beaver/app/datasync/datasync_api/internal/handler"
 	"beaver/app/datasync/datasync_api/internal/svc"
 	"beaver/common/etcd"
-	"beaver/utils/logger"
+	"beaver/utils/beaverlog"
 	"flag"
 	"fmt"
 
@@ -41,7 +41,7 @@ func main() {
 
 	var c config.Config
 	conf.MustLoad(*configFile, &c)
-	logger.Init("datasync_api")
+	beaverlog.InitFromConf(c.RestConf.ServiceConf)
 
 	server := rest.MustNewServer(c.RestConf)
 	defer server.Stop()
@@ -49,6 +49,9 @@ func main() {
 	ctx := svc.NewServiceContext(c)
 	handler.RegisterHandlers(server, ctx)
 
+	// 本面只提供 /beaver/api/datasync/sync/v1/getSync* 增量同步 API（RegisterHandlers 注册）。
+	// 业务能力一律是各业务面自己的 /api 契约，由 gateway_api 转发；
+	// 这里只挂同步 API；A 主体业务能力统一由 gateway_api 转发到各业务面，本面不做换票端点。
 	etcd.DeliveryAddress(c.Etcd, c.Name+"_api", fmt.Sprintf("%s:%d", c.Host, c.Port))
 
 	fmt.Printf("Starting server at %s:%d...\n", c.Host, c.Port)

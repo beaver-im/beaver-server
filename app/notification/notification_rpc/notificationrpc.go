@@ -22,14 +22,16 @@
 package main
 
 import (
+	"beaver/common/zrpc_interceptor"
 	"flag"
 	"fmt"
 
 	"beaver/app/notification/notification_rpc/internal/config"
-	"beaver/app/notification/notification_rpc/internal/server"
+	eventserver "beaver/app/notification/notification_rpc/internal/server/event"
+	inboxserver "beaver/app/notification/notification_rpc/internal/server/inbox"
 	"beaver/app/notification/notification_rpc/internal/svc"
-	"beaver/app/notification/notification_rpc/types/notification_rpc"
-	"beaver/utils/logger"
+	"beaver/app/notification/notification_rpc/pb"
+	"beaver/utils/beaverlog"
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/service"
@@ -45,17 +47,21 @@ func main() {
 
 	var c config.Config
 	conf.MustLoad(*configFile, &c)
-	logger.Init("notification_rpc")
+	beaverlog.InitFromConf(c.RpcServerConf.ServiceConf)
 	ctx := svc.NewServiceContext(c)
 
 	s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {
-		notification_rpc.RegisterNotificationServer(grpcServer, server.NewNotificationServer(ctx))
+		pb.RegisterEventServer(grpcServer, eventserver.NewEventServer(ctx))
+		pb.RegisterInboxServer(grpcServer, inboxserver.NewInboxServer(ctx))
 
 		if c.Mode == service.DevMode || c.Mode == service.TestMode {
 			reflection.Register(grpcServer)
 		}
 	})
 	defer s.Stop()
+
+	// 还原 HTTP 面验签后的身份结论，rpc logic 只从 context 取。
+	s.AddUnaryInterceptors(zrpc_interceptor.IdentityServerInterceptor)
 
 	fmt.Printf("Starting rpc server at %s...\n", c.ListenOn)
 	s.Start()

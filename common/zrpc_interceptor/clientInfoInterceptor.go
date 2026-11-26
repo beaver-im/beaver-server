@@ -24,23 +24,55 @@ package zrpc_interceptor
 import (
 	"context"
 
+	"beaver/common/identity"
+	"beaver/common/traceid"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 )
 
+// ClientInfoInterceptor 把 HTTP 面的调用信息（客户端 IP、已确认的身份结论）透传到 gRPC metadata。
+//
+// 身份不由这里生成：HTTP 面只挂 JwtS2s 验机器票，用户身份采信网关写入的 Beaver-User-Id /
+// Beaver-Admin-Id 头，由 .api 的 Req 字段（header tag）直接绑定，logic 之间以显式参数传递。
+// 因此 identity.From 通常为空；若上游确实用 identity.With 写过结论，这里原样透传，
+// rpc 侧由 IdentityServerInterceptor 还原成同一份 Identity。
 func ClientInfoInterceptor(ctx context.Context, method string, req, reply any, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-	var clientIP, userID string
-	cl := ctx.Value("clientIP")
-	if cl != nil {
-		clientIP = cl.(string)
-	}
-	uid := ctx.Value("userId")
-	if uid != nil {
-		userID = uid.(string)
+	var clientIP string
+	if cl := ctx.Value("clientIP"); cl != nil {
+		if s, ok := cl.(string); ok {
+			clientIP = s
+		}
 	}
 
-	md := metadata.New(map[string]string{"clientIP": clientIP, "userId": userID})
-	ctx = metadata.NewOutgoingContext(context.Background(), md)
-	err := invoker(ctx, method, req, reply, cc, opts...)
-	return err
+	id := identity.From(ctx)
+
+	md, ok := metadata.FromOutgoingContext(ctx)
+	if ok {
+		md = md.Copy()
+	} else {
+		md = metadata.MD{}
+	}
+	if clientIP != "" {
+		md.Set("clientIP", clientIP)
+	}
+	if id.UserID != "" {
+		md.Set("userId", id.UserID)
+	}
+	if id.ClientID != "" {
+		md.Set("clientId", id.ClientID)
+	}
+	switch id.Kind {
+	case identity.KindUser:
+		md.Set("kind", "user")
+	case identity.KindS2S:
+		md.Set("kind", "s2s")
+	}
+	if id := traceid.FromContext(ctx); id != "" {
+		md.Set(traceid.MetadataKey, id)
+	}
+
+	// 必须保留原 ctx，否则会丢掉 HTTP 侧注入的 trace 等字段
+	ctx = metadata.NewOutgoingContext(ctx, md)
+	return invoker(ctx, method, req, reply, cc, opts...)
 }
