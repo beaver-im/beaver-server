@@ -80,7 +80,7 @@ rules:
       old: "Host: smtp.qq.com"
       new: "REPLACE_ME_SMTP_HOST_LINE"
     - name: SMTP 密码
-      old: "klokenvhymkobaif"
+      old: "123456"
       new: "REPLACE_ME_SMTP_PASSWORD"
 
   qiniu:

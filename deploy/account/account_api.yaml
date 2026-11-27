@@ -37,8 +37,8 @@ Email:
   QQ:
     Host: smtp.qq.com
     Port: 465
-    Username: 751135385@qq.com
-    Password: klokenvhymkobaif
+    Username: 123456@qq.com
+    Password: "123456"
   # 未来可以添加其他邮箱服务商
   # Gmail:
   #   Host: smtp.gmail.com
