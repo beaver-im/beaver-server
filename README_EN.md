@@ -1,14 +1,14 @@
 # 🦫 Beaver IM - Enterprise-Grade Instant Messaging Platform
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-3.0.2-blue.svg)](VERSION)
+[![Version](https://img.shields.io/badge/version-3.0.4-blue.svg)](VERSION)
 [![Go](https://img.shields.io/badge/go-1.26.8-blue.svg)](https://golang.org/)
 [![Go-Zero](https://img.shields.io/badge/Go--Zero-v1.7.4-green.svg)](https://github.com/zeromicro/go-zero)
 [![QQ Group](https://img.shields.io/badge/QQ-1013328597%2B-blue.svg)](https://qm.qq.com/q/82rbf7QBzO)
 
-> **Beaver IM server** - Go-Zero microservices backing the Flutter mobile app, Electron desktop app and admin console, with REST / WebSocket / gRPC and S2S HTTP views.
+> **Beaver IM core server** - Go-Zero microservices backing the Flutter mobile app and Electron desktop app with a complete, self-contained core IM closed loop (REST / WebSocket / gRPC). `beaver-server-package/` and `beaver-desktop-package/` are **independent, optional value-added services / capability packs**—core IM works normally even without them.
 
-**Current version: [3.0.2](VERSION)** (see [`VERSION`](VERSION) at the repository root; last verified 2026-11-26).
+**Current version: [3.0.4](VERSION)** (see [`VERSION`](VERSION) at the repository root).
 
 [English](README_EN.md) | [中文](README.md)
 
@@ -88,9 +88,10 @@ platform / datasync      push :20500        (RPC inside this repo only)
 | call | 21800 | - | beaver-call | Calls (LiveKit, single process) |
 | open | 21900 | - | beaver-open | Open platform: API / portal / WS / MQ |
 | social | 22100 | - | beaver-social | Circles + moments (single process, two DBs) |
-| agent | 22300 | - | beaver-server-ai | AI / digital partners (Python, agent_api) |
-| office | 22400 | - | beaver-server-online | Online docs (HTTP + Yjs WS) |
-| backend_admin | 40000 | - | beaver-server-backend | Admin APIs (JWT / CORS) |
+| agent | 22300 | - | beaver-server-ai | AI / digital partners (Python, `agent_api`, optional) |
+| office | 22400 | - | beaver-server-online | Online docs (HTTP + Yjs WS, optional) |
+| observability | 22800 | - | beaver-server-observability | Logging & observability (OpenSearch + Vector, optional) |
+| backend_admin | 40000 | - | beaver-server-backend | Admin APIs (JWT / CORS, optional) |
 
 ## 📁 Project Structure
 
@@ -148,23 +149,27 @@ Build and orchestration scripts live in `build/` and `deploy/<domain>/`. `VERSIO
 
 ## 🔗 Related Projects
 
-All repositories now live under the GitHub `beaver-im` organization. `beaver-server-package/` and `beaver-desktop-package/` are only local container directories for subrepos, not repositories themselves.
+All repositories live under the GitHub `beaver-im` organization. **The core repository forms a complete, self-contained IM closed loop on its own**; `beaver-server-package/` and `beaver-desktop-package/` are **independent, optional value-added services / capability packs** (local container folders, not repositories themselves)—core IM works normally even without them.
 
 | Group | Project | Repository | Description |
 |-------|---------|------------|-------------|
-| **Main** | beaver-server | [GitHub](https://github.com/beaver-im/beaver-server) | Backend monorepo (this repo) |
-| **Clients** | beaver-flutter | [GitHub](https://github.com/beaver-im/beaver-flutter) | Mobile app (Flutter, recommended) |
-| | beaver-desktop | [GitHub](https://github.com/beaver-im/beaver-desktop) | Desktop app (Electron) |
-| | beaver-manager | [GitHub](https://github.com/beaver-im/beaver-manager) | Admin console |
-| | beaver-oauth | [GitHub](https://github.com/beaver-im/beaver-oauth) | OAuth login |
-| **Server subpackages** | beaver-server-ai | [GitHub](https://github.com/beaver-im/beaver-server-ai) | AI agent (Python) |
-| | beaver-server-backend | [GitHub](https://github.com/beaver-im/beaver-server-backend) | Admin APIs (`backend_admin`) |
-| | beaver-server-call | [GitHub](https://github.com/beaver-im/beaver-server-call) | Calls (LiveKit) |
-| | beaver-server-online | [GitHub](https://github.com/beaver-im/beaver-server-online) | Online docs (`office_api`) |
-| | beaver-server-open | [GitHub](https://github.com/beaver-im/beaver-server-open) | Open platform / bots |
-| | beaver-server-social | [GitHub](https://github.com/beaver-im/beaver-server-social) | Circles and moments (`social_api`) |
-| **Client subpackages** | beaver-desktop-ai | [GitHub](https://github.com/beaver-im/beaver-desktop-ai) | External desktop AI capability pack (Vite / TS) |
-| | beaver-desktop-online | [GitHub](https://github.com/beaver-im/beaver-desktop-online) | External desktop online-docs capability pack (Vite / TS / Vue) |
+| **Core Server** | beaver-server | [GitHub](https://github.com/beaver-im/beaver-server) | Core backend monorepo (self-contained closed loop, this repo) |
+| **Core Clients** | beaver-flutter | [GitHub](https://github.com/beaver-im/beaver-flutter) | Mobile app (Flutter, recommended) |
+| | beaver-desktop | [GitHub](https://github.com/beaver-im/beaver-desktop) | Desktop app core (Electron) |
+| **Portals / SDK / Docs** | beaver-manager | [GitHub](https://github.com/beaver-im/beaver-manager) | Admin web console |
+| | beaver-oauth | [GitHub](https://github.com/beaver-im/beaver-oauth) | OAuth login portal |
+| | beaver-open | [GitHub](https://github.com/beaver-im/beaver-open) | Open platform web portal |
+| | beaver-sdk | [GitHub](https://github.com/beaver-im/beaver-sdk) | JS SDK & OpenClaw adapter |
+| | beaver-docs | [GitHub](https://github.com/beaver-im/beaver-docs) | Official documentation site |
+| **Optional Server Add-ons** | beaver-server-ai | [GitHub](https://github.com/beaver-im/beaver-server-ai) | AI agent (Python, optional) |
+| (`beaver-server-package`) | beaver-server-backend | [GitHub](https://github.com/beaver-im/beaver-server-backend) | Admin APIs (`backend_admin`, optional) |
+| | beaver-server-call | [GitHub](https://github.com/beaver-im/beaver-server-call) | Calls (LiveKit, optional) |
+| | beaver-server-observability | [GitHub](https://github.com/beaver-im/beaver-server-observability) | Logging & observability (optional) |
+| | beaver-server-online | [GitHub](https://github.com/beaver-im/beaver-server-online) | Online docs (`office_api`, optional) |
+| | beaver-server-open | [GitHub](https://github.com/beaver-im/beaver-server-open) | Open platform / bots (optional) |
+| | beaver-server-social | [GitHub](https://github.com/beaver-im/beaver-server-social) | Circles and moments (`social_api`, optional) |
+| **Optional Desktop Packs** | beaver-desktop-ai | [GitHub](https://github.com/beaver-im/beaver-desktop-ai) | External desktop AI capability pack (optional) |
+| (`beaver-desktop-package`) | beaver-desktop-online | [GitHub](https://github.com/beaver-im/beaver-desktop-online) | External desktop online-docs pack (optional) |
 
 ## 📱 Feature Showcase
 

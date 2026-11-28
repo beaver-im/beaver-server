@@ -3,14 +3,14 @@
 > 开发与 AI 协作请先读 **[中文工程手册](docs/README.md)**：go-zero 先写 `.api` / `.proto`，再用 goctl 生成接线。旧版本与目录示例以当前源码和手册核验说明为准。
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-3.0.2-blue.svg)](VERSION)
+[![Version](https://img.shields.io/badge/version-3.0.4-blue.svg)](VERSION)
 [![Go](https://img.shields.io/badge/go-1.26.8-blue.svg)](https://golang.org/)
 [![Go-Zero](https://img.shields.io/badge/Go--Zero-v1.7.4-green.svg)](https://github.com/zeromicro/go-zero)
 [![QQ群](https://img.shields.io/badge/QQ群-1013328597%2B-blue.svg)](https://qm.qq.com/q/82rbf7QBzO)
 
-> **海狸 IM 后端服务** - 基于 Go-Zero 微服务架构，为 Flutter 移动端、Electron 桌面端与后台管理系统提供 REST / WebSocket / gRPC 能力。
+> **海狸 IM 后端核心服务** - 基于 Go-Zero 微服务架构，为 Flutter 移动端、Electron 桌面端提供完整的核心即时通讯闭环能力（REST / WebSocket / gRPC）。`beaver-server` 自身即可独立运行核心 IM 闭环；`beaver-server-package/` 与 `beaver-desktop-package/` 均为**独立可选的增值服务/能力包**，不部署也不影响核心 IM 正常使用。
 
-**当前版本：[3.0.2](VERSION)**（以仓库根目录 [`VERSION`](VERSION) 为准；最后核对：2026-11-26）
+**当前版本：[3.0.4](VERSION)**（以仓库根目录 [`VERSION`](VERSION) 为准）
 
 [English](README_EN.md) | [中文](README.md)
 
@@ -88,9 +88,10 @@ platform / datasync      push :20500        （RPC 仅本仓服务间）
 | call | 21800 | - | beaver-call | 通话（LiveKit，单进程） |
 | open | 21900 | - | beaver-open | 开放平台（API / 控制台 / WS / MQ） |
 | social | 22100 | - | beaver-social | 圈子 + 动态（单进程双库） |
-| agent | 22300 | - | beaver-server-ai | AI / 数字伙伴（Python，agent_api） |
-| office | 22400 | - | beaver-server-online | 在线文档（HTTP + Yjs WS） |
-| backend_admin | 40000 | - | beaver-server-backend | 后台管理（自带 JWT 鉴权 / CORS） |
+| agent | 22300 | - | beaver-server-ai | AI / 数字伙伴（Python，agent_api，可选增值） |
+| office | 22400 | - | beaver-server-online | 在线文档（HTTP + Yjs WS，可选增值） |
+| observability | 22800 | - | beaver-server-observability | 日志上报与查询（OpenSearch + Vector，可选增值） |
+| backend_admin | 40000 | - | beaver-server-backend | 后台管理（自带 JWT 鉴权 / CORS，可选增值） |
 
 ## 📁 项目结构
 
@@ -152,23 +153,27 @@ go run main.go -db
 
 ## 🔗 相关项目
 
-以下仓库现统一位于 GitHub `beaver-im` 组织。`beaver-server-package/` 与 `beaver-desktop-package/` 只是子仓的本地容器目录，不是独立仓。
+以下仓库均位于 GitHub `beaver-im` 组织。**核心仓自己就是一个完整闭环**；`beaver-server-package/` 与 `beaver-desktop-package/` 均为**独立可选的增值服务/能力包**（本地目录仅作子仓容器，不是独立仓），不部署/不安装也不影响核心 IM 正常使用。
 
 | 类别 | 项目 | 仓库地址 | 说明 |
 |------|------|----------|------|
-| **主仓** | beaver-server | [GitHub](https://github.com/beaver-im/beaver-server) | 后端微服务主仓（本仓库） |
-| **客户端** | beaver-flutter | [GitHub](https://github.com/beaver-im/beaver-flutter) | 移动端（Flutter，推荐） |
-| | beaver-desktop | [GitHub](https://github.com/beaver-im/beaver-desktop) | 桌面端（Electron） |
-| | beaver-manager | [GitHub](https://github.com/beaver-im/beaver-manager) | 后台管理系统 |
-| | beaver-oauth | [GitHub](https://github.com/beaver-im/beaver-oauth) | OAuth 授权登录 |
-| **服务端子包** | beaver-server-ai | [GitHub](https://github.com/beaver-im/beaver-server-ai) | AI Agent（Python） |
-| | beaver-server-backend | [GitHub](https://github.com/beaver-im/beaver-server-backend) | 后台管理接口 `backend_admin` |
-| | beaver-server-call | [GitHub](https://github.com/beaver-im/beaver-server-call) | 音视频通话（LiveKit） |
-| | beaver-server-online | [GitHub](https://github.com/beaver-im/beaver-server-online) | 在线文档（office_api） |
-| | beaver-server-open | [GitHub](https://github.com/beaver-im/beaver-server-open) | 开放平台 / 机器人 |
-| | beaver-server-social | [GitHub](https://github.com/beaver-im/beaver-server-social) | 圈子与动态（social_api） |
-| **客户端子包** | beaver-desktop-ai | [GitHub](https://github.com/beaver-im/beaver-desktop-ai) | 桌面端外置 AI 能力包（Vite / TS） |
-| | beaver-desktop-online | [GitHub](https://github.com/beaver-im/beaver-desktop-online) | 桌面端外置在线文档能力包（Vite / TS / Vue） |
+| **核心后端** | beaver-server | [GitHub](https://github.com/beaver-im/beaver-server) | 后端微服务核心仓（自身即完整闭环，本仓库） |
+| **核心客户端** | beaver-flutter | [GitHub](https://github.com/beaver-im/beaver-flutter) | 移动端（Flutter，推荐） |
+| | beaver-desktop | [GitHub](https://github.com/beaver-im/beaver-desktop) | 桌面端核心（Electron） |
+| **周边门户 / SDK / 文档** | beaver-manager | [GitHub](https://github.com/beaver-im/beaver-manager) | 后台管理系统前端 |
+| | beaver-oauth | [GitHub](https://github.com/beaver-im/beaver-oauth) | OAuth 授权登录前端 |
+| | beaver-open | [GitHub](https://github.com/beaver-im/beaver-open) | 开放平台前端门户 |
+| | beaver-sdk | [GitHub](https://github.com/beaver-im/beaver-sdk) | JS SDK & OpenClaw 插件 |
+| | beaver-docs | [GitHub](https://github.com/beaver-im/beaver-docs) | 官方文档站点 |
+| **可选服务端增值包** | beaver-server-ai | [GitHub](https://github.com/beaver-im/beaver-server-ai) | AI Agent 服务（Python，可选） |
+| (`beaver-server-package`) | beaver-server-backend | [GitHub](https://github.com/beaver-im/beaver-server-backend) | 后台管理接口 `backend_admin`（可选） |
+| | beaver-server-call | [GitHub](https://github.com/beaver-im/beaver-server-call) | 音视频通话（LiveKit，可选） |
+| | beaver-server-observability | [GitHub](https://github.com/beaver-im/beaver-server-observability) | 日志采集与可观测性（可选） |
+| | beaver-server-online | [GitHub](https://github.com/beaver-im/beaver-server-online) | 在线文档 `office_api`（可选） |
+| | beaver-server-open | [GitHub](https://github.com/beaver-im/beaver-server-open) | 开放平台 / 机器人 `open_api`（可选） |
+| | beaver-server-social | [GitHub](https://github.com/beaver-im/beaver-server-social) | 圈子与动态 `social_api`（可选） |
+| **可选桌面端能力包** | beaver-desktop-ai | [GitHub](https://github.com/beaver-im/beaver-desktop-ai) | 桌面端外置 AI 能力包（可选） |
+| (`beaver-desktop-package`) | beaver-desktop-online | [GitHub](https://github.com/beaver-im/beaver-desktop-online) | 桌面端外置在线文档能力包（可选） |
 
 ## 🤝 贡献指南
 
