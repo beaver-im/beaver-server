@@ -27,31 +27,32 @@ import (
 	"beaver/app/account/account_api/internal/svc"
 	"beaver/app/account/account_api/internal/types"
 	accttypes "beaver/app/account/account_rpc/pb"
+	beaverlog "beaver/utils/beaverlog"
 )
 
-// UserUpdateDisplayLogic 更新用户展示信息
-//
-// 薄转发：HTTP 出入参与同域 RPC 的 proto 类型字段名一致，用 convert 做一次
-// JSON 往返即可，不在这里复制业务规则（规则在 account_rpc 里）。
+// UserUpdateDisplayLogic 更新用户展示信息（队间 / open 工号实体常用）
 type UserUpdateDisplayLogic struct {
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
+	logger *beaverlog.Logger
 }
 
-// NewUserUpdateDisplayLogic 构造 logic。
 func NewUserUpdateDisplayLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UserUpdateDisplayLogic {
 	return &UserUpdateDisplayLogic{
 		ctx:    ctx,
 		svcCtx: svcCtx,
+		logger: beaverlog.New("user_update_display", ctx),
 	}
 }
 
-// UserUpdateDisplay 更新用户展示信息
 func (l *UserUpdateDisplayLogic) UserUpdateDisplay(req *types.UserUpdateDisplayReq) (*types.UserUpdateDisplayRes, error) {
 	rpcReq := &accttypes.UserUpdateDisplayReq{UserId: req.UserID, NickName: req.NickName, Avatar: req.Avatar}
 	rpcRes, err := l.svcCtx.UserRpc.UserUpdateDisplay(l.ctx, rpcReq)
 	if err != nil {
 		return nil, err
+	}
+	if rpcRes != nil && rpcRes.Version > 0 {
+		NotifyUserProfileChange(l.svcCtx, l.logger, req.UserID, rpcRes.Version)
 	}
 	return &types.UserUpdateDisplayRes{Version: rpcRes.Version}, nil
 }
