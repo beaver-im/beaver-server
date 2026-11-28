@@ -13,8 +13,6 @@ Name: account
 Host: 0.0.0.0
 Port: 20100
 Log:
-  Mode: file
-  Path: logs/account_api
   Encoding: json
   TimeFormat: 2006-01-02T15:04:05
   KeepDays: 7

@@ -9,8 +9,8 @@ Etcd: 127.0.0.1:2379
 
 RocketMQ:
   Addr: 127.0.0.1:9876
-  AccessKey: root
-  SecretKey: '123456'
+  AccessKey: rootuser
+  SecretKey: '123456a'
 
 # 入站 S2S 机器票：业务服务经 JwtS2s 调用推送面，受众 core:api。
 # 北向：JWKS 验网关 ES256 断言（公钥材料，可公开）；JwtS2s 强制要求，缺失则拒绝启动。

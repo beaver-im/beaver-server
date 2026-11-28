@@ -2,7 +2,7 @@
 globalWhiteRemoteAddresses: []
 
 accounts:
-  - accessKey: root
-    secretKey: 123456
+  - accessKey: rootuser
+    secretKey: 123456a
     whiteRemoteAddress: "*"
     admin: true

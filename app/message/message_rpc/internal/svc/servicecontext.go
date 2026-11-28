@@ -53,7 +53,6 @@ import (
 
 	"beaver/core/corewebhook"
 
-	"beaver/utils/beaverlog"
 
 	versionPkg "beaver/core/version"
 
@@ -124,7 +123,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		SecretKey: c.RocketMQ.SecretKey,
 	})
 
-	beaverlog.SetRocketMQ(mqClient)
 
 	return &ServiceContext{
 		Config: c,

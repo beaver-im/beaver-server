@@ -41,8 +41,8 @@ ChatRpc:
     Key: messagerpc.rpc
 RocketMQ:
   Addr: 127.0.0.1:9876
-  AccessKey: root
-  SecretKey: '123456'
+  AccessKey: rootuser
+  SecretKey: '123456a'
 # WebSocket配置
 WebSocket:
   # 心跳配置(单位:秒)

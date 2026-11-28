@@ -1,12 +1,12 @@
 @echo off
 REM Start ALL API services (no RPC; RPC is started by each repo start_rpc.bat)
-REM Core 10 APIs + 6 business repos x1 = 16 tabs.
+REM Core 10 APIs + 7 business repos x1 = 17 tabs.
 setlocal enabledelayedexpansion
 
 for %%i in ("%~dp0..\..") do set "WORKSPACE=%%~fi"
 
 echo Workspace: !WORKSPACE!
-echo Starting all API services (16)...
+echo Starting all API services (17)...
 
 wt new-tab --title "Gateway API" cmd /k "cd /d !WORKSPACE!\beaver-server\app\gateway\gateway_api && go run gateway.go" ^
   ; new-tab --title "Account API" cmd /k "cd /d !WORKSPACE!\beaver-server\app\account\account_api && go run account.go" ^
@@ -23,6 +23,7 @@ wt new-tab --title "Gateway API" cmd /k "cd /d !WORKSPACE!\beaver-server\app\gat
   ; new-tab --title "Call API" cmd /k "cd /d !WORKSPACE!\beaver-server-package\beaver-server-call\app\call_api && go run call.go" ^
   ; new-tab --title "Office API" cmd /k "cd /d !WORKSPACE!\beaver-server-package\beaver-server-online\app\office\office_api && go run office.go" ^
   ; new-tab --title "Open API" cmd /k "cd /d !WORKSPACE!\beaver-server-package\beaver-server-open\app\open\open_api && go run open.go" ^
-  ; new-tab --title "Social API" cmd /k "cd /d !WORKSPACE!\beaver-server-package\beaver-server-social\app\social\social_api && go run social.go"
+  ; new-tab --title "Social API" cmd /k "cd /d !WORKSPACE!\beaver-server-package\beaver-server-social\app\social\social_api && go run social.go" ^
+  ; new-tab --title "Observability API" cmd /k "cd /d !WORKSPACE!\beaver-server-package\beaver-server-observability\app\observability\observability_api && go run observability.go"
 
 endlocal

@@ -36,7 +36,6 @@ import (
 	"beaver/core/coreredis"
 	"beaver/core/corerocketmq"
 	pushcli "beaver/remote/push"
-	"beaver/utils/beaverlog"
 
 	"github.com/go-redis/redis"
 	"github.com/zeromicro/go-zero/rest"
@@ -64,7 +63,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		AccessKey: c.RocketMQ.AccessKey,
 		SecretKey: c.RocketMQ.SecretKey,
 	})
-	beaverlog.SetRocketMQ(mqClient)
 
 	commonconfig.Load(c.RemoteProxy)
 	pushcli.Init(c.Name, c.RemoteProxy.Push.ClientSecret)

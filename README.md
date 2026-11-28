@@ -25,10 +25,10 @@
 - 📞 **音视频通话** - 基于 LiveKit 的通话信令与房间管理（`beaver-call`）
 - 🔔 **通知与推送** - 系统通知、互动提醒、收件箱与已读；`push_api` 独立推送网关，实时 / 离线两路按 channel 映射 MQ Topic
 - 🔄 **跨端同步** - `datasync` 多端增量同步，覆盖好友 / 群 / 消息 / 表情 / 通知 / 圈子 / 机器人等
-- 🏢 **组织与工作台** - 部门 / 员工、工作台、反馈 / 举报、埋点、版本发布等平台能力
+- 🏢 **组织与工作台** - 部门 / 员工、工作台、反馈 / 举报、版本发布等平台能力
 - 🤖 **AI 与知识** - 数字伙伴 / 机器人、知识源与技能（`SKILL.md`）、Agent 会话增量同步（`beaver-server-ai` + 开放平台）
 - 📄 **在线文档** - HTTP API + Yjs WebSocket 同进程协作（`beaver-server-online`）
-- 📊 **平台运维** - 客户端日志经 RocketMQ 写入 OpenSearch，OpenSearch 已开启安全认证并支持 Basic Auth 客户端
+- 📊 **平台运维** - 服务端日志由 Vector 采集容器 stdout、客户端日志由 SDK 上报，统一落在独立仓 `beaver-server-observability`
 - 🛠️ **后台管理** - 用户 / 组织 / 版本等管理端接口（`beaver-server-backend` 的 `backend_admin`）
 
 ## 🛠️ 技术栈
@@ -37,7 +37,7 @@
 |------|------|------|
 | 语言 / 框架 | Go 1.26.8 + go-zero 1.7.4 | goctl 是独立工具，版本以本地实际安装为准，见工程手册 1.1 |
 | 通信 | gRPC、HTTP S2S、WebSocket、RocketMQ | 本仓服务间走 RPC，跨仓与推送走 HTTP 机器票 |
-| 存储 / 检索 | MySQL 8.0、Redis 6.0、ETCD 3.5、OpenSearch | 多库拆分 + 缓存 + 服务发现 + 日志检索 |
+| 存储 / 检索 | MySQL 8.0、Redis 6.0、ETCD 3.5 | 多库拆分 + 缓存 + 服务发现；OpenSearch 属独立日志仓 |
 | 部署 | Docker Compose、build 脚本 | 配置在 `deploy/<域>/`，外部依赖在 `docker/` |
 | 其他 | JWT（ES256 / JWKS）、LiveKit、MinIO / 七牛云 | 鉴权、通话、对象存储 |
 
@@ -83,7 +83,7 @@ platform / datasync      push :20500        （RPC 仅本仓服务间）
 | push | 20500 | - | beaver-server | 独立推送网关（S2S 薄入口） |
 | asset | 20600 | 30600 | beaver-server | 文件 + 表情（已合并） |
 | notification | 21000 | 31000 | beaver-server | 通知 |
-| platform | 21600 | 31100 | beaver-server | 平台（组织 / 反馈 / 埋点 / 更新等） |
+| platform | 21600 | 31100 | beaver-server | 平台（组织 / 反馈 / 更新等） |
 | datasync | 21700 | - | beaver-server | 数据同步 |
 | call | 21800 | - | beaver-call | 通话（LiveKit，单进程） |
 | open | 21900 | - | beaver-open | 开放平台（API / 控制台 / WS / MQ） |

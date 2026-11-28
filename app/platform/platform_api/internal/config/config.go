@@ -44,13 +44,6 @@ type Config struct {
 		AccessKey string `json:",optional"`
 		SecretKey string `json:",optional"`
 	}
-	// OpenSearch 仅用于客户端日志独立索引（与服务端本地日志分离）
-	OpenSearch struct {
-		Addr           string `json:",optional"`
-		Username       string `json:",optional"`
-		Password       string `json:",optional"`
-		ClientLogIndex string `json:",default=beaver-logs"`
-	}
 	FileRpc     zrpc.RpcClientConf
 	PlatformRpc zrpc.RpcClientConf
 	UserRpc     zrpc.RpcClientConf

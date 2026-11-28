@@ -14,7 +14,7 @@
 | push | 20500 | - | beaver-server | 独立推送网关（S2S 薄入口，无数据表），从 notification_rpc 剥离 |
 | asset | 20600 | 30600 | beaver-server | 文件 + 表情（已合并） |
 | notification | 21000 | 31000 | beaver-server | 通知 |
-| platform | 21600 | 31100 | beaver-server | 平台（组织 / 工作台 / 反馈 / 举报 / 埋点 / 更新等） |
+| platform | 21600 | 31100 | beaver-server | 平台（组织 / 工作台 / 反馈 / 举报 / 更新等） |
 | datasync | 21700 | - | beaver-server | 数据同步 |
 
 ## 独立子仓

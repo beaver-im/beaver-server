@@ -102,38 +102,11 @@ services:
       /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-agent-task &&
       /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-agent-done &&
       /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-workflow-task &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-platform-logs &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-realtime-chat-cg &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-realtime-sync-cg &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-realtime-bot-cg &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-realtime-chat-cg -d true -m false &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-realtime-sync-cg -d true -m false &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-realtime-bot-cg -d true -m false &&
       /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-offline-push-cg &&
       /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-agent-task-cg &&
       /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-agent-done-cg &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-workflow-task-cg &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-platform-logs-cg"
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-workflow-task-cg"
 
-  opensearch:
-    image: opensearchproject/opensearch:2.19.0
-    container_name: opensearch
-    restart: "no"
-    environment:
-      - discovery.type=single-node
-      - "OPENSEARCH_INITIAL_ADMIN_PASSWORD=Demo@123456"
-      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
-    ports:
-      - "9200:9200"
-    volumes:
-      - ./opensearch:/usr/share/opensearch/data
-  opensearch-dashboards:
-    image: opensearchproject/opensearch-dashboards:2.19.0
-    container_name: opensearch-dashboards
-    restart: "no"
-    environment:
-      - 'OPENSEARCH_HOSTS=["https://opensearch:9200"]'
-      - OPENSEARCH_USERNAME=admin
-      - "OPENSEARCH_PASSWORD=Demo@123456"
-      - OPENSEARCH_SSL_VERIFICATION_MODE=none
-    ports:
-      - "5601:5601"
-    depends_on:
-      - opensearch

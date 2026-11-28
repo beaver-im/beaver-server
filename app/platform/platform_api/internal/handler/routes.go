@@ -29,7 +29,6 @@ import (
 	feedback "beaver/app/platform/platform_api/internal/handler/feedback"
 	instance_public "beaver/app/platform/platform_api/internal/handler/instance_public"
 	org "beaver/app/platform/platform_api/internal/handler/org"
-	track_public "beaver/app/platform/platform_api/internal/handler/track_public"
 	update_public "beaver/app/platform/platform_api/internal/handler/update_public"
 	workbench "beaver/app/platform/platform_api/internal/handler/workbench"
 	"beaver/app/platform/platform_api/internal/svc"
@@ -42,12 +41,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		rest.WithMiddlewares(
 			[]rest.Middleware{serverCtx.JwtS2s},
 			[]rest.Route{
-				{
-					// 队间：查询后台操作日志
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/platform/admin/v1/admin_query_logs",
-					Handler: admin.AdminQueryLogsHandler(serverCtx),
-				},
 				{
 					// 队间：创建应用
 					Method:  http.MethodPost,
@@ -239,17 +232,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				},
 			}...,
 		),
-	)
-
-	server.AddRoutes(
-		[]rest.Route{
-			{
-				// 记录客户端日志
-				Method:  http.MethodPost,
-				Path:    "/beaver/api/platform/track_public/v1/track",
-				Handler: track_public.TrackHandler(serverCtx),
-			},
-		},
 	)
 
 	server.AddRoutes(

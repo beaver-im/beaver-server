@@ -4,34 +4,6 @@ package platform_rpc;
 
 option go_package = "./pb";
 
-// ==================== 管理后台：客户端日志 ====================
-
-message AdminQueryLogsReq {
-  string bucket_id = 1; // string Bucket ID
-  string level = 2; // string 日志级别，可选
-  int64 start_time = 3; // int64 开始时间戳毫秒
-  int64 end_time = 4; // int64 结束时间戳毫秒
-  string keyword = 5; // string 关键词，可选
-  string user_filter = 6; // string 用户 ID 筛选，可选
-  int32 page = 7; // int32 页码
-  int32 page_size = 8; // int32 每页条数
-}
-
-message AdminLogItem {
-  uint64 id = 1; // uint64 日志记录 ID
-  string level = 2; // string 日志级别
-  string data = 3; // string 日志数据 JSON
-  string bucket_id = 4; // string Bucket ID
-  string bucket_name = 5; // string Bucket 名称
-  int64 timestamp = 6; // int64 时间戳毫秒
-  string created_at = 7; // string 创建时间 RFC3339
-}
-
-message AdminQueryLogsRes {
-  int64 total = 1; // int64 总条数
-  repeated AdminLogItem logs = 2; // array 日志列表
-}
-
 // ==================== 应用更新（通用，platform_api / backend_admin 共用）====================
 
 message AppItem {
@@ -493,11 +465,6 @@ message RemoveOrgMemberReq {
 message RemoveOrgMemberRes {}
 
 // （AI 业务 message 已随 AI 服务拆分至 beaver-ai 仓 ai_rpc.proto）
-// admin 域
-service admin {
-  rpc AdminQueryLogs(AdminQueryLogsReq) returns (AdminQueryLogsRes);
-}
-
 // app 域
 service app {
   rpc CreateApp(CreateAppReq) returns (CreateAppRes);

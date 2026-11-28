@@ -31,7 +31,6 @@ import (
 	platformcli "beaver/app/platform/platform_rpc/platform"
 	"beaver/common/zrpc_interceptor"
 	"beaver/core/coregorm"
-	"beaver/core/coreopensearch"
 	"beaver/core/coreredis"
 	"beaver/core/corerocketmq"
 	orgseed "beaver/database/org"
@@ -57,7 +56,6 @@ type ServiceContext struct {
 	FileRpc     assettypes.FileClient
 	PlatformRpc platformcli.Platform
 	RocketMQ    *corerocketmq.Client
-	OpenSearch  *coreopensearch.Client
 	Instance    InstanceView
 	// JwtS2s 由 .api 的 @server 声明接线（用户票 / 机器票分开挂）。
 	JwtS2s rest.Middleware
@@ -72,7 +70,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		AccessKey: c.RocketMQ.AccessKey,
 		SecretKey: c.RocketMQ.SecretKey,
 	})
-	beaverlog.SetRocketMQ(mqClient)
 
 	return &ServiceContext{
 		Config:      c,
@@ -81,7 +78,6 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		FileRpc:     file.NewFile(zrpc.MustNewClient(c.FileRpc, rpcOpt)),
 		PlatformRpc: platformcli.NewPlatform(zrpc.MustNewClient(c.PlatformRpc, rpcOpt)),
 		RocketMQ:    mqClient,
-		OpenSearch:  coreopensearch.New(c.OpenSearch.Addr, c.OpenSearch.Username, c.OpenSearch.Password),
 		Instance:    loadInstance(mysqlDb),
 		JwtS2s:      middleware.NewJwtS2sMiddleware(c).Handle,
 	}

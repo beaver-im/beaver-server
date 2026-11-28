@@ -37,6 +37,8 @@ RUN go build -ldflags="-s -w" -o datasync_api/datasync app/datasync/datasync_api
 # gateway_api
 RUN go build -ldflags="-s -w" -o gateway_api/gateway app/gateway/gateway_api/gateway.go
 
+# 日志增值服务已拆到 beaver-server-observability 独立仓，本镜像不再构建日志 consumer。
+
 # ==================== MESSAGE 相关服务（chat 更名）====================
 # message_api
 RUN go build -ldflags="-s -w" -o message_api/message app/message/message_api/message.go

@@ -70,8 +70,8 @@ PlatformRpc:
     Key: platformrpc.rpc
 RocketMQ:
   Addr: 127.0.0.1:9876
-  AccessKey: root
-  SecretKey: '123456'
+  AccessKey: rootuser
+  SecretKey: '123456a'
 Push:
   Enabled: false
   FCM:
