@@ -24,7 +24,7 @@
 | 服务 | API 端口 | RPC 端口 | 所属仓库 | 备注 |
 |------|---------:|---------:|----------|------|
 | call | 21800 | - | beaver-call | 通话（LiveKit，原 call_rpc 已并入 call_api） |
-| open | 21900 | - | beaver-open | 开放平台 API / 控制台 / WS / MQ（原 open_rpc 已取消） |
+| open | 21900 | - | beaver-web-open | 开放平台 API / 控制台 / WS / MQ（原 open_rpc 已取消） |
 | social | 22100 | - | beaver-social | 圈子 + 动态（单进程双库 beaver_circle / beaver_moment） |
 | agent | 22300 | - | beaver-server-ai | AI / 数字伙伴（Python，agent_api） |
 | office | 22400 | - | beaver-server-online | 在线文档（HTTP + Yjs WS，原 doc_rpc 已取消） |

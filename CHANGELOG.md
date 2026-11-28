@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [3.0.4] - 2026-11-28
+
+### Changed
+- Unified ecosystem release version to `3.0.4`
+- Clarified modular architecture between core IM closed loop (`beaver-server` + core clients) and optional value-added service packages (`beaver-server-package/*`, `beaver-desktop-package/*`)
+- Unified ecosystem GitHub repository links to `https://github.com/beaver-im/*`
+
 ### Added
 - Enhanced security features with multi-factor authentication
 - Advanced message search functionality
