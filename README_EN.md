@@ -1,4 +1,4 @@
-# 🦫 Beaver IM - Enterprise-Grade Instant Messaging Platform
+# Beaver IM
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-3.0.4-blue.svg)](VERSION)
@@ -6,7 +6,7 @@
 [![Go-Zero](https://img.shields.io/badge/Go--Zero-v1.7.4-green.svg)](https://github.com/zeromicro/go-zero)
 [![QQ Group](https://img.shields.io/badge/QQ-1013328597%2B-blue.svg)](https://qm.qq.com/q/82rbf7QBzO)
 
-> **Beaver IM core server** - Go-Zero microservices backing the Flutter mobile app and Electron desktop app with a complete, self-contained core IM closed loop (REST / WebSocket / gRPC). `beaver-server-package/` and `beaver-desktop-package/` are **independent, optional value-added services / capability packs**—core IM works normally even without them.
+Beaver IM core server built on Go-Zero microservices, backing the Flutter mobile app and Electron desktop app with a complete core IM closed loop (REST / WebSocket / gRPC). `beaver-server-package/` and `beaver-desktop-package/` are independent, optional value-added services and capability packs—core IM works normally even without them.
 
 **Current version: [3.0.4](VERSION)** (see [`VERSION`](VERSION) at the repository root).
 
@@ -16,22 +16,22 @@
 
 ---
 
-## 🌟 Key Features
+## Key Features
 
-- 🔐 **Authentication** - phone / email / verification code / QR code / OAuth login; the gateway verifies external JWTs and signs an ES256 assertion, services verify it with a public JWKS; S2S machine tickets, device management and remote logout
-- 💬 **Messaging** - one-to-one and group chats, conversations and message history, read receipts, forwarding, WebSocket delivery and RocketMQ async pipelines
-- 👥 **Social** - friend requests and profiles, group creation and moderation, block list; circles and moments live in the separate `beaver-social` repo
-- 📁 **Files & Emoji** - uploads/downloads, emoji packs and favorites, with MinIO / Qiniu object storage
-- 📞 **Calls** - LiveKit-backed signaling and rooms (`beaver-call`)
-- 🔔 **Notifications & Push** - system notifications, interaction reminders, inbox and read state; a standalone `push_api` gateway with realtime / offline channels mapped to MQ topics
-- 🔄 **Sync** - `datasync` incremental multi-device sync for friends, groups, messages, emoji, notifications, circles and bots
-- 🏢 **Organization** - departments, employees, workbench, feedback / reports, client telemetry and release management in `platform`
-- 🤖 **AI & Knowledge** - digital partners / bots, knowledge sources and skills (`SKILL.md`), agent conversation sync (`beaver-server-ai` + open platform)
-- 📄 **Online Documents** - HTTP API and Yjs WebSocket in one `office_api` process (`beaver-server-online`)
-- 📊 **Operations** - client logs flow through RocketMQ into OpenSearch; OpenSearch authentication is enabled with Basic Auth support
-- 🛠️ **Admin** - user / organization / release admin endpoints in `backend_admin` (`beaver-server-backend`)
+- **Authentication**: Phone, email, verification code, QR code, and OAuth login; `gateway_api` verifies external JWTs and signs an ES256 assertion, services verify it with a public JWKS; S2S machine tickets, device management, and remote logout.
+- **Messaging**: 1:1 and group chats, conversations and message history, read receipts, forwarding, WebSocket delivery, and RocketMQ async pipelines.
+- **Social**: Friend requests and profiles, group creation and moderation, block list; circles and moments live in the optional `beaver-server-social` repo.
+- **Files & Emoji**: Uploads/downloads, emoji packs and favorites, backed by MinIO / Qiniu object storage.
+- **Calls**: LiveKit-backed signaling and rooms in the optional `beaver-server-call` repo.
+- **Notifications & Push**: System notifications, interaction reminders, inbox and read state; a standalone `push_api` gateway with realtime / offline channels mapped to MQ topics.
+- **Sync**: `datasync` incremental multi-device sync for friends, groups, messages, emoji, notifications, circles, and bots.
+- **Organization**: Departments, employees, workbench, feedback / reports, client telemetry, and release management in `platform`.
+- **AI & Knowledge**: Digital partners / bots, knowledge sources and skills (`SKILL.md`), and agent conversation sync (`beaver-server-ai` + open platform).
+- **Online Documents**: HTTP API and Yjs WebSocket in one `office_api` process (optional `beaver-server-online`).
+- **Operations**: Server log collection via Vector and client log ingestion into OpenSearch (`beaver-server-observability`).
+- **Admin**: User / organization / release admin endpoints in `backend_admin` (optional `beaver-server-backend`).
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 | Area | Technology | Notes |
 |------|------------|-------|
@@ -41,9 +41,9 @@
 | Deployment | Docker Compose, build scripts | `deploy/<domain>/` and `docker/` |
 | Other | JWT (ES256 / JWKS), LiveKit, MinIO / Qiniu | Auth, calls, object storage |
 
-## 🏗️ Architecture
+## Architecture
 
-Clients (Flutter / Electron) reach the backend through `gateway_api :20800`. The gateway verifies external Beaver / Open / Admin tickets, signs an ES256 assertion, injects trusted identity headers and forwards by path. Services verify the assertion with JWKS; cross-service and cross-repo calls use S2S machine tickets and `machine` / `_public` views. WebSocket carries long-lived connections; RocketMQ carries async messages and push delivery. The admin console reaches `backend_admin` through the gateway.
+Clients (Flutter / Electron) reach the backend through `gateway_api :20800`. The gateway verifies external Beaver / Open / Admin tickets, signs an ES256 assertion, injects trusted identity headers, and forwards by path. Services verify the assertion with JWKS; cross-service and cross-repo calls use S2S machine tickets and `machine` / `_public` views. WebSocket carries long-lived connections; RocketMQ carries async messages and push delivery. The admin console reaches `backend_admin` through the gateway.
 
 ```
 ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
@@ -66,7 +66,7 @@ platform / datasync      push :20500        (RPC inside this repo only)
         │ MySQL · Redis · ETCD · OpenSearch │
         └─────────────────────────────────┘
 
-  Cross-repo ──► social / call / open / office / agent / backend (HTTP machine views)
+  Cross-repo ──► social / call / open / office / agent / backend / observability (HTTP machine views)
 ```
 
 ### Service Ports
@@ -85,15 +85,15 @@ platform / datasync      push :20500        (RPC inside this repo only)
 | notification | 21000 | 31000 | beaver-server | Notifications |
 | platform | 21600 | 31100 | beaver-server | Org / feedback / telemetry / updates |
 | datasync | 21700 | - | beaver-server | Incremental sync |
-| call | 21800 | - | beaver-call | Calls (LiveKit, single process) |
-| open | 21900 | - | beaver-open | Open platform: API / portal / WS / MQ |
-| social | 22100 | - | beaver-social | Circles + moments (single process, two DBs) |
+| call | 21800 | - | beaver-server-call | Calls (LiveKit, optional) |
+| open | 21900 | - | beaver-server-open | Open platform: API / portal / WS / MQ (optional) |
+| social | 22100 | - | beaver-server-social | Circles and moments (optional) |
 | agent | 22300 | - | beaver-server-ai | AI / digital partners (Python, `agent_api`, optional) |
 | office | 22400 | - | beaver-server-online | Online docs (HTTP + Yjs WS, optional) |
 | observability | 22800 | - | beaver-server-observability | Logging & observability (OpenSearch + Vector, optional) |
 | backend_admin | 40000 | - | beaver-server-backend | Admin APIs (JWT / CORS, optional) |
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 beaver-server/
@@ -126,11 +126,11 @@ beaver-server/
 └── server.md               # Service port reference
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 See the [backend docs](https://wsrh8888.github.io/beaver-docs/backend/) and [deployment guide](https://wsrh8888.github.io/beaver-docs/backend/deploy/build-scripts.html), plus the local handbook chapter [7 Configuration & Deployment](docs/07-deploy/README.md).
 
-Initialize the local database (MySQL connection must be configured first; `main.go` is **a DB init tool, not a service entry point**):
+Initialize the local database (MySQL connection must be configured first; `main.go` is a DB init tool, not a service entry point):
 
 ```bash
 go run main.go -db
@@ -138,49 +138,49 @@ go run main.go -db
 
 Build and orchestration scripts live in `build/` and `deploy/<domain>/`. `VERSION` is used by the build scripts for image tags.
 
-## 📚 Documentation & Resources
+## Documentation & Resources
 
-- 📖 [Engineering handbook](docs/README.md) (Chinese: architecture, contracts, boundaries, identity, data, deployment, decisions)
-- 📖 [Full documentation](https://wsrh8888.github.io/beaver-docs/)
-- 📝 [Changelog](CHANGELOG.md) · [Update notes](update.md)
-- 🎥 [Video tutorials](https://space.bilibili.com/269553626/lists)
-- 📱 [Android demo APK](https://github.com/wsrh8888/beaver-docs/releases/download/lastest/latest.apk)
-- 💬 [QQ Group: 1013328597](https://qm.qq.com/q/82rbf7QBzO)
+- [Engineering handbook](docs/README.md) (Chinese: architecture, contracts, boundaries, identity, data, deployment, decisions)
+- [Full documentation](https://wsrh8888.github.io/beaver-docs/)
+- [Changelog](CHANGELOG.md) · [Update notes](update.md)
+- [Video tutorials](https://space.bilibili.com/269553626/lists)
+- [Android demo APK](https://github.com/wsrh8888/beaver-docs/releases/download/lastest/latest.apk)
+- [QQ Group: 1013328597](https://qm.qq.com/q/82rbf7QBzO)
 
-## 🔗 Related Projects
+## Related Projects
 
-All repositories live under the GitHub `beaver-im` organization. **The core repository forms a complete, self-contained IM closed loop on its own**; `beaver-server-package/` and `beaver-desktop-package/` are **independent, optional value-added services / capability packs** (local container folders, not repositories themselves)—core IM works normally even without them.
+All repositories live under the GitHub `beaver-im` organization. The core repository forms a complete, self-contained IM closed loop on its own; `beaver-server-package/` and `beaver-desktop-package/` are independent, optional value-added services / capability packs (local container folders, not repositories themselves)—core IM works normally even without them.
 
 | Group | Project | Repository | Description |
 |-------|---------|------------|-------------|
-| **Core Server** | beaver-server | [GitHub](https://github.com/beaver-im/beaver-server) | Core backend monorepo (self-contained closed loop, this repo) |
-| **Core Clients** | beaver-flutter | [GitHub](https://github.com/beaver-im/beaver-flutter) | Mobile app (Flutter, recommended) |
+| Core Server | beaver-server | [GitHub](https://github.com/beaver-im/beaver-server) | Core backend monorepo (self-contained closed loop, this repo) |
+| Core Clients | beaver-flutter | [GitHub](https://github.com/beaver-im/beaver-flutter) | Mobile app (Flutter, recommended) |
 | | beaver-desktop | [GitHub](https://github.com/beaver-im/beaver-desktop) | Desktop app core (Electron) |
-| **Portals / SDK / Docs** | beaver-manager | [GitHub](https://github.com/beaver-im/beaver-manager) | Admin web console |
-| | beaver-oauth | [GitHub](https://github.com/beaver-im/beaver-oauth) | OAuth login portal |
-| | beaver-open | [GitHub](https://github.com/beaver-im/beaver-open) | Open platform web portal |
+| Portals / SDK / Docs | beaver-web-manager | [GitHub](https://github.com/beaver-im/beaver-web-manager) | Admin web console |
+| | beaver-web-oauth | [GitHub](https://github.com/beaver-im/beaver-web-oauth) | OAuth login portal |
+| | beaver-web-open | [GitHub](https://github.com/beaver-im/beaver-web-open) | Open platform web portal |
 | | beaver-sdk | [GitHub](https://github.com/beaver-im/beaver-sdk) | JS SDK & OpenClaw adapter |
 | | beaver-docs | [GitHub](https://github.com/beaver-im/beaver-docs) | Official documentation site |
-| **Optional Server Add-ons** | beaver-server-ai | [GitHub](https://github.com/beaver-im/beaver-server-ai) | AI agent (Python, optional) |
+| Optional Server Add-ons | beaver-server-ai | [GitHub](https://github.com/beaver-im/beaver-server-ai) | AI agent (Python, optional) |
 | (`beaver-server-package`) | beaver-server-backend | [GitHub](https://github.com/beaver-im/beaver-server-backend) | Admin APIs (`backend_admin`, optional) |
 | | beaver-server-call | [GitHub](https://github.com/beaver-im/beaver-server-call) | Calls (LiveKit, optional) |
 | | beaver-server-observability | [GitHub](https://github.com/beaver-im/beaver-server-observability) | Logging & observability (optional) |
 | | beaver-server-online | [GitHub](https://github.com/beaver-im/beaver-server-online) | Online docs (`office_api`, optional) |
 | | beaver-server-open | [GitHub](https://github.com/beaver-im/beaver-server-open) | Open platform / bots (optional) |
 | | beaver-server-social | [GitHub](https://github.com/beaver-im/beaver-server-social) | Circles and moments (`social_api`, optional) |
-| **Optional Desktop Packs** | beaver-desktop-ai | [GitHub](https://github.com/beaver-im/beaver-desktop-ai) | External desktop AI capability pack (optional) |
+| Optional Desktop Packs | beaver-desktop-ai | [GitHub](https://github.com/beaver-im/beaver-desktop-ai) | External desktop AI capability pack (optional) |
 | (`beaver-desktop-package`) | beaver-desktop-online | [GitHub](https://github.com/beaver-im/beaver-desktop-online) | External desktop online-docs pack (optional) |
 
-## 📱 Feature Showcase
+## Feature Showcase
 
-### 🔐 Authentication & Security
+### Authentication & Security
 <div align="center">
   <img src="./static/mobile/login.jpg" width="200" alt="Login Interface"/>
   <img src="./static/mobile/register.jpg" width="200" alt="Registration Interface"/>
   <img src="./static/mobile/find-password.jpg" width="200" alt="Password Recovery"/>
 </div>
 
-### 💬 Messaging & Communication
+### Messaging & Communication
 <div align="center">
   <img src="./static/mobile/message.jpg" width="200" alt="Message Interface"/>
   <img src="./static/mobile/private-chat.jpg" width="200" alt="Private Chat"/>
@@ -190,7 +190,7 @@ All repositories live under the GitHub `beaver-im` organization. **The core repo
   <img src="./static/mobile/chat-details.jpg" width="200" alt="Chat Details"/>
 </div>
 
-### 👥 Social Features
+### Social Features
 <div align="center">
   <img src="./static/mobile/friend.jpg" width="200" alt="Friend List"/>
   <img src="./static/mobile/new-friends.jpg" width="200" alt="New Friends"/>
@@ -198,7 +198,7 @@ All repositories live under the GitHub `beaver-im` organization. **The core repo
   <img src="./static/mobile/edit-remark.jpg" width="200" alt="Edit Remark"/>
 </div>
 
-### 🏠 Moments & Groups
+### Moments & Groups
 <div align="center">
   <img src="./static/mobile/moments.jpg" width="200" alt="Moments"/>
   <img src="./static/mobile/send-moments.jpg" width="200" alt="Send Moments"/>
@@ -208,14 +208,14 @@ All repositories live under the GitHub `beaver-im` organization. **The core repo
   <img src="./static/mobile/add-members.jpg" width="200" alt="Add Members"/>
 </div>
 
-### 👤 User Management
+### User Management
 <div align="center">
   <img src="./static/mobile/mine.jpg" width="200" alt="User Center"/>
   <img src="./static/mobile/profile-edit.jpg" width="200" alt="Profile Editing"/>
   <img src="./static/mobile/qcode.jpg" width="200" alt="QR Code Features"/>
 </div>
 
-### ⚙️ System Features
+### System Features
 <div align="center">
   <img src="./static/mobile/settings.jpg" width="200" alt="Settings"/>
   <img src="./static/mobile/update.jpg" width="200" alt="Update"/>
@@ -224,44 +224,37 @@ All repositories live under the GitHub `beaver-im` organization. **The core repo
   <img src="./static/mobile/statement.jpg" width="200" alt="Statement"/>
 </div>
 
-## 🤝 Contributing
+## Contributing
 
 Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
+2. Create a feature branch (`git checkout -b feature/my-change`)
+3. Commit your changes (`git commit -m 'Describe your change'`)
+4. Push to the branch (`git push origin feature/my-change`)
 5. Open a Pull Request
 
-## 📄 License & Legal Disclaimer
+## License & Legal Disclaimer
 
 This project is licensed under the [MIT License](LICENSE) — see [LICENSE](LICENSE).
 
-**Summary:**
+Summary:
 
 - Closed-source self-use and re-open-sourcing derivatives are free if you keep the root `LICENSE` and show About attribution when deployed (Based on Beaver IM + repo link)
 - Closed-source delivery to third parties, removing About, or running a paid IM SaaS requires a commercial license (written contract)
-- **Do not delete or alter `LICENSE`**, whether paid or free
+- Do not delete or alter `LICENSE`, whether paid or free
 
-Full disclaimer & attribution: [LEGAL.md](LEGAL.md)  
-Commercial product lines & pricing: [Copyright & Commercial Licensing](https://wsrh8888.github.io/beaver-docs/community/license.html)  
+Full disclaimer & attribution: [LEGAL.md](LEGAL.md)<br>
+Commercial product lines & pricing: [Copyright & Commercial Licensing](https://wsrh8888.github.io/beaver-docs/community/license.html)<br>
 Contact: [751135385@qq.com](mailto:751135385@qq.com)
 
-## ⭐ Star History
+## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=beaver-im/beaver-server&type=Date)](https://star-history.com/#beaver-im/beaver-server&Date)
 
-## ☕ Buy the Author a Coffee
+## Sponsor
 
 <div align="center">
   <img src="./static/sponsor/wechat.jpg" width="200" alt="WeChat Sponsor QR Code"/>
   <img src="./static/sponsor/zhifubao.jpg" width="200" alt="Alipay Sponsor QR Code"/>
-</div>
-
----
-
-<div align="center">
-  <strong>Made with ❤️ by Beaver IM Team</strong><br>
-  <em>Enterprise-Grade Instant Messaging Platform</em>
 </div>

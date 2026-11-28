@@ -1,6 +1,6 @@
-# 🦫 Beaver IM - 企业级即时通讯平台
+# Beaver IM
 
-> 开发与 AI 协作请先读 **[中文工程手册](docs/README.md)**：go-zero 先写 `.api` / `.proto`，再用 goctl 生成接线。旧版本与目录示例以当前源码和手册核验说明为准。
+> 开发与 AI 协作请先读 [中文工程手册](docs/README.md)：go-zero 先写 `.api` / `.proto`，再用 goctl 生成接线。旧版本与目录示例以当前源码和手册核验说明为准。
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-3.0.4-blue.svg)](VERSION)
@@ -8,7 +8,7 @@
 [![Go-Zero](https://img.shields.io/badge/Go--Zero-v1.7.4-green.svg)](https://github.com/zeromicro/go-zero)
 [![QQ群](https://img.shields.io/badge/QQ群-1013328597%2B-blue.svg)](https://qm.qq.com/q/82rbf7QBzO)
 
-> **海狸 IM 后端核心服务** - 基于 Go-Zero 微服务架构，为 Flutter 移动端、Electron 桌面端提供完整的核心即时通讯闭环能力（REST / WebSocket / gRPC）。`beaver-server` 自身即可独立运行核心 IM 闭环；`beaver-server-package/` 与 `beaver-desktop-package/` 均为**独立可选的增值服务/能力包**，不部署也不影响核心 IM 正常使用。
+海狸 IM 后端核心服务，基于 go-zero 微服务架构，为 Flutter 移动端与 Electron 桌面端提供即时通讯后端（REST / WebSocket / gRPC）。`beaver-server` 自身即可独立运行核心 IM 闭环；`beaver-server-package/` 与 `beaver-desktop-package/` 均为独立可选的增值服务/能力包，不部署也不影响核心 IM 正常使用。
 
 **当前版本：[3.0.4](VERSION)**（以仓库根目录 [`VERSION`](VERSION) 为准）
 
@@ -16,34 +16,34 @@
 
 ---
 
-## ✨ 核心能力
+## 核心能力
 
-- 🔐 **认证授权** - 手机号 / 邮箱 / 验证码 / 扫码 / OAuth 登录，JWT 外部票经网关验签并以 ES256 断言向业务服务传递身份，服务侧用 JWKS 公钥验签；S2S 机器票、登录设备管理与踢下线
-- 💬 **即时通讯** - 私聊与群聊、会话与消息存储、已读回执、消息转发、WebSocket 实时推送与 RocketMQ 异步链路
-- 👥 **社交关系** - 好友申请与资料、群组创建与管理、屏蔽；圈子与动态由独立仓 `beaver-social` 提供
-- 📁 **文件与表情** - 文件上传下载、表情包与收藏，对象存储支持 MinIO / 七牛云
-- 📞 **音视频通话** - 基于 LiveKit 的通话信令与房间管理（`beaver-call`）
-- 🔔 **通知与推送** - 系统通知、互动提醒、收件箱与已读；`push_api` 独立推送网关，实时 / 离线两路按 channel 映射 MQ Topic
-- 🔄 **跨端同步** - `datasync` 多端增量同步，覆盖好友 / 群 / 消息 / 表情 / 通知 / 圈子 / 机器人等
-- 🏢 **组织与工作台** - 部门 / 员工、工作台、反馈 / 举报、版本发布等平台能力
-- 🤖 **AI 与知识** - 数字伙伴 / 机器人、知识源与技能（`SKILL.md`）、Agent 会话增量同步（`beaver-server-ai` + 开放平台）
-- 📄 **在线文档** - HTTP API + Yjs WebSocket 同进程协作（`beaver-server-online`）
-- 📊 **平台运维** - 服务端日志由 Vector 采集容器 stdout、客户端日志由 SDK 上报，统一落在独立仓 `beaver-server-observability`
-- 🛠️ **后台管理** - 用户 / 组织 / 版本等管理端接口（`beaver-server-backend` 的 `backend_admin`）
+- **认证授权**：支持手机号、邮箱、验证码、扫码及 OAuth 登录；网关校验外部 JWT 后签发 ES256 断言转发给业务服务，服务侧使用 JWKS 公钥验签，支持 S2S 机器票、登录设备管理与踢下线。
+- **即时通讯**：支持私聊与群聊、会话与消息持久化、已读回执、消息转发、WebSocket 实时推送与 RocketMQ 异步投递链路。
+- **社交关系**：好友申请与资料管理、群组创建与管理、黑名单屏蔽；圈子与动态由独立可选仓 `beaver-server-social` 提供。
+- **文件与表情**：文件上传下载、表情包与收藏管理，对象存储支持 MinIO 与七牛云。
+- **音视频通话**：基于 LiveKit 的通话信令与房间管理（可选服务 `beaver-server-call`）。
+- **通知与推送**：系统通知、互动提醒、收件箱与已读维护；独立 `push_api` 推送网关，实时与离线两路按 channel 映射至 MQ Topic。
+- **跨端同步**：`datasync` 多端增量同步，覆盖好友、群组、消息、表情、通知、圈子与机器人等数据。
+- **组织与工作台**：部门与员工管理、工作台、反馈与举报、客户端版本发布等平台能力。
+- **AI 与知识**：数字伙伴与机器人、知识源与技能（`SKILL.md`）、Agent 会话增量同步（可选服务 `beaver-server-ai` + 开放平台）。
+- **在线文档**：HTTP API 与 Yjs WebSocket 同进程协同编辑（可选服务 `beaver-server-online`）。
+- **平台运维**：服务端日志由 Vector 采集容器 stdout，客户端日志由 SDK 上报，统一存入独立可选日志仓 `beaver-server-observability`。
+- **后台管理**：用户、组织与版本发布等管理端接口（可选服务 `beaver-server-backend` 的 `backend_admin`）。
 
-## 🛠️ 技术栈
+## 技术栈
 
 | 类别 | 技术 | 说明 |
 |------|------|------|
 | 语言 / 框架 | Go 1.26.8 + go-zero 1.7.4 | goctl 是独立工具，版本以本地实际安装为准，见工程手册 1.1 |
 | 通信 | gRPC、HTTP S2S、WebSocket、RocketMQ | 本仓服务间走 RPC，跨仓与推送走 HTTP 机器票 |
 | 存储 / 检索 | MySQL 8.0、Redis 6.0、ETCD 3.5 | 多库拆分 + 缓存 + 服务发现；OpenSearch 属独立日志仓 |
-| 部署 | Docker Compose、build 脚本 | 配置在 `deploy/<域>/`，外部依赖在 `docker/` |
+| 部署 | Docker Compose、build 脚本 | 配置位于 `deploy/<域>/`，外部依赖位于 `docker/` |
 | 其他 | JWT（ES256 / JWKS）、LiveKit、MinIO / 七牛云 | 鉴权、通话、对象存储 |
 
-## 🏗️ 架构概览
+## 架构概览
 
-客户端（Flutter / Electron）统一经 `gateway_api :20800` 访问：网关校验外部票（Beaver / Open / Admin 三类）并签发 ES256 断言，注入可信身份头后按路径转发；业务服务以 JWKS 验签，跨服务 / 跨仓调用统一使用 S2S 机器票与 `machine` / `_public` 视图。WebSocket 负责长连接上下行，RocketMQ 承担异步消息与推送投递。后台管理端经网关访问 `backend_admin`。
+客户端（Flutter / Electron）统一经 `gateway_api :20800` 接入：网关校验外部票（Beaver / Open / Admin 三类）并签发 ES256 断言，注入可信身份头后按路径转发；业务服务使用 JWKS 验签，跨服务 / 跨仓调用使用 S2S 机器票与 `machine` / `_public` 视图。WebSocket 负责长连接上下行，RocketMQ 负责异步消息与推送投递，后台管理端经网关访问 `backend_admin`。
 
 ```
 ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
@@ -66,34 +66,34 @@ platform / datasync      push :20500        （RPC 仅本仓服务间）
         │ MySQL · Redis · ETCD · OpenSearch │
         └─────────────────────────────────┘
 
-  跨仓调用 ──► social / call / open / office / agent / backend（HTTP 机器票视图）
+  跨仓调用 ──► social / call / open / office / agent / backend / observability（HTTP 机器票视图）
 ```
 
 ### 服务端口
 
-以 [`server.md`](server.md) 为唯一端口表，实际监听以各服务 `etc/*.yaml` 为准。主仓 9 个业务域 + 独立推送服务；子仓均为单进程，原先的 moment / circle / call_rpc / open_rpc / doc_rpc 端口已不再使用。
+以 [`server.md`](server.md) 为唯一端口表，实际监听以各服务 `etc/*.yaml` 为准。主仓含 9 个业务域与独立推送服务；子仓均为单进程，原 moment / circle / call_rpc / open_rpc / doc_rpc 端口已不再使用。
 
 | 服务 | API 端口 | RPC 端口 | 所属仓库 | 说明 |
-|------|---------:|---------:|------|------|
+|------|---------:|---------:|----------|------|
 | gateway_api | 20800 | - | beaver-server | 客户端 API 网关，验票 / 转发 |
 | account | 20100 | 30100 | beaver-server | 用户 + 认证（已合并） |
 | relation | 20200 | 30200 | beaver-server | 好友 + 群组（已合并） |
-| message | 20300 | 30300 | beaver-server | 聊天（chat 更名） |
+| message | 20300 | 30300 | beaver-server | 聊天（原 chat 更名） |
 | ws | 20400 | - | beaver-server | WebSocket 长连接 |
 | push | 20500 | - | beaver-server | 独立推送网关（S2S 薄入口） |
 | asset | 20600 | 30600 | beaver-server | 文件 + 表情（已合并） |
 | notification | 21000 | 31000 | beaver-server | 通知 |
 | platform | 21600 | 31100 | beaver-server | 平台（组织 / 反馈 / 更新等） |
 | datasync | 21700 | - | beaver-server | 数据同步 |
-| call | 21800 | - | beaver-call | 通话（LiveKit，单进程） |
-| open | 21900 | - | beaver-open | 开放平台（API / 控制台 / WS / MQ） |
-| social | 22100 | - | beaver-social | 圈子 + 动态（单进程双库） |
-| agent | 22300 | - | beaver-server-ai | AI / 数字伙伴（Python，agent_api，可选增值） |
+| call | 21800 | - | beaver-server-call | 通话（LiveKit，单进程，可选增值） |
+| open | 21900 | - | beaver-server-open | 开放平台（API / 控制台 / WS / MQ，可选增值） |
+| social | 22100 | - | beaver-server-social | 圈子 + 动态（单进程双库，可选增值） |
+| agent | 22300 | - | beaver-server-ai | AI / 数字伙伴（Python，`agent_api`，可选增值） |
 | office | 22400 | - | beaver-server-online | 在线文档（HTTP + Yjs WS，可选增值） |
 | observability | 22800 | - | beaver-server-observability | 日志上报与查询（OpenSearch + Vector，可选增值） |
 | backend_admin | 40000 | - | beaver-server-backend | 后台管理（自带 JWT 鉴权 / CORS，可选增值） |
 
-## 📁 项目结构
+## 项目结构
 
 ```
 beaver-server/
@@ -126,15 +126,15 @@ beaver-server/
 └── server.md               # 服务端口说明
 ```
 
-## 🚀 快速开始
+## 快速开始
 
 详细的环境准备、配置说明与部署步骤见文档站及本地工程手册第 7 章：
 
-- 📖 [后端开发文档](https://wsrh8888.github.io/beaver-docs/backend/)
-- 📖 [部署说明](https://wsrh8888.github.io/beaver-docs/backend/deploy/build-scripts.html)
-- 📖 [本地工程手册 · 配置与部署](docs/07-deploy/README.md)
+- [后端开发文档](https://wsrh8888.github.io/beaver-docs/backend/)
+- [部署说明](https://wsrh8888.github.io/beaver-docs/backend/deploy/build-scripts.html)
+- [本地工程手册 · 配置与部署](docs/07-deploy/README.md)
 
-本地初始化数据库（需先配置 MySQL 连接；`main.go` **只是建库工具，不是服务入口**）：
+本地初始化数据库（需先配置 MySQL 连接；`main.go` 仅是建库工具，不是服务入口）：
 
 ```bash
 go run main.go -db
@@ -142,73 +142,66 @@ go run main.go -db
 
 服务构建与编排见 `build/` 与 `deploy/<域>/`；`VERSION` 用于构建脚本打镜像 tag。
 
-## 📚 文档与资源
+## 文档与资源
 
-- 📖 **工程手册**: [docs/README.md](docs/README.md)（架构 / 契约 / 边界 / 身份 / 数据 / 部署 / 决策记录）
-- 📖 **详细文档**: [https://wsrh8888.github.io/beaver-docs/](https://wsrh8888.github.io/beaver-docs/)
-- 📝 [变更记录](CHANGELOG.md) · [更新说明](update.md)
-- 🎥 **视频教程**: [B站频道](https://space.bilibili.com/269553626/lists)
-- 📱 **体验包下载**: [海狸 IM Android 体验包](https://github.com/wsrh8888/beaver-docs/releases/download/lastest/latest.apk)
-- 💬 **QQ 群**: [1013328597](https://qm.qq.com/q/82rbf7QBzO)
+- 工程手册：[docs/README.md](docs/README.md)（架构 / 契约 / 边界 / 身份 / 数据 / 部署 / 决策记录）
+- 详细文档：[https://wsrh8888.github.io/beaver-docs/](https://wsrh8888.github.io/beaver-docs/)
+- 更新说明：[CHANGELOG.md](CHANGELOG.md) · [update.md](update.md)
+- 视频教程：[B站频道](https://space.bilibili.com/269553626/lists)
+- 体验包下载：[海狸 IM Android 体验包](https://github.com/wsrh8888/beaver-docs/releases/download/lastest/latest.apk)
+- QQ 群：[1013328597](https://qm.qq.com/q/82rbf7QBzO)
 
-## 🔗 相关项目
+## 相关项目
 
-以下仓库均位于 GitHub `beaver-im` 组织。**核心仓自己就是一个完整闭环**；`beaver-server-package/` 与 `beaver-desktop-package/` 均为**独立可选的增值服务/能力包**（本地目录仅作子仓容器，不是独立仓），不部署/不安装也不影响核心 IM 正常使用。
+以下仓库均位于 GitHub `beaver-im` 组织。核心仓自身就是一个完整闭环；`beaver-server-package/` 与 `beaver-desktop-package/` 均为独立可选的增值服务/能力包（本地目录仅作子仓容器，不是独立仓），不部署/不安装也不影响核心 IM 正常使用。
 
 | 类别 | 项目 | 仓库地址 | 说明 |
 |------|------|----------|------|
-| **核心后端** | beaver-server | [GitHub](https://github.com/beaver-im/beaver-server) | 后端微服务核心仓（自身即完整闭环，本仓库） |
-| **核心客户端** | beaver-flutter | [GitHub](https://github.com/beaver-im/beaver-flutter) | 移动端（Flutter，推荐） |
+| 核心后端 | beaver-server | [GitHub](https://github.com/beaver-im/beaver-server) | 后端微服务核心仓（自身即完整闭环，本仓库） |
+| 核心客户端 | beaver-flutter | [GitHub](https://github.com/beaver-im/beaver-flutter) | 移动端（Flutter，推荐） |
 | | beaver-desktop | [GitHub](https://github.com/beaver-im/beaver-desktop) | 桌面端核心（Electron） |
-| **周边门户 / SDK / 文档** | beaver-manager | [GitHub](https://github.com/beaver-im/beaver-manager) | 后台管理系统前端 |
-| | beaver-oauth | [GitHub](https://github.com/beaver-im/beaver-oauth) | OAuth 授权登录前端 |
-| | beaver-open | [GitHub](https://github.com/beaver-im/beaver-open) | 开放平台前端门户 |
+| 周边门户 / SDK / 文档 | beaver-web-manager | [GitHub](https://github.com/beaver-im/beaver-web-manager) | 后台管理系统前端 |
+| | beaver-web-oauth | [GitHub](https://github.com/beaver-im/beaver-web-oauth) | OAuth 授权登录前端 |
+| | beaver-web-open | [GitHub](https://github.com/beaver-im/beaver-web-open) | 开放平台前端门户 |
 | | beaver-sdk | [GitHub](https://github.com/beaver-im/beaver-sdk) | JS SDK & OpenClaw 插件 |
 | | beaver-docs | [GitHub](https://github.com/beaver-im/beaver-docs) | 官方文档站点 |
-| **可选服务端增值包** | beaver-server-ai | [GitHub](https://github.com/beaver-im/beaver-server-ai) | AI Agent 服务（Python，可选） |
+| 可选服务端增值包 | beaver-server-ai | [GitHub](https://github.com/beaver-im/beaver-server-ai) | AI Agent 服务（Python，可选） |
 | (`beaver-server-package`) | beaver-server-backend | [GitHub](https://github.com/beaver-im/beaver-server-backend) | 后台管理接口 `backend_admin`（可选） |
 | | beaver-server-call | [GitHub](https://github.com/beaver-im/beaver-server-call) | 音视频通话（LiveKit，可选） |
 | | beaver-server-observability | [GitHub](https://github.com/beaver-im/beaver-server-observability) | 日志采集与可观测性（可选） |
 | | beaver-server-online | [GitHub](https://github.com/beaver-im/beaver-server-online) | 在线文档 `office_api`（可选） |
 | | beaver-server-open | [GitHub](https://github.com/beaver-im/beaver-server-open) | 开放平台 / 机器人 `open_api`（可选） |
 | | beaver-server-social | [GitHub](https://github.com/beaver-im/beaver-server-social) | 圈子与动态 `social_api`（可选） |
-| **可选桌面端能力包** | beaver-desktop-ai | [GitHub](https://github.com/beaver-im/beaver-desktop-ai) | 桌面端外置 AI 能力包（可选） |
+| 可选桌面端能力包 | beaver-desktop-ai | [GitHub](https://github.com/beaver-im/beaver-desktop-ai) | 桌面端外置 AI 能力包（可选） |
 | (`beaver-desktop-package`) | beaver-desktop-online | [GitHub](https://github.com/beaver-im/beaver-desktop-online) | 桌面端外置在线文档能力包（可选） |
 
-## 🤝 贡献指南
+## 贡献指南
 
 欢迎通过 Issue / Pull Request 参与贡献，详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-## 📄 开源协议与免责声明
+## 开源协议与免责声明
 
 本项目基于 [MIT](LICENSE) 协议开源，详见 [LICENSE](LICENSE)。
 
-**使用要点（摘要）：**
+使用要点（摘要）：
 
 - 闭源自用商用、二次开源均可免费，但须保留根目录 `LICENSE`，上线前端须有「关于」署名（基于海狸 IM + 仓库地址）
 - 闭源交付第三方、去掉署名、对外 SaaS 收费等，请采购商业授权（书面合同）
-- 无论是否付费，**不得删除或篡改 `LICENSE`**
+- 无论是否付费，不得删除或篡改 `LICENSE`
 
-完整免责与署名要求：[LEGAL.md](LEGAL.md)  
-商业授权产品线与报价：[版权与商业授权](https://wsrh8888.github.io/beaver-docs/community/license.html)  
+完整免责与署名要求：[LEGAL.md](LEGAL.md)<br>
+商业授权产品线与报价：[版权与商业授权](https://wsrh8888.github.io/beaver-docs/community/license.html)<br>
 联系：[751135385@qq.com](mailto:751135385@qq.com)
 
-## ⭐ Star 历史
+## Star 历史
 
 [![Star History Chart](https://api.star-history.com/svg?repos=beaver-im/beaver-server&type=Date)](https://star-history.com/#beaver-im/beaver-server&Date)
 
-## ☕ 请作者喝杯茶
+## 赞助支持
 
-如果这个项目对你有帮助，欢迎请作者喝杯茶 ☕
+如果这个项目对你有帮助，欢迎请作者喝杯咖啡：
 
 <div align="center">
   <img src="./static/sponsor/wechat.jpg" width="200" alt="微信赞助码"/>
   <img src="./static/sponsor/zhifubao.jpg" width="200" alt="支付宝赞助码"/>
-</div>
-
----
-
-<div align="center">
-  <strong>Made with ❤️ by Beaver IM Team</strong><br>
-  <em>企业级即时通讯平台</em>
 </div>
