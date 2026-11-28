@@ -208,36 +208,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Path:    "/beaver/api/asset/file/v1/save",
 					Handler: file.FileSaveHandler(serverCtx),
 				},
-				{
-					// 文件通用上传(按yaml StorageType配置路由到local/qiniu/minio)
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/asset/file/v1/upload",
-					Handler: file.FileUploadHandler(serverCtx),
-				},
-				{
-					// 文件上传本地
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/asset/file/v1/upload_local",
-					Handler: file.FileUploadLocalHandler(serverCtx),
-				},
-				{
-					// 文件上传MinIO
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/asset/file/v1/upload_minio",
-					Handler: file.FileUploadMinioHandler(serverCtx),
-				},
-				{
-					// 文件上传七牛云
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/asset/file/v1/upload_qiniu",
-					Handler: file.FileUploadQiniuHandler(serverCtx),
-				},
-				{
-					// 队间：为后台签发文件上传用户票
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/asset/file/v1/upload_token",
-					Handler: file.GetUploadTokenHandler(serverCtx),
-				},
 			}...,
 		),
 	)
@@ -249,6 +219,18 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Method:  http.MethodGet,
 				Path:    "/beaver/api/asset/file_public/v1/preview",
 				Handler: file_public.PreviewHandler(serverCtx),
+			},
+			{
+				// 文件上传（经网关；Bearer 须为 beaver:upload）
+				Method:  http.MethodPost,
+				Path:    "/beaver/api/asset/file_public/v1/upload",
+				Handler: file_public.FileUploadHandler(serverCtx),
+			},
+			{
+				// 平台换取短时上传能力票（第三平面凭据）
+				Method:  http.MethodPost,
+				Path:    "/beaver/api/asset/file_public/v1/upload_token",
+				Handler: file_public.GetUploadTokenHandler(serverCtx),
 			},
 		},
 	)

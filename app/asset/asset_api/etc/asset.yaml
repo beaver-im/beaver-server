@@ -32,7 +32,7 @@ FileMaxSize:
   unknown: 10
 MaxBytes: 1073741824 # 1GB - go-zero HTTP服务器最大请求体大小
 
-# 通用上传接口(/beaver/api/asset/file/v1/upload)使用的默认存储后端：local|qiniu|minio
+# 通用上传接口(/beaver/api/asset/file_public/v1/upload)使用的默认存储后端：local|qiniu|minio
 StorageType: local
 
 # 本地存储配置
@@ -95,4 +95,13 @@ Assertion:
     {"keys":[{"alg":"ES256","crv":"P-256","kid":"gateway-2026-11","kty":"EC","use":"sig","x":"46Jx5dTVRu4EQsot-rtD1lBS302SYrVJ7EJsHblRtig","y":"wEbsT3a7M4uWO7nZLxM4tHCx9-QN-MnZAOn1jyqC6Zw"}]}
 S2S:
   Secret: beaver-s2s-core-b0db00321ca84fc783a2ba81505e82b1
+# 第三平面：asset 发给各平台的产品凭据（签发方 asset；非登录、非 S2S）
+Upload:
+  AccessSecret: beaver-jwt-upload-7c2e9a1f4b8d4063a5e2c9f1d8b60475
+  AccessExpire: 600
+  Clients:
+    open:
+      ClientSecret: beaver-asset-open-3f8a1c9e6b2d4075c5a8e1f9d2b60384
+    backend_admin:
+      ClientSecret: beaver-asset-backend-9e2c5f8a1d6b4073c5f9a2d8b1e60374
 

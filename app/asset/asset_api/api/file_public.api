@@ -1,19 +1,65 @@
 syntax = "v1"
 
+// 第三平面：asset 对外上传产品面（经网关，group 以 _public 结尾）。
+// 平台持 Upload.Clients 秘钥换短时 beaver:upload 票；浏览器带票经网关上传。
+// 与登录票、内部 S2S 平行，互不冒充。
+
 type (
 	PreviewReq {
 		FileKey string `form:"fileKey"`
 	}
 
 	// 预览决策：logic 校验/查库/签名后填充，handler 据此输出文件流或 302。
-	// 本接口返回原始 HTTP 响应（与 WS 握手同类的专用接线），不走 {code,msg,result} 信封，
-	// 以下字段仅供 handler 内部读取，不序列化给客户端。
 	PreviewRes {
-		Source       string `json:"source"`              // 文件来源：qiniu/local/minio
-		RedirectURL  string `json:"redirectUrl,optional"`  // 签名 URL，非空时 handler 302 跳转
-		LocalPath    string `json:"localPath,optional"`    // 本地绝对路径，仅 handler 内部读取
-		ContentType  string `json:"contentType,optional"`  // 本地文件的 Content-Type
-		OriginalName string `json:"originalName,optional"` // 原始文件名，用于 Content-Disposition
+		Source       string `json:"source"`
+		RedirectURL  string `json:"redirectUrl,optional"`
+		LocalPath    string `json:"localPath,optional"`
+		ContentType  string `json:"contentType,optional"`
+		OriginalName string `json:"originalName,optional"`
+	}
+)
+
+type (
+	GetUploadTokenReq {
+		ClientID     string `json:"clientId"`     // 平台 clientId（asset Upload.Clients 键）
+		ClientSecret string `json:"clientSecret"` // 平台秘钥
+		UserID       string `json:"userId"`       // 上传归属主体（持钥平台在已登录上下文填入）
+	}
+
+	GetUploadTokenRes {
+		UploadToken string `json:"uploadToken"` // 短时上传能力票 beaver:upload
+		ExpiresIn   int64  `json:"expiresIn"`   // 有效期（秒）
+	}
+)
+
+type (
+	FileUploadReq {
+	}
+
+	FileUploadRes {
+		FileURL string `json:"fileUrl"` // 可访问地址
+	}
+
+	FileUploadFileInfo {
+		Type      string              `json:"type"`
+		ImageFile *FileUploadImageFile `json:"imageFile,optional"`
+		VideoFile *FileUploadVideoFile `json:"videoFile,optional"`
+		AudioFile *FileUploadAudioFile `json:"audioFile,optional"`
+	}
+
+	FileUploadImageFile {
+		Width  int `json:"width"`
+		Height int `json:"height"`
+	}
+
+	FileUploadVideoFile {
+		Width    int `json:"width"`
+		Height   int `json:"height"`
+		Duration int `json:"duration"`
+	}
+
+	FileUploadAudioFile {
+		Duration int `json:"duration"`
 	}
 )
 
@@ -24,4 +70,12 @@ service asset {
 	@doc "文件预览（公开面，返回文件流或重定向）"
 	@handler Preview
 	get /beaver/api/asset/file_public/v1/preview (PreviewReq) returns (PreviewRes)
+
+	@doc "平台换取短时上传能力票（第三平面凭据）"
+	@handler GetUploadToken
+	post /beaver/api/asset/file_public/v1/upload_token (GetUploadTokenReq) returns (GetUploadTokenRes)
+
+	@doc "文件上传（经网关；Bearer 须为 beaver:upload）"
+	@handler FileUpload
+	post /beaver/api/asset/file_public/v1/upload (FileUploadReq) returns (FileUploadRes)
 }

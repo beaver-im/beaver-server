@@ -486,15 +486,9 @@ func UploadFile(ctx context.Context, svcCtx *svc.ServiceContext, file multipart.
 	// MD5去重：命中则直接返回已存记录
 	existingFile, err := CheckFileExists(fileReq.FileMd5, svcCtx)
 	if err == nil {
-		resp := &types.FileUploadRes{
-			FileKey:      existingFile.FileKey,
-			OriginalName: existingFile.OriginalName,
-			FileURL:      buildFileURL(svcCtx, source, existingFile),
-		}
-		if existingFile.FileInfo != nil {
-			resp.FileInfo = ConvertFileInfoToAPI(existingFile.FileInfo)
-		}
-		return resp, nil
+		return &types.FileUploadRes{
+			FileURL: buildFileURL(svcCtx, source, existingFile),
+		}, nil
 	}
 
 	// 生成相对路径作为 objectKey
@@ -526,12 +520,7 @@ func UploadFile(ctx context.Context, svcCtx *svc.ServiceContext, file multipart.
 	}
 
 	resp := &types.FileUploadRes{
-		FileKey:      newFileModel.FileKey,
-		OriginalName: newFileModel.OriginalName,
-		FileURL:      buildFileURL(svcCtx, source, newFileModel),
-	}
-	if fileInfo != nil {
-		resp.FileInfo = ConvertFileInfoToAPI(fileInfo)
+		FileURL: buildFileURL(svcCtx, source, newFileModel),
 	}
 
 	beaverlog.New("file_upload").Info(model.LogMsg{Text: "文件上传成功", Data: map[string]interface{}{"fileKey": newFileModel.FileKey, "source": string(source)}})
@@ -547,51 +536,3 @@ func PresignMinioURL(ctx context.Context, client *minio.Client, bucket, objectKe
 	return u.String(), nil
 }
 
-// ConvertUploadRes 把公共上传结果转换成各上传接口各自的 Res 类型。
-// 契约规范要求每个 handler 独立 Req/Res，这里集中做字段映射，避免 logic 里重复。
-func ConvertUploadRes(base *types.FileUploadRes, target any) {
-	switch r := target.(type) {
-	case *types.FileUploadQiniuRes:
-		r.FileKey, r.FileURL, r.OriginalName = base.FileKey, base.FileURL, base.OriginalName
-		if base.FileInfo != nil {
-			r.FileInfo = &types.FileUploadQiniuFileInfo{Type: base.FileInfo.Type}
-			if base.FileInfo.ImageFile != nil {
-				r.FileInfo.ImageFile = &types.FileUploadQiniuImageFile{Width: base.FileInfo.ImageFile.Width, Height: base.FileInfo.ImageFile.Height}
-			}
-			if base.FileInfo.VideoFile != nil {
-				r.FileInfo.VideoFile = &types.FileUploadQiniuVideoFile{Width: base.FileInfo.VideoFile.Width, Height: base.FileInfo.VideoFile.Height, Duration: base.FileInfo.VideoFile.Duration}
-			}
-			if base.FileInfo.AudioFile != nil {
-				r.FileInfo.AudioFile = &types.FileUploadQiniuAudioFile{Duration: base.FileInfo.AudioFile.Duration}
-			}
-		}
-	case *types.FileUploadLocalRes:
-		r.FileKey, r.FileURL, r.OriginalName = base.FileKey, base.FileURL, base.OriginalName
-		if base.FileInfo != nil {
-			r.FileInfo = &types.FileUploadLocalFileInfo{Type: base.FileInfo.Type}
-			if base.FileInfo.ImageFile != nil {
-				r.FileInfo.ImageFile = &types.FileUploadLocalImageFile{Width: base.FileInfo.ImageFile.Width, Height: base.FileInfo.ImageFile.Height}
-			}
-			if base.FileInfo.VideoFile != nil {
-				r.FileInfo.VideoFile = &types.FileUploadLocalVideoFile{Width: base.FileInfo.VideoFile.Width, Height: base.FileInfo.VideoFile.Height, Duration: base.FileInfo.VideoFile.Duration}
-			}
-			if base.FileInfo.AudioFile != nil {
-				r.FileInfo.AudioFile = &types.FileUploadLocalAudioFile{Duration: base.FileInfo.AudioFile.Duration}
-			}
-		}
-	case *types.FileUploadMinioRes:
-		r.FileKey, r.FileURL, r.OriginalName = base.FileKey, base.FileURL, base.OriginalName
-		if base.FileInfo != nil {
-			r.FileInfo = &types.FileUploadMinioFileInfo{Type: base.FileInfo.Type}
-			if base.FileInfo.ImageFile != nil {
-				r.FileInfo.ImageFile = &types.FileUploadMinioImageFile{Width: base.FileInfo.ImageFile.Width, Height: base.FileInfo.ImageFile.Height}
-			}
-			if base.FileInfo.VideoFile != nil {
-				r.FileInfo.VideoFile = &types.FileUploadMinioVideoFile{Width: base.FileInfo.VideoFile.Width, Height: base.FileInfo.VideoFile.Height, Duration: base.FileInfo.VideoFile.Duration}
-			}
-			if base.FileInfo.AudioFile != nil {
-				r.FileInfo.AudioFile = &types.FileUploadMinioAudioFile{Duration: base.FileInfo.AudioFile.Duration}
-			}
-		}
-	}
-}

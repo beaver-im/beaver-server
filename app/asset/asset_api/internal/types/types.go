@@ -39,19 +39,19 @@ type AddEmojiRes struct {
 }
 
 type BatchDeleteFilesReq struct {
-	IDs []uint64 `json:"ids,optional"` // 记录ID列表
+	IDs []uint64 `json:"ids,optional"`
 }
 
 type BatchDeleteFilesRes struct {
-	Paths []string `json:"paths,optional"` // 被删除的存储路径列表
+	Paths []string `json:"paths,optional"`
 }
 
 type DeleteFileReq struct {
-	ID uint64 `json:"id,optional"` // 记录ID
+	ID uint64 `json:"id,optional"`
 }
 
 type DeleteFileRes struct {
-	Path string `json:"path,optional"` // 被删除的存储路径
+	Path string `json:"path,optional"`
 }
 
 type EmojiCollectDetailItem struct {
@@ -154,16 +154,16 @@ type EmojiSimpleItem struct {
 }
 
 type FileItem struct {
-	ID           uint64 `json:"id,optional"`           // 记录ID
-	FileKey      string `json:"fileKey,optional"`      // 文件Key
-	OriginalName string `json:"originalName,optional"` // 原始文件名
-	Size         int64  `json:"size,optional"`         // 文件大小
-	Path         string `json:"path,optional"`         // 存储路径
-	Md5          string `json:"md5,optional"`          // MD5
-	Type         string `json:"type,optional"`         // 文件类型
-	Source       string `json:"source,optional"`       // 来源 qiniu/local
-	CreatedAt    string `json:"createdAt,optional"`    // 创建时间
-	UpdatedAt    string `json:"updatedAt,optional"`    // 更新时间
+	ID           uint64 `json:"id,optional"`
+	FileKey      string `json:"fileKey,optional"`
+	OriginalName string `json:"originalName,optional"`
+	Size         int64  `json:"size,optional"`
+	Path         string `json:"path,optional"`
+	Md5          string `json:"md5,optional"`
+	Type         string `json:"type,optional"`
+	Source       string `json:"source,optional"`
+	CreatedAt    string `json:"createdAt,optional"`
+	UpdatedAt    string `json:"updatedAt,optional"`
 }
 
 type FileUploadAudioFile struct {
@@ -182,110 +182,11 @@ type FileUploadImageFile struct {
 	Height int `json:"height"`
 }
 
-type FileUploadLocalAudioFile struct {
-	Duration int `json:"duration"`
-}
-
-type FileUploadLocalFileInfo struct {
-	Type      string                    `json:"type"`
-	ImageFile *FileUploadLocalImageFile `json:"imageFile,optional"`
-	VideoFile *FileUploadLocalVideoFile `json:"videoFile,optional"`
-	AudioFile *FileUploadLocalAudioFile `json:"audioFile,optional"`
-}
-
-type FileUploadLocalImageFile struct {
-	Width  int `json:"width"`
-	Height int `json:"height"`
-}
-
-type FileUploadLocalReq struct {
-}
-
-type FileUploadLocalRes struct {
-	FileKey      string                   `json:"fileKey"`
-	FileURL      string                   `json:"fileUrl,optional"`
-	OriginalName string                   `json:"originalName"`
-	FileInfo     *FileUploadLocalFileInfo `json:"fileInfo,optional"`
-}
-
-type FileUploadLocalVideoFile struct {
-	Width    int `json:"width"`
-	Height   int `json:"height"`
-	Duration int `json:"duration"`
-}
-
-type FileUploadMinioAudioFile struct {
-	Duration int `json:"duration"`
-}
-
-type FileUploadMinioFileInfo struct {
-	Type      string                    `json:"type"`
-	ImageFile *FileUploadMinioImageFile `json:"imageFile,optional"`
-	VideoFile *FileUploadMinioVideoFile `json:"videoFile,optional"`
-	AudioFile *FileUploadMinioAudioFile `json:"audioFile,optional"`
-}
-
-type FileUploadMinioImageFile struct {
-	Width  int `json:"width"`
-	Height int `json:"height"`
-}
-
-type FileUploadMinioReq struct {
-}
-
-type FileUploadMinioRes struct {
-	FileKey      string                   `json:"fileKey"`
-	FileURL      string                   `json:"fileUrl,optional"`
-	OriginalName string                   `json:"originalName"`
-	FileInfo     *FileUploadMinioFileInfo `json:"fileInfo,optional"`
-}
-
-type FileUploadMinioVideoFile struct {
-	Width    int `json:"width"`
-	Height   int `json:"height"`
-	Duration int `json:"duration"`
-}
-
-type FileUploadQiniuAudioFile struct {
-	Duration int `json:"duration"`
-}
-
-type FileUploadQiniuFileInfo struct {
-	Type      string                    `json:"type"`
-	ImageFile *FileUploadQiniuImageFile `json:"imageFile,optional"`
-	VideoFile *FileUploadQiniuVideoFile `json:"videoFile,optional"`
-	AudioFile *FileUploadQiniuAudioFile `json:"audioFile,optional"`
-}
-
-type FileUploadQiniuImageFile struct {
-	Width  int `json:"width"`
-	Height int `json:"height"`
-}
-
-type FileUploadQiniuReq struct {
-}
-
-type FileUploadQiniuRes struct {
-	FileKey      string                   `json:"fileKey"`
-	FileURL      string                   `json:"fileUrl,optional"`
-	OriginalName string                   `json:"originalName"`
-	FileInfo     *FileUploadQiniuFileInfo `json:"fileInfo,optional"`
-}
-
-type FileUploadQiniuVideoFile struct {
-	Width    int `json:"width"`
-	Height   int `json:"height"`
-	Duration int `json:"duration"`
-}
-
 type FileUploadReq struct {
 }
 
 type FileUploadRes struct {
-	FileKey      string              `json:"fileKey"`
-	FileURL      string              `json:"fileUrl,optional"`
-	OriginalName string              `json:"originalName"`
-	FileInfo     *FileUploadFileInfo `json:"fileInfo,optional"`
+	FileURL string `json:"fileUrl"` // 可访问地址
 }
 
 type FileUploadVideoFile struct {
@@ -450,42 +351,44 @@ type GetEmojisListRes struct {
 }
 
 type GetFileByIdReq struct {
-	ID uint64 `json:"id,optional"` // 记录ID
+	ID uint64 `json:"id,optional"`
 }
 
 type GetFileByIdRes struct {
-	File *FileItem `json:"file,optional"` // 文件详情
+	File *FileItem `json:"file,optional"`
 }
 
 type GetFileByMd5Req struct {
-	Md5 string `json:"md5,optional"` // MD5
+	Md5 string `json:"md5,optional"`
 }
 
 type GetFileByMd5Res struct {
-	File *FileItem `json:"file,optional"` // 文件详情
+	File *FileItem `json:"file,optional"`
 }
 
 type GetFileDetailReq struct {
-	FileKey string `json:"fileKey,optional"` // 文件Key
+	FileKey string `json:"fileKey,optional"`
 }
 
 type GetFileDetailRes struct {
-	FileKey      string `json:"fileKey,optional"`      // 文件Key
-	OriginalName string `json:"originalName,optional"` // 原始文件名
-	Size         int64  `json:"size,optional"`         // 文件大小
-	Path         string `json:"path,optional"`         // 存储路径
-	Md5          string `json:"md5,optional"`          // MD5
-	Type         string `json:"type,optional"`         // 文件类型
-	CreatedAt    string `json:"createdAt,optional"`    // 创建时间
-	UpdatedAt    string `json:"updatedAt,optional"`    // 更新时间
+	FileKey      string `json:"fileKey,optional"`
+	OriginalName string `json:"originalName,optional"`
+	Size         int64  `json:"size,optional"`
+	Path         string `json:"path,optional"`
+	Md5          string `json:"md5,optional"`
+	Type         string `json:"type,optional"`
+	CreatedAt    string `json:"createdAt,optional"`
+	UpdatedAt    string `json:"updatedAt,optional"`
 }
 
 type GetUploadTokenReq struct {
-	UserID string `json:"userId"` // 后台管理员身份
+	ClientID     string `json:"clientId"`     // 平台 clientId（asset Upload.Clients 键）
+	ClientSecret string `json:"clientSecret"` // 平台秘钥
+	UserID       string `json:"userId"`       // 上传归属主体（持钥平台在已登录上下文填入）
 }
 
 type GetUploadTokenRes struct {
-	UploadToken string `json:"uploadToken"` // 网关用户面上传票
+	UploadToken string `json:"uploadToken"` // 短时上传能力票 beaver:upload
 	ExpiresIn   int64  `json:"expiresIn"`   // 有效期（秒）
 }
 
@@ -547,15 +450,15 @@ type ListEmojisRes struct {
 }
 
 type ListFilesReq struct {
-	Page     int32  `json:"page,optional"`     // 页码
-	PageSize int32  `json:"pageSize,optional"` // 每页条数
-	Type     string `json:"type,optional"`     // 文件类型筛选
-	Keywords string `json:"keywords,optional"` // 关键词
+	Page     int32  `json:"page,optional"`
+	PageSize int32  `json:"pageSize,optional"`
+	Type     string `json:"type,optional"`
+	Keywords string `json:"keywords,optional"`
 }
 
 type ListFilesRes struct {
-	Total int64      `json:"total,optional"` // 总数
-	List  []FileItem `json:"list,optional"`  // 文件列表
+	Total int64      `json:"total,optional"`
+	List  []FileItem `json:"list,optional"`
 }
 
 type MachineEmojiInfo struct {
@@ -590,11 +493,11 @@ type PreviewReq struct {
 }
 
 type PreviewRes struct {
-	Source       string `json:"source"`                // 文件来源：qiniu/local/minio
-	RedirectURL  string `json:"redirectUrl,optional"`  // 签名 URL，非空时 handler 302 跳转
-	LocalPath    string `json:"localPath,optional"`    // 本地绝对路径，仅 handler 内部读取
-	ContentType  string `json:"contentType,optional"`  // 本地文件的 Content-Type
-	OriginalName string `json:"originalName,optional"` // 原始文件名，用于 Content-Disposition
+	Source       string `json:"source"`
+	RedirectURL  string `json:"redirectUrl,optional"`
+	LocalPath    string `json:"localPath,optional"`
+	ContentType  string `json:"contentType,optional"`
+	OriginalName string `json:"originalName,optional"`
 }
 
 type SaveEmojiPackageReq struct {

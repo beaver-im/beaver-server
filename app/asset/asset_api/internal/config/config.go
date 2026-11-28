@@ -22,6 +22,7 @@ package config
 
 import (
 	"beaver/commonconfig"
+	"beaver/utils/s2s"
 
 	"github.com/zeromicro/go-zero/rest"
 	"github.com/zeromicro/go-zero/zrpc"
@@ -51,7 +52,7 @@ type Config struct {
 	UserRpc     zrpc.RpcClientConf
 	// AssetRpc：file + emoji 同进程（etcd assetrpc.rpc），队间能力面薄转发到它。
 	AssetRpc zrpc.RpcClientConf
-	// StorageType 通用上传接口(/beaver/api/asset/file/v1/upload)使用的默认存储后端：local|qiniu|minio
+	// StorageType 通用上传接口(/beaver/api/asset/file_public/v1/upload)使用的默认存储后端：local|qiniu|minio
 	StorageType string
 	Local       struct {
 		UploadDir   string // 本地文件上传目录
@@ -80,5 +81,12 @@ type Config struct {
 	// S2S 入站机器票：东西向队间调用与本服务共用同一套路由，凭据受众统一 core:api。
 	S2S struct {
 		Secret string `json:",optional"`
+	}
+	// Upload 第三平面：asset 作为签发方发给各平台的产品凭据 + 短时上传票。
+	// ClientSecret 命名 beaver-asset-{接收方}-…；与登录票、S2S 平行；Clients 空则无法换票。
+	Upload struct {
+		AccessSecret string                     `json:",optional"` // 签发/校验 beaver:upload
+		AccessExpire int                        `json:",optional"` // 秒
+		Clients      map[string]s2s.ClientEntry `json:",optional"` // 平台 clientId → beaver-asset-* 秘钥
 	}
 }

@@ -19,7 +19,7 @@
  * beaver-server-header-v1
  */
 
-package logic
+package file_public
 
 import (
 	"context"
@@ -35,15 +35,13 @@ import (
 	"beaver/utils/s2s"
 )
 
-const uploadTokenClientID = "backend_admin"
-
 type GetUploadTokenLogic struct {
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 	logger *beaverlog.Logger
 }
 
-// 队间：签发文件上传用户票
+// 平台换取短时上传能力票（第三平面凭据）
 func NewGetUploadTokenLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetUploadTokenLogic {
 	return &GetUploadTokenLogic{
 		ctx:    ctx,
@@ -53,24 +51,31 @@ func NewGetUploadTokenLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Ge
 }
 
 func (l *GetUploadTokenLogic) GetUploadToken(req *types.GetUploadTokenReq) (*types.GetUploadTokenRes, error) {
-	if s2s.PrincipalFromContext(l.ctx) != uploadTokenClientID {
-		return nil, errors.New("无权获取文件上传 token")
+	if !s2s.AuthenticateClient(l.svcCtx.Config.Upload.Clients, req.ClientID, req.ClientSecret) {
+		l.logger.Error(model.LogMsg{Text: "上传凭据校验失败", Data: map[string]interface{}{"clientId": req.ClientID}})
+		return nil, errors.New("invalid_client")
 	}
-	if strings.TrimSpace(req.UserID) == "" {
+	userID := strings.TrimSpace(req.UserID)
+	if userID == "" {
 		return nil, errors.New("缺少上传用户身份")
 	}
-	secret := strings.TrimSpace(l.svcCtx.Config.Auth.AccessSecret)
-	if secret == "" || l.svcCtx.Config.Auth.AccessExpire <= 0 {
+
+	secret := strings.TrimSpace(l.svcCtx.Config.Upload.AccessSecret)
+	expire := l.svcCtx.Config.Upload.AccessExpire
+	if secret == "" || expire <= 0 {
 		return nil, errors.New("上传凭证配置不完整")
 	}
 
-	ttl := time.Duration(l.svcCtx.Config.Auth.AccessExpire) * time.Second
-	token, err := jwts.GenTokenTTL(jwts.JwtPayLoad{UserID: req.UserID}, secret, ttl, jwts.AudienceUser)
+	ttl := time.Duration(expire) * time.Second
+	token, err := jwts.GenTokenTTL(jwts.JwtPayLoad{UserID: userID}, secret, ttl, jwts.AudienceUpload)
 	if err != nil {
-		l.logger.Error(model.LogMsg{Text: "签发文件上传 token 失败", Data: map[string]interface{}{"err": err.Error()}})
-		return nil, errors.New("签发文件上传 token 失败")
+		l.logger.Error(model.LogMsg{Text: "签发上传能力票失败", Data: map[string]interface{}{"err": err.Error()}})
+		return nil, errors.New("签发上传能力票失败")
 	}
 
-	l.logger.Info(model.LogMsg{Text: "签发文件上传 token 成功", Data: map[string]interface{}{"expiresIn": int64(ttl.Seconds())}})
+	l.logger.Info(model.LogMsg{Text: "签发上传能力票成功", Data: map[string]interface{}{
+		"clientId":  req.ClientID,
+		"expiresIn": int64(ttl.Seconds()),
+	}})
 	return &types.GetUploadTokenRes{UploadToken: token, ExpiresIn: int64(ttl.Seconds())}, nil
 }

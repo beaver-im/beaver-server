@@ -22,19 +22,28 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
+	"strings"
 
-	"github.com/zeromicro/go-zero/rest/httpx"
-
-	"beaver/app/asset/asset_api/internal/logic/file"
+	"beaver/app/asset/asset_api/internal/logic/file_public"
 	"beaver/app/asset/asset_api/internal/svc"
 	"beaver/app/asset/asset_api/internal/types"
 	"beaver/common/response"
+
+	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
-// 文件通用上传(按yaml StorageType配置路由到local/qiniu/minio)
 func FileUploadHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		raw := strings.TrimSpace(r.Header.Get("Authorization"))
+		token := strings.TrimPrefix(raw, "Bearer ")
+		token = strings.TrimPrefix(token, "bearer ")
+		if _, err := file_public.VerifyUploadToken(svcCtx, token); err != nil {
+			response.Response(r, w, nil, err)
+			return
+		}
+
 		var req types.FileUploadReq
 		if err := httpx.Parse(r, &req); err != nil {
 			response.Response(r, w, nil, err)
@@ -43,13 +52,13 @@ func FileUploadHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 
 		file, fileHead, err := r.FormFile("file")
 		if err != nil {
-			response.Response(r, w, nil, err)
+			response.Response(r, w, nil, errors.New("缺少上传文件"))
 			return
 		}
 		defer file.Close()
 		fileInfoStr := r.FormValue("fileInfo")
 
-		l := logic.NewFileUploadLogic(r.Context(), svcCtx)
+		l := file_public.NewFileUploadLogic(r.Context(), svcCtx)
 		resp, err := l.FileUpload(&req, file, fileHead, fileInfoStr)
 		response.Response(r, w, resp, err)
 	}
