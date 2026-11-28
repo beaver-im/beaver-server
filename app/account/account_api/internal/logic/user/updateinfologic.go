@@ -22,7 +22,6 @@
 package logic
 
 import (
-	pushcli "beaver/remote/push"
 	"context"
 	"errors"
 	"fmt"
@@ -31,9 +30,6 @@ import (
 	"beaver/app/account/account_api/internal/svc"
 	"beaver/app/account/account_api/internal/types"
 	user_models "beaver/app/account/account_models/user"
-	relationtypes "beaver/app/relation/relation_rpc/pb"
-	"beaver/common/wsEnum/wsCommandConst"
-	"beaver/common/wsEnum/wsTypeConst"
 	beaverlog "beaver/utils/beaverlog"
 	"beaver/utils/beaverlog/model"
 
@@ -110,38 +106,8 @@ func (l *UpdateInfoLogic) UpdateInfo(req *types.UpdateInfoReq) (resp *types.Upda
 		l.recordUserChangeLog(req.UserID, version, updateFields)
 	}
 
-	// 异步获取所有相关用户并推送通知（只有在有更新的情况下才推送）
 	if version > 0 {
-		go func() {
-			// 创建新的context，避免使用请求的context
-			ctx := l.ctx
-
-			// 获取所有需要推送的用户ID
-			allRecipients, err := l.getAllRelatedUserIds(ctx, req.UserID)
-			if err != nil {
-				l.logger.Error(model.LogMsg{Text: "获取相关用户ID失败", Data: map[string]interface{}{"userId": req.UserID, "err": err.Error()}})
-				return
-			}
-
-			l.logger.Info(model.LogMsg{Text: "推送用户信息变更", Data: map[string]interface{}{"userId": req.UserID, "count": len(allRecipients), "recipients": allRecipients}})
-
-			// 通过 RocketMQ 异步推送给所有相关用户
-			for _, recipientID := range allRecipients {
-				payload := map[string]interface{}{
-					"command":  wsCommandConst.USER_PROFILE,
-					"type":     wsTypeConst.UserReceive,
-					"senderId": req.UserID,
-					"targetId": recipientID,
-					"body": map[string]interface{}{
-						"table":    "users",        // 涉及的数据库表
-						"version":  int32(version), // 最新版本号（转换为int32类型）
-						"targetId": req.UserID,     // 变更的记录ID
-					},
-					"conversationId": "",
-				}
-				pushcli.SendRealtimeApi(l.ctx, "sync", payload)
-			}
-		}()
+		NotifyUserProfileChange(l.svcCtx, l.logger, req.UserID, version)
 	}
 
 	return &types.UpdateInfoRes{}, nil
@@ -194,47 +160,4 @@ func (l *UpdateInfoLogic) recordUserChangeLog(userID string, version int64, upda
 			l.logger.Info(model.LogMsg{Text: "用户变更日志记录成功", Data: map[string]interface{}{"userId": userID, "count": len(changeLogs)}})
 		}
 	}
-}
-
-/**
- * 获取所有需要推送的用户ID（自己 + 好友 + 群成员）
- */
-func (l *UpdateInfoLogic) getAllRelatedUserIds(ctx context.Context, userID string) ([]string, error) {
-	// 使用map进行去重
-	userMap := make(map[string]bool)
-
-	// 始终包含自己的ID
-	userMap[userID] = true
-
-	// 1. 获取好友列表
-	friendResp, err := l.svcCtx.FriendRpc.GetFriendIds(ctx, &relationtypes.GetFriendIdsRequest{
-		UserID: userID,
-	})
-	if err != nil {
-		l.logger.Error(model.LogMsg{Text: "获取好友列表失败", Data: map[string]interface{}{"userId": userID, "err": err.Error()}})
-		return nil, err
-	}
-	for _, uid := range friendResp.FriendIds {
-		userMap[uid] = true
-	}
-
-	// 2. 获取群成员列表
-	groupResp, err := l.svcCtx.GroupRpc.GetUserGroupMembers(ctx, &relationtypes.GetUserGroupMembersReq{
-		UserID: userID,
-	})
-	if err != nil {
-		l.logger.Error(model.LogMsg{Text: "获取群成员列表失败", Data: map[string]interface{}{"userId": userID, "err": err.Error()}})
-		return nil, err
-	}
-	for _, uid := range groupResp.MemberIDs {
-		userMap[uid] = true
-	}
-
-	// 转换为切片
-	var result []string
-	for uid := range userMap {
-		result = append(result, uid)
-	}
-
-	return result, nil
 }

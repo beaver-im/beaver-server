@@ -1,4 +1,4 @@
-﻿# 部署配置批量替换规则（模板）
+# 部署配置批量替换规则（模板）
 # 结构：rules -> 分组 -> 规则列表（与 config_prod.yaml 一致）
 #   - 带 key: 的规则是密钥，可用 ./gen_secrets.sh 重新生成
 #   - 密钥统一「带前缀短格式」：JWT = beaver-jwt-{user|open|admin}-{32hex}，
@@ -42,17 +42,12 @@ rules:
     - name: RocketMQ 地址
       old: "127.0.0.1:9876"
       new: "REPLACE_ME_ROCKETMQ_ADDR"
-
-  opensearch:
-    - name: OpenSearch 地址
-      old: "https://127.0.0.1:9200"
-      new: "REPLACE_ME_OPENSEARCH_ADDR"
-    - name: OpenSearch 用户名
-      old: "Username: admin"
-      new: "REPLACE_ME_OPENSEARCH_USERNAME_LINE"
-    - name: OpenSearch 密码
-      old: "Password: 'Demo@123456'"
-      new: "REPLACE_ME_OPENSEARCH_PASSWORD_LINE"
+    - name: RocketMQ AccessKey
+      old: "AccessKey: rootuser"
+      new: "REPLACE_ME_ROCKETMQ_ACCESSKEY_LINE"
+    - name: RocketMQ SecretKey
+      old: "SecretKey: '123456a'"
+      new: "REPLACE_ME_ROCKETMQ_SECRETKEY_LINE"
 
   # ========== 对象存储 / 邮件（生产环境若不用可忽略）==========
   minio:
@@ -74,7 +69,7 @@ rules:
       old: "Host: smtp.qq.com"
       new: "REPLACE_ME_SMTP_HOST_LINE"
     - name: SMTP 密码
-      old: "klokenvhymkobaif"
+      old: "123456"
       new: "REPLACE_ME_SMTP_PASSWORD"
 
   qiniu:

@@ -11,5 +11,6 @@ wt new-tab --title "Gateway API" cmd /k "cd /d !ROOT_DIR!\app\gateway\gateway_ap
   ; new-tab --title "Message API" cmd /k "cd /d !ROOT_DIR!\app\message\message_api && go run message.go" ^
   ; new-tab --title "Platform API" cmd /k "cd /d !ROOT_DIR!\app\platform\platform_api && go run platform.go" ^
   ; new-tab --title "Notification API" cmd /k "cd /d !ROOT_DIR!\app\notification\notification_api && go run notification.go" ^
+  ; new-tab --title "Push API" cmd /k "cd /d !ROOT_DIR!\app\push\push_api && go run push.go" ^
   ; new-tab --title "Datasync API" cmd /k "cd /d !ROOT_DIR!\app\datasync\datasync_api && go run datasync.go" ^
   ; new-tab --title "WS API" cmd /k "cd /d !ROOT_DIR!\app\ws\ws_api && go run ws.go"

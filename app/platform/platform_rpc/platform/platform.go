@@ -37,9 +37,6 @@ import (
 type (
 	AddOrgMemberReq             = platform_rpc.AddOrgMemberReq
 	AddOrgMemberRes             = platform_rpc.AddOrgMemberRes
-	AdminLogItem                = platform_rpc.AdminLogItem
-	AdminQueryLogsReq           = platform_rpc.AdminQueryLogsReq
-	AdminQueryLogsRes           = platform_rpc.AdminQueryLogsRes
 	AppItem                     = platform_rpc.AppItem
 	AppVersionBrief             = platform_rpc.AppVersionBrief
 	AppVersionsArchItem         = platform_rpc.AppVersionsArchItem
@@ -113,7 +110,6 @@ type (
 	WorkbenchEntryConfig        = platform_rpc.WorkbenchEntryConfig
 
 	Platform interface {
-		AdminQueryLogs(ctx context.Context, in *AdminQueryLogsReq, opts ...grpc.CallOption) (*AdminQueryLogsRes, error)
 		CreateApp(ctx context.Context, in *CreateAppReq, opts ...grpc.CallOption) (*CreateAppRes, error)
 		ListApps(ctx context.Context, in *ListAppsReq, opts ...grpc.CallOption) (*ListAppsRes, error)
 		CreateArchitecture(ctx context.Context, in *CreateArchitectureReq, opts ...grpc.CallOption) (*CreateArchitectureRes, error)
@@ -162,11 +158,6 @@ func NewPlatform(cli zrpc.Client) Platform {
 	return &defaultPlatform{
 		cli: cli,
 	}
-}
-
-func (m *defaultPlatform) AdminQueryLogs(ctx context.Context, in *AdminQueryLogsReq, opts ...grpc.CallOption) (*AdminQueryLogsRes, error) {
-	client := platform_rpc.NewAdminClient(m.cli.Conn())
-	return client.AdminQueryLogs(ctx, in, opts...)
 }
 
 func (m *defaultPlatform) CreateApp(ctx context.Context, in *CreateAppReq, opts ...grpc.CallOption) (*CreateAppRes, error) {

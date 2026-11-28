@@ -111,7 +111,7 @@ func (l *TransferOwnerLogic) TransferOwner(req *types.TransferOwnerReq) (resp *t
 	// 异步通知群成员
 	go func() {
 		// 创建新的context，避免使用请求的context
-		ctx := l.ctx
+		ctx := context.Background()
 
 		// 获取群成员列表
 		response, err := l.svcCtx.GroupRpc.GetGroupMembers(ctx, &relationtypes.GetGroupMembersReq{
@@ -140,7 +140,7 @@ func (l *TransferOwnerLogic) TransferOwner(req *types.TransferOwnerReq) (resp *t
 				},
 				"conversationId": "",
 			}
-			pushcli.SendRealtimeApi(ctx, "sync", payload)
+			pushcli.SendRealtimeApi(context.Background(), "sync", payload)
 		}
 	}()
 

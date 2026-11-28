@@ -40,7 +40,11 @@ type ServiceContext struct {
 func NewServiceContext(c config.Config) *ServiceContext {
 	return &ServiceContext{
 		Config:   c,
-		RocketMQ: corerocketmq.InitRocketMQ(c.RocketMQ.Addr),
+		RocketMQ: corerocketmq.InitRocketMQ(corerocketmq.Options{
+			Addr:      c.RocketMQ.Addr,
+			AccessKey: c.RocketMQ.AccessKey,
+			SecretKey: c.RocketMQ.SecretKey,
+		}),
 		JwtS2s:   middleware.NewJwtS2sMiddleware(c).Handle,
 	}
 }

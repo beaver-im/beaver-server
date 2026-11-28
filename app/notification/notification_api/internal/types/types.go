@@ -116,6 +116,37 @@ type GetInboxByIdsRes struct {
 	Inbox []InboxItem `json:"inbox"`
 }
 
+// 最近通知列表：服务端为权威数据源，收件箱 + 事件明细合并返回
+type GetInboxListReq struct {
+	UserID     string   `header:"Beaver-User-Id"`    // 当前用户ID（网关注入的可信身份头）
+	Categories []string `json:"categories,optional"` // 分类过滤，不传则 social/group/moment
+	Limit      int32    `json:"limit,optional"`      // 单页条数，默认20，上限100
+	Offset     int32    `json:"offset,optional"`     // 跳过条数
+}
+
+type NotificationListItem struct {
+	EventID    string `json:"eventId"`
+	EventType  string `json:"eventType"`
+	Category   string `json:"category"`
+	Version    int64  `json:"version"`
+	IsRead     bool   `json:"isRead"`
+	ReadAt     int64  `json:"readAt"` // ms，未读为0
+	Status     int32  `json:"status"`
+	IsDeleted  bool   `json:"isDeleted"`
+	Silent     bool   `json:"silent"`
+	Payload    string `json:"payload"` // 事件扩展数据JSON字符串
+	FromUserID string `json:"fromUserId"`
+	TargetID   string `json:"targetId"`
+	TargetType string `json:"targetType"`
+	CreatedAt  int64  `json:"createdAt"` // ms
+	UpdatedAt  int64  `json:"updatedAt"` // ms
+}
+
+type GetInboxListRes struct {
+	Items   []NotificationListItem `json:"items"`
+	HasMore bool                   `json:"hasMore"`
+}
+
 type GetReadCursorsReq struct {
 	UserID     string   `header:"Beaver-User-Id"`    // 当前用户ID（网关注入的可信身份头）
 	Categories []string `json:"categories,optional"` // 可选过滤分类，不传则返回该用户全部

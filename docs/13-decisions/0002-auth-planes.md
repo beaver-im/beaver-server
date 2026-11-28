@@ -15,7 +15,7 @@
 3. **单向跨界兼容**：只有开放平台面额外接受主站用户票，覆盖 `/beaver-open/api/open/oauth/v1/` 的 `h5_authcode`、`qrcode_scan`、`qrcode_confirm`、`qrcode_cancel`。反向一律拒绝。兼容写在 `verifyExternalTicket` 代码里，配置层零 action 特例。
 4. **公开端点唯一规范**：URL 的 group 段以 `_public` 结尾即网关放行，`PublicPatterns` 只保留一条通用正则；禁止 action 级特例。`.api` 文件名后缀现同样统一为 `_public`，但仍只是源码组织约定，不参与网关判定。
    变更记录：本 ADR 2026-11-23 补记时文件名后缀写的是 `_publish`，2026-11-24 由用户拍板统一为 `_public`（拼写统一、层级职责不变）；此处按新规范更新规范条目，不改写当时的历史决定与否决理由。
-5. **机器票归属按 team/surface 两段**：`teamAndSurface` 取路径前两段，`machineSecret` / `machineAudience` 查表顺序为 `team/surface → team → Default`。机器票优先校验，验过即放行且不覆盖原票（`X-Client-Id` 保留）；网关对外票据验完后另签机器票覆盖 `Authorization` 交给下游。出站 S2S 不经网关，各服务直连目标换票。
+5. **机器票归属按 team/surface 两段**：`teamAndSurface` 取路径前两段，断言受众按 `team/surface → team → Default` 查表；机器票由各团队自己的 `S2S.Secret` + `JwtS2s` 在业务面入站校验。网关对外票据验完后签 ES256 断言覆盖 `Authorization`，下游按 JWKS 验签。**出站 S2S 换票与业务调用都不经网关**，各服务直连目标服务的机器端点；网关不接受入站机器票直通。
 6. **身份头按平面分、字段名按域分**：admin 写 `Beaver-Admin-Id`，其余写 `Beaver-User-Id`；下游 `.api` 字段仍是 `UserID` / `AdminID`。
 
 ## 备选方案与否决理由

@@ -79,17 +79,20 @@ services:
       - ./rocketmq/broker/logs:/home/rocketmq/logs
       - ./rocketmq/broker/store:/home/rocketmq/store
       - ./rocketmq/broker/conf/broker.conf:/home/rocketmq/conf/broker.conf
+      - ./rocketmq/broker/conf/plain_acl.yml:/home/rocketmq/rocketmq-5.3.1/conf/plain_acl.yml
     depends_on:
       - rocketmq-namesrv
 
-  # 一次性创建 8 个新 Topic + 8 个新 ConsumerGroup（push 从 notification_rpc 剥离后）
-  # mqadmin 不在镜像 PATH，必须用完整路径（已实测 command -v mqadmin 为空）
+  # 一次性创建 8 个新 Topic + 8 个新 ConsumerGroup
+  # ACL：凭据只放 tools.yml，命令行不要带 -ak/-sk
   rocketmq-init:
     image: apache/rocketmq:5.3.1
     container_name: rocketmq-init
     depends_on:
       - rocketmq-broker
     restart: on-failure
+    volumes:
+      - ./rocketmq/broker/conf/tools.yml:/home/rocketmq/rocketmq-5.3.1/conf/tools.yml
     entrypoint: >
       sh -c "sleep 10 &&
       /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-realtime-chat &&
@@ -99,38 +102,11 @@ services:
       /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-agent-task &&
       /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-agent-done &&
       /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-workflow-task &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateTopic -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -t im-platform-logs &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-realtime-chat-cg &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-realtime-sync-cg &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-realtime-bot-cg &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-realtime-chat-cg -d true -m false &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-realtime-sync-cg -d true -m false &&
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-realtime-bot-cg -d true -m false &&
       /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-offline-push-cg &&
       /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-agent-task-cg &&
       /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-agent-done-cg &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-workflow-task-cg &&
-      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-platform-logs-cg"
+      /home/rocketmq/rocketmq-5.3.1/bin/mqadmin updateSubGroup -n rocketmq-namesrv:9876 -b rocketmq-broker:10911 -g im-workflow-task-cg"
 
-  opensearch:
-    image: opensearchproject/opensearch:2.19.0
-    container_name: opensearch
-    restart: "no"
-    environment:
-      - discovery.type=single-node
-      - "OPENSEARCH_INITIAL_ADMIN_PASSWORD=Demo@123456"
-      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
-    ports:
-      - "9200:9200"
-    volumes:
-      - ./opensearch:/usr/share/opensearch/data
-  opensearch-dashboards:
-    image: opensearchproject/opensearch-dashboards:2.19.0
-    container_name: opensearch-dashboards
-    restart: "no"
-    environment:
-      - 'OPENSEARCH_HOSTS=["https://opensearch:9200"]'
-      - OPENSEARCH_USERNAME=admin
-      - "OPENSEARCH_PASSWORD=Demo@123456"
-      - OPENSEARCH_SSL_VERIFICATION_MODE=none
-    ports:
-      - "5601:5601"
-    depends_on:
-      - opensearch

@@ -14,8 +14,7 @@ ServiceAlias:
   group: relation_api
   file: asset_api
   emoji: asset_api
-  circle: social_api
-  moment: social_api
+  social: social_api
   org: platform_api
   workbench: platform_api
   ai: agent_api

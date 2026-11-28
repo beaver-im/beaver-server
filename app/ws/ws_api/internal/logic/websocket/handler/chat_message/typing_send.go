@@ -75,7 +75,7 @@ func HandleTypingSend(
 			},
 			"conversationId": body.ConversationID,
 		}
-		if err := pushcli.SendRealtimeApi(ctx, "sync", payload); err != nil {
+		if err := pushcli.SendRealtimeApi(context.Background(), "sync", payload); err != nil {
 			logger.Error(model.LogMsg{
 				Text: "推送typing通知失败",
 				Data: map[string]any{"sender": req.UserID, "target": peerID, "err": err.Error()},

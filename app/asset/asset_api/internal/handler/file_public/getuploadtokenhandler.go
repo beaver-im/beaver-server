@@ -22,35 +22,25 @@
 package handler
 
 import (
-	"net/http"
-
-	"github.com/zeromicro/go-zero/rest/httpx"
-
-	"beaver/app/asset/asset_api/internal/logic/file"
+	"beaver/app/asset/asset_api/internal/logic/file_public"
 	"beaver/app/asset/asset_api/internal/svc"
 	"beaver/app/asset/asset_api/internal/types"
 	"beaver/common/response"
+	"net/http"
+
+	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
-func FileUploadLocalHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+func GetUploadTokenHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.FileUploadLocalReq
+		var req types.GetUploadTokenReq
 		if err := httpx.Parse(r, &req); err != nil {
 			response.Response(r, w, nil, err)
 			return
 		}
 
-		// 读取上传文件与fileInfo（multipart 必须在 handler 层处理）
-		file, fileHead, err := r.FormFile("file")
-		if err != nil {
-			response.Response(r, w, nil, err)
-			return
-		}
-		defer file.Close()
-		fileInfoStr := r.FormValue("fileInfo")
-
-		l := logic.NewFileUploadLocalLogic(r.Context(), svcCtx)
-		resp, err := l.FileUploadLocal(&req, file, fileHead, fileInfoStr)
+		l := file_public.NewGetUploadTokenLogic(r.Context(), svcCtx)
+		resp, err := l.GetUploadToken(&req)
 		response.Response(r, w, resp, err)
 	}
 }

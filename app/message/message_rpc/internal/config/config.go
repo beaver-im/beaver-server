@@ -37,7 +37,9 @@ type Config struct {
 		Db       int
 	}
 	RocketMQ struct {
-		Addr string
+		Addr      string
+		AccessKey string `json:",optional"`
+		SecretKey string `json:",optional"`
 	}
 	DatasyncRpc     zrpc.RpcClientConf
 	UserRpc         zrpc.RpcClientConf

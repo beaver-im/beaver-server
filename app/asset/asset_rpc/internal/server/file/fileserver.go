@@ -50,12 +50,6 @@ func (s *FileServer) GetFileDetail(ctx context.Context, in *pb.GetFileDetailReq)
 	return l.GetFileDetail(in)
 }
 
-// 获取七牛云上传token
-func (s *FileServer) GetQiniuUploadToken(ctx context.Context, in *pb.GetQiniuUploadTokenReq) (*pb.GetQiniuUploadTokenRes, error) {
-	l := filelogic.NewGetQiniuUploadTokenLogic(ctx, s.svcCtx)
-	return l.GetQiniuUploadToken(in)
-}
-
 func (s *FileServer) ListFiles(ctx context.Context, in *pb.ListFilesReq) (*pb.ListFilesRes, error) {
 	l := filelogic.NewListFilesLogic(ctx, s.svcCtx)
 	return l.ListFiles(in)

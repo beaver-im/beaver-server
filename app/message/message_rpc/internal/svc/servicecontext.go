@@ -53,7 +53,6 @@ import (
 
 	"beaver/core/corewebhook"
 
-	"beaver/utils/beaverlog"
 
 	versionPkg "beaver/core/version"
 
@@ -118,9 +117,12 @@ func NewServiceContext(c config.Config) *ServiceContext {
 	agentcli.Init(c.Name, c.RemoteProxy.Agent.ClientSecret)
 	pushcli.Init(c.Name, c.RemoteProxy.Push.ClientSecret)
 
-	mqClient := corerocketmq.InitRocketMQ(c.RocketMQ.Addr)
+	mqClient := corerocketmq.InitRocketMQ(corerocketmq.Options{
+		Addr:      c.RocketMQ.Addr,
+		AccessKey: c.RocketMQ.AccessKey,
+		SecretKey: c.RocketMQ.SecretKey,
+	})
 
-	beaverlog.SetRocketMQ(mqClient)
 
 	return &ServiceContext{
 		Config: c,

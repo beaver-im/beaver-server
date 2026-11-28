@@ -27,12 +27,13 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-// 外部票受众。C 端用户、开放平台开发者、后台管理员三票同密钥同源，
-// 只有 Audience 能区分平面；网关按路由组校验，杜绝拿普通用户票打后台接口。
+// 外部票受众。登录三平面 + 上传能力票；受众必须与签发平面一致。
+// 登录票由网关按路由组校验；上传能力票由 asset 在 file_public 上传口自验。
 const (
 	AudienceUser      = "beaver:user"
 	AudienceDeveloper = "beaver:developer"
 	AudienceAdmin     = "beaver:admin"
+	AudienceUpload    = "beaver:upload" // 第三平面：短时上传能力票（非登录、非 S2S）
 )
 
 type JwtPayLoad struct {
@@ -46,13 +47,18 @@ type CustomClaims struct {
 	jwt.RegisteredClaims
 }
 
-// GenToken 签发外部票。audience 取 AudienceUser / AudienceDeveloper / AudienceAdmin，
+// GenToken 签发外部票。audience 取 AudienceUser / AudienceDeveloper / AudienceAdmin / AudienceUpload，
 // 由签发票面所属平面决定，签错平面等于发错权限。
 func GenToken(payload JwtPayLoad, accessSecret string, expires int, audience string) (string, error) {
+	return GenTokenTTL(payload, accessSecret, time.Hour*time.Duration(expires), audience)
+}
+
+// GenTokenTTL 按指定有效期签发外部票。
+func GenTokenTTL(payload JwtPayLoad, accessSecret string, ttl time.Duration, audience string) (string, error) {
 	claims := CustomClaims{
 		JwtPayLoad: payload,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(expires))),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
 			Audience:  jwt.ClaimStrings{audience},
 		},
 	}

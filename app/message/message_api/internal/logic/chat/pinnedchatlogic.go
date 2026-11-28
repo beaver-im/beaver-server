@@ -126,7 +126,7 @@ func (l *PinnedChatLogic) notifyPinnedUpdate(conversationId, userId string, vers
 		},
 		"conversationId": conversationId,
 	}
-	if err := pushcli.SendRealtimeApi(l.ctx, "sync", payload); err != nil {
+	if err := pushcli.SendRealtimeApi(context.Background(), "sync", payload); err != nil {
 		l.logger.Error(model.LogMsg{
 			Text: "推送置顶通知失败",
 			Data: map[string]any{

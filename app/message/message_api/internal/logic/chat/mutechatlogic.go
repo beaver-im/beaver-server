@@ -127,7 +127,7 @@ func (l *MuteChatLogic) notifyMutedUpdate(conversationId, userId string, version
 		},
 		"conversationId": conversationId,
 	}
-	if err := pushcli.SendRealtimeApi(l.ctx, "sync", payload); err != nil {
+	if err := pushcli.SendRealtimeApi(context.Background(), "sync", payload); err != nil {
 		l.logger.Error(model.LogMsg{
 			Text: "推送免打扰通知失败",
 			Data: map[string]any{

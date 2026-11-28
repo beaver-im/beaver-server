@@ -145,7 +145,7 @@ func (l *NoticeUpdateLogic) NoticeUpdate(req *types.NoticeUpdateReq) (resp *type
 			},
 			"conversationId": "",
 		}
-		pushcli.SendRealtimeApi(l.ctx, "sync", payload)
+		pushcli.SendRealtimeApi(context.Background(), "sync", payload)
 
 		l.logger.Info(model.LogMsg{Text: "异步发送好友备注更新通知完成", Data: map[string]interface{}{"userId": req.UserID, "friendId": friend.FriendID, "version": nextVersion}})
 	}()

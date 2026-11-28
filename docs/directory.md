@@ -108,7 +108,7 @@
 | `message` | api + models + rpc | 会话、消息、已读、转发、媒体关联 | `message_api/api/chat.api` |
 | `asset` | api + models + rpc | 文件上传、表情包 | `asset_api/api/file.api`、`file_public.api`、`emoji.api` |
 | `notification` | api + models + rpc | 事件、收件箱、已读、推送注册 | `notification_api/api/event.api`、`inbox.api`、`read.api`、`push.api` |
-| `platform` | api + models + rpc | 组织/部门/员工、工作台、反馈、举报、埋点、版本更新、管理端 | `platform_api/api/org.api`、`workbench.api`、`admin.api`、`feedback.api`、`*_public.api` |
+| `platform` | api + models + rpc | 组织/部门/员工、工作台、反馈、举报、版本更新、管理端 | `platform_api/api/org.api`、`workbench.api`、`admin.api`、`feedback.api`、`*_public.api` |
 | `datasync` | api + models（**无 rpc**） | 多端增量同步（好友/群/消息/表情/通知/圈子/机器人） | `datasync_api/api/*.api` |
 | `ws` | 只有 api | WebSocket 长连接、心跳、消息上下行 | `ws_api/api/socket.api`、`proxy.api`、`types.api` |
 | `gateway` | 只有 api（自定义代理） | 唯一对外入口：按路径第二段做服务发现、验票、注入身份头、转发 | 无 `.api`，`gateway.yaml` + `core/` |
@@ -229,7 +229,7 @@ app/account/account_models/
 | `coreredis/` | Redis |
 | `corerocketmq/` | RocketMQ 生产者/消费者 |
 | `coreetcd/` | etcd 服务注册发现 |
-| `coreopensearch/` | OpenSearch（`opensearch.go`、`knowledge.go`） |
+| ~~`coreopensearch/`~~ | 已移除：OpenSearch 属于日志增值服务，在独立仓 `beaver-server-observability` |
 | `corepush/` | 推送通道 |
 | `coreonline/` | 在线状态 |
 | `coreupdate/` | 版本发布（`release.go`） |
@@ -270,7 +270,7 @@ types/remote/token.go     换票请求/响应
 
 ## 5 契约与生成
 
-### 5.1 `.api` 文件分布（当前 39 份，含 9 份汇总入口）
+### 5.1 `.api` 文件分布（数量以目录实际为准，含各汇总入口）
 
 ```text
 app/account/account_api/api/       auth.api  auth_public.api  user.api
@@ -279,7 +279,8 @@ app/message/message_api/api/       chat.api
 app/asset/asset_api/api/           file.api  file_public.api  emoji.api
 app/notification/notification_api/api/  event.api  inbox.api  push.api  read.api
 app/platform/platform_api/api/     admin.api  feedback.api  org.api  workbench.api
-                                   instance_public.api  track_public.api  update_public.api
+                                   instance_public.api  update_public.api
+# 客户端埋点/统计（track_public.api）已删除；客户端「日志上报」迁到独立仓 observability 的 log_public 面
 app/datasync/datasync_api/api/     agent  chat  circle  emoji  friend  group  notification  user
 app/ws/ws_api/api/                 proxy.api  socket.api  types.api
 ```

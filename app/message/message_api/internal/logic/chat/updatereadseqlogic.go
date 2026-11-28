@@ -208,7 +208,7 @@ func (l *UpdateReadSeqLogic) notifyReadSeqUpdate(userID, conversationID string, 
 		},
 		"conversationId": conversationID,
 	}
-	if err := pushcli.SendRealtimeApi(l.ctx, "sync", payload); err != nil {
+	if err := pushcli.SendRealtimeApi(context.Background(), "sync", payload); err != nil {
 		l.logger.Error(model.LogMsg{
 			Text: "推送已读同步失败",
 			Data: map[string]any{
@@ -258,7 +258,7 @@ func (l *UpdateReadSeqLogic) notifyPeerReadSeq(readerID, conversationID string, 
 			},
 			"conversationId": conversationID,
 		}
-		if err := pushcli.SendRealtimeApi(l.ctx, "sync", payload); err != nil {
+		if err := pushcli.SendRealtimeApi(context.Background(), "sync", payload); err != nil {
 			l.logger.Error(model.LogMsg{
 				Text: "推送对端已读通知失败",
 				Data: map[string]any{

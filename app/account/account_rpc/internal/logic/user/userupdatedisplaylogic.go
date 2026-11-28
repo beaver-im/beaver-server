@@ -24,6 +24,8 @@ package userlogic
 import (
 	"context"
 	"errors"
+	"fmt"
+	"time"
 
 	user_models "beaver/app/account/account_models/user"
 	"beaver/app/account/account_rpc/internal/svc"
@@ -90,10 +92,44 @@ func (l *UserUpdateDisplayLogic) UserUpdateDisplay(in *pb.UserUpdateDisplayReq) 
 		return nil, err
 	}
 
+	l.recordUserChangeLog(in.UserId, version, updates)
 	l.logger.Info(model.LogMsg{
 		Text: "更新用户展示信息成功",
 		Data: map[string]interface{}{"userId": in.UserId, "version": version},
 	})
 
 	return &pb.UserUpdateDisplayRes{Version: version}, nil
+}
+
+func (l *UserUpdateDisplayLogic) recordUserChangeLog(userID string, version int64, updateFields map[string]interface{}) {
+	changeLogs := make([]user_models.UserChangeLogModel, 0, len(updateFields))
+	now := time.Now().Unix()
+	for field, newValue := range updateFields {
+		if field == "version" {
+			continue
+		}
+		changeType := field
+		switch field {
+		case "nick_name":
+			changeType = "nickName"
+		case "avatar":
+			changeType = "avatar"
+		}
+		changeLogs = append(changeLogs, user_models.UserChangeLogModel{
+			UserID:     userID,
+			ChangeType: changeType,
+			NewValue:   fmt.Sprintf("%v", newValue),
+			ChangeTime: now,
+			Version:    version,
+		})
+	}
+	if len(changeLogs) == 0 {
+		return
+	}
+	if err := l.svcCtx.DB.Create(&changeLogs).Error; err != nil {
+		l.logger.Error(model.LogMsg{
+			Text: "记录用户展示变更日志失败",
+			Data: map[string]any{"userId": userID, "err": err.Error()},
+		})
+	}
 }

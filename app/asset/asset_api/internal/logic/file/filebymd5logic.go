@@ -52,5 +52,10 @@ func (l *FileByMd5Logic) FileByMd5(req *types.GetFileByMd5Req) (resp *types.GetF
 	if err != nil {
 		return nil, err
 	}
+	// 查重未命中：asset_rpc 返回空 File（刻意不当 gRPC 错误），这里不能解引用，
+	// 否则 panic 成 500 空响应；按契约回空 File，调用方据此走「未命中→继续上传」。
+	if rpcRes.File == nil {
+		return &types.GetFileByMd5Res{}, nil
+	}
 	return &types.GetFileByMd5Res{File: &types.FileItem{ID: rpcRes.File.Id, FileKey: rpcRes.File.FileKey, OriginalName: rpcRes.File.OriginalName, Size: rpcRes.File.Size, Path: rpcRes.File.Path, Md5: rpcRes.File.Md5, Type: rpcRes.File.Type, Source: rpcRes.File.Source, CreatedAt: rpcRes.File.CreatedAt, UpdatedAt: rpcRes.File.UpdatedAt}}, nil
 }

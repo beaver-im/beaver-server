@@ -34,7 +34,9 @@ type Config struct {
 	rest.RestConf
 	Etcd     string
 	RocketMQ struct {
-		Addr string
+		Addr      string
+		AccessKey string `json:",optional"`
+		SecretKey string `json:",optional"`
 	}
 	// Assertion 北向：JWKS 验网关 ES256 断言（iss + kid）；JwtS2s 强制要求，缺失 fail-closed。
 	Assertion commonconfig.AssertionVerify `json:",optional"`

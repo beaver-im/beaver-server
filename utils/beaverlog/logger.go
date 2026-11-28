@@ -27,12 +27,9 @@ import (
 	"net/http"
 	"strings"
 	"sync"
-	"time"
 
-	"beaver/common/const/mqwsconst"
 	"beaver/common/middleware/ua"
 	"beaver/common/traceid"
-	"beaver/core/corerocketmq"
 	"beaver/utils/beaverlog/model"
 
 	"github.com/zeromicro/go-zero/core/logx"
@@ -54,9 +51,6 @@ var (
 
 	ipOnce   sync.Once
 	serverIP string
-
-	mqMu     sync.RWMutex
-	mqClient *corerocketmq.Client
 )
 
 // Init 显式指定服务标识，如 auth_api、chat_rpc。
@@ -69,13 +63,6 @@ func Init(serviceSource string) {
 // InitFromConf 从服务配置推导 module（yaml Name）。
 func InitFromConf(c service.ServiceConf) {
 	Init(strings.TrimSpace(c.Name))
-}
-
-// SetRocketMQ 注入 RocketMQ，启用扁平 JSON 上报（topic beaver_logs）。
-func SetRocketMQ(c *corerocketmq.Client) {
-	mqMu.Lock()
-	mqClient = c
-	mqMu.Unlock()
 }
 
 // Attach 把请求侧公参写入 ctx（入口处调一次即可）。
@@ -136,13 +123,7 @@ func currentSource() string {
 	return source
 }
 
-func currentMQ() *corerocketmq.Client {
-	mqMu.RLock()
-	defer mqMu.RUnlock()
-	return mqClient
-}
-
-// Logger module 为服务内子模块（仅本地 logx）；上报 module 用服务名。
+// Logger module 取服务名；module 为服务内子模块场景名。
 type Logger struct {
 	module string
 	ctx    context.Context
@@ -167,26 +148,6 @@ func (l *Logger) Warn(msg model.LogMsg) {
 
 func (l *Logger) Error(msg model.LogMsg) {
 	l.send("error", msg)
-}
-
-// logPayload 顶层扁平字段；message 仅业务 text/data。
-type logPayload struct {
-	Module           string `json:"module"`
-	Level            string `json:"level"`
-	TraceID          string `json:"traceId"`
-	UserID           string `json:"user_id"`
-	ProjectName      string `json:"project_name"`
-	DeviceID         string `json:"device_id"`
-	ClientRemoteAddr string `json:"client_remote_addr"`
-	HTTPRequestURL   string `json:"http_request_url"`
-	UserAgent        string `json:"user_agent"`
-	Message          string `json:"message"`
-	Timestamp        int64  `json:"timestamp"`
-}
-
-type messageBody struct {
-	Text string      `json:"text"`
-	Data interface{} `json:"data,omitempty"`
 }
 
 func (l *Logger) send(level string, msg model.LogMsg) {
@@ -229,39 +190,6 @@ func (l *Logger) send(level string, msg model.LogMsg) {
 		lg.Infow(msg.Text, fields...)
 	}
 
-	l.publishMQ(level, msg, userID, traceID, req)
-}
-
-func (l *Logger) publishMQ(level string, msg model.LogMsg, userID, traceID string, req map[string]any) {
-	mq := currentMQ()
-	if mq == nil {
-		return
-	}
-
-	messageBytes, err := json.Marshal(messageBody{Text: msg.Text, Data: msg.Data})
-	if err != nil {
-		messageBytes = []byte(msg.Text)
-	}
-
-	payload := logPayload{
-		Module:           currentSource(),
-		Level:            level,
-		TraceID:          traceID,
-		ProjectName:      "beaver-server",
-		UserID:           userID,
-		DeviceID:         mapString(req, "device_id"),
-		ClientRemoteAddr: mapString(req, "client_remote_addr"),
-		HTTPRequestURL:   mapString(req, "http_request_url"),
-		UserAgent:        mapString(req, "user_agent"),
-		Message:          string(messageBytes),
-		Timestamp:        time.Now().UnixMilli(),
-	}
-
-	go func() {
-		if err := mq.SendRawJSON(context.Background(), mqwsconst.TopicPlatformLogs, payload); err != nil {
-			logx.Errorf("beaverlog mq publish failed: %v", err)
-		}
-	}()
 }
 
 func userIDFromCtx(ctx context.Context) string {

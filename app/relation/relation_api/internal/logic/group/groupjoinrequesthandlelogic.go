@@ -165,7 +165,7 @@ func (l *GroupJoinRequestHandleLogic) GroupJoinRequestHandle(req *types.GroupJoi
 	if req.Status == 1 {
 		go func() {
 			// 创建新的context，避免使用请求的context
-			ctx := l.ctx
+			ctx := context.Background()
 
 			// 获取群成员列表，用于推送通知
 			response, err := l.svcCtx.GroupRpc.GetGroupMembers(ctx, &relationtypes.GetGroupMembersReq{
@@ -195,7 +195,7 @@ func (l *GroupJoinRequestHandleLogic) GroupJoinRequestHandle(req *types.GroupJoi
 						},
 						"conversationId": "",
 					}
-					pushcli.SendRealtimeApi(ctx, "sync", payload)
+					pushcli.SendRealtimeApi(context.Background(), "sync", payload)
 				}
 			}
 
@@ -216,7 +216,7 @@ func (l *GroupJoinRequestHandleLogic) GroupJoinRequestHandle(req *types.GroupJoi
 				},
 				"conversationId": "",
 			}
-			pushcli.SendRealtimeApi(ctx, "sync", payload)
+			pushcli.SendRealtimeApi(context.Background(), "sync", payload)
 		}()
 	}
 

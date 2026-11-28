@@ -1,0 +1,8 @@
+# RocketMQ ACL 1.0（plain）。与业务 yaml 的 RocketMQ.AccessKey / SecretKey 保持一致。
+globalWhiteRemoteAddresses: []
+
+accounts:
+  - accessKey: rootuser
+    secretKey: 123456a
+    whiteRemoteAddress: "*"
+    admin: true

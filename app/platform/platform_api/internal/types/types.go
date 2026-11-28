@@ -35,32 +35,6 @@ type AdminListWorkbenchAppsRes struct {
 	List  []WorkbenchAppItem `json:"list,optional"`  // 应用列表
 }
 
-type AdminLogItem struct {
-	ID         uint64 `json:"id,optional"`         // 日志记录ID
-	Level      string `json:"level,optional"`      // 日志级别
-	Data       string `json:"data,optional"`       // 日志数据JSON
-	BucketID   string `json:"bucketId,optional"`   // Bucket ID
-	BucketName string `json:"bucketName,optional"` // Bucket名称
-	Timestamp  int64  `json:"timestamp,optional"`  // 时间戳（毫秒）
-	CreatedAt  string `json:"createdAt,optional"`  // 创建时间
-}
-
-type AdminQueryLogsReq struct {
-	BucketID   string `json:"bucketId,optional"`   // Bucket ID
-	Level      string `json:"level,optional"`      // 日志级别
-	StartTime  int64  `json:"startTime,optional"`  // 开始时间（毫秒）
-	EndTime    int64  `json:"endTime,optional"`    // 结束时间（毫秒）
-	Keyword    string `json:"keyword,optional"`    // 关键词
-	UserFilter string `json:"userFilter,optional"` // 用户筛选
-	Page       int32  `json:"page,optional"`       // 页码
-	PageSize   int32  `json:"pageSize,optional"`   // 每页条数
-}
-
-type AdminQueryLogsRes struct {
-	Total int64          `json:"total,optional"` // 总数
-	Logs  []AdminLogItem `json:"logs,optional"`  // 日志列表
-}
-
 type AppItem struct {
 	ID          uint64 `json:"id,optional"`          // 记录ID
 	AppID       string `json:"appId,optional"`       // 应用ID

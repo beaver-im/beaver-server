@@ -27,31 +27,49 @@ import (
 	"beaver/app/account/account_api/internal/svc"
 	"beaver/app/account/account_api/internal/types"
 	accttypes "beaver/app/account/account_rpc/pb"
+	beaverlog "beaver/utils/beaverlog"
 )
 
-// UserUpdateLogic 批量更新用户资料
-//
-// 薄转发：HTTP 出入参与同域 RPC 的 proto 类型字段名一致，用 convert 做一次
-// JSON 往返即可，不在这里复制业务规则（规则在 account_rpc 里）。
+// UserUpdateLogic 批量更新用户资料（队间；open 同步 bot/digital 工号资料走此口）
 type UserUpdateLogic struct {
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
+	logger *beaverlog.Logger
 }
 
-// NewUserUpdateLogic 构造 logic。
 func NewUserUpdateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UserUpdateLogic {
 	return &UserUpdateLogic{
 		ctx:    ctx,
 		svcCtx: svcCtx,
+		logger: beaverlog.New("user_update", ctx),
 	}
 }
 
-// UserUpdate 批量更新用户资料
 func (l *UserUpdateLogic) UserUpdate(req *types.UserUpdateReq) (*types.UserUpdateRes, error) {
-	rpcReq := &accttypes.UpdateUsersReq{UserIds: req.UserIDs, PatchNickName: req.PatchNickName, PatchEmail: req.PatchEmail, PatchAvatar: req.PatchAvatar, PatchAbstract: req.PatchAbstract}
+	rpcReq := &accttypes.UpdateUsersReq{
+		UserIds:       req.UserIDs,
+		PatchNickName: req.PatchNickName,
+		PatchEmail:    req.PatchEmail,
+		PatchAvatar:   req.PatchAvatar,
+		PatchAbstract: req.PatchAbstract,
+	}
 	rpcRes, err := l.svcCtx.UserRpc.UpdateUsers(l.ctx, rpcReq)
 	if err != nil {
 		return nil, err
 	}
+
+	// 有展示字段变更时，按落库后的 version 推 USER_PROFILE
+	if rpcRes != nil && rpcRes.AffectedCount > 0 && hasProfilePatch(req) {
+		for _, uid := range req.UserIDs {
+			if ver := loadUserVersion(l.svcCtx, uid); ver > 0 {
+				NotifyUserProfileChange(l.svcCtx, l.logger, uid, ver)
+			}
+		}
+	}
+
 	return &types.UserUpdateRes{AffectedCount: rpcRes.AffectedCount}, nil
+}
+
+func hasProfilePatch(req *types.UserUpdateReq) bool {
+	return req.PatchNickName != nil || req.PatchAvatar != nil || req.PatchAbstract != nil || req.PatchEmail != nil
 }

@@ -32,7 +32,6 @@ import (
 	feedback_models "beaver/app/platform/platform_models/feedback"
 	org_models "beaver/app/platform/platform_models/org"
 	report_models "beaver/app/platform/platform_models/report"
-	track_models "beaver/app/platform/platform_models/track"
 	update_models "beaver/app/platform/platform_models/update"
 	workbench_models "beaver/app/platform/platform_models/workbench"
 	friend_models "beaver/app/relation/relation_models/friend"
@@ -155,8 +154,6 @@ func main() {
 			name: "beaver_platform",
 			run: func(db *gorm.DB) error {
 				return db.AutoMigrate(
-					&track_models.TrackBucket{},
-					&track_models.TrackLogger{},
 					&feedback_models.FeedbackModel{},
 					&report_models.ContentReportModel{},
 					&update_models.UpdateApp{},

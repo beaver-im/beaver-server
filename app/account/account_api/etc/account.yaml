@@ -13,8 +13,6 @@ Name: account
 Host: 0.0.0.0
 Port: 20100
 Log:
-  Mode: file
-  Path: logs/account_api
   Encoding: json
   TimeFormat: 2006-01-02T15:04:05
   KeepDays: 7
@@ -37,8 +35,8 @@ Email:
   QQ:
     Host: smtp.qq.com
     Port: 465
-    Username: 751135385@qq.com
-    Password: klokenvhymkobaif
+    Username: 123456@qq.com
+    Password: "123456a"
   # 未来可以添加其他邮箱服务商
   # Gmail:
   #   Host: smtp.gmail.com
@@ -64,8 +62,6 @@ NotificationRpc:
     Hosts:
     - 127.0.0.1:2379
     Key: notificationrpc.rpc
-RocketMQ:
-  Addr: 127.0.0.1:9876
 
 # 入站 S2S 机器票：本团队业务面共用一套凭据，票据受众统一 core:api。
 # auth 秘钥签发端点在本服务：POST /beaver/api/account/auth_public/v1/issue（client_credentials）。

@@ -36,7 +36,6 @@ import (
 	"beaver/core/coreredis"
 	"beaver/core/corerocketmq"
 	pushcli "beaver/remote/push"
-	"beaver/utils/beaverlog"
 
 	"github.com/go-redis/redis"
 	"github.com/zeromicro/go-zero/rest"
@@ -59,8 +58,11 @@ type ServiceContext struct {
 func NewServiceContext(c config.Config) *ServiceContext {
 	mysqlDb := coregorm.InitGorm(c.Mysql.DataSource)
 	client := coreredis.InitRedis(c.Redis.Addr, c.Redis.Password, c.Redis.Db)
-	mqClient := corerocketmq.InitRocketMQ(c.RocketMQ.Addr)
-	beaverlog.SetRocketMQ(mqClient)
+	mqClient := corerocketmq.InitRocketMQ(corerocketmq.Options{
+		Addr:      c.RocketMQ.Addr,
+		AccessKey: c.RocketMQ.AccessKey,
+		SecretKey: c.RocketMQ.SecretKey,
+	})
 
 	commonconfig.Load(c.RemoteProxy)
 	pushcli.Init(c.Name, c.RemoteProxy.Push.ClientSecret)

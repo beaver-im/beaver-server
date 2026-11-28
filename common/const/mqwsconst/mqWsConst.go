@@ -35,7 +35,6 @@ const (
 	TopicAgentTask    TopicType = "im-agent-task"
 	TopicAgentDone    TopicType = "im-agent-done"
 	TopicWorkflowTask TopicType = "im-workflow-task"
-	TopicPlatformLogs TopicType = "im-platform-logs"
 )
 
 type GroupType string
@@ -49,5 +48,4 @@ const (
 	GroupAgentTask    GroupType = "im-agent-task-cg"
 	GroupAgentDone    GroupType = "im-agent-done-cg"
 	GroupWorkflowTask GroupType = "im-workflow-task-cg"
-	GroupPlatformLogs GroupType = "im-platform-logs-cg"
 )
