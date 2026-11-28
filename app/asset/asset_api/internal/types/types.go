@@ -480,12 +480,13 @@ type GetFileDetailRes struct {
 	UpdatedAt    string `json:"updatedAt,optional"`    // 更新时间
 }
 
-type GetQiniuUploadTokenReq struct {
+type GetUploadTokenReq struct {
+	UserID string `json:"userId"` // 后台管理员身份
 }
 
-type GetQiniuUploadTokenRes struct {
-	UploadToken string `json:"uploadToken,optional"` // 七牛上传凭证
-	ExpiresIn   int64  `json:"expiresIn,optional"`   // 有效期（秒）
+type GetUploadTokenRes struct {
+	UploadToken string `json:"uploadToken"` // 网关用户面上传票
+	ExpiresIn   int64  `json:"expiresIn"`   // 有效期（秒）
 }
 
 type GetUserFavoritePackagesReq struct {

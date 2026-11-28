@@ -94,7 +94,7 @@ func (l *DeleteFriendLogic) DeleteFriend(req *types.DeleteFriendReq) (resp *type
 			"body":           map[string]interface{}{"tableUpdates": tableUpdates},
 			"conversationId": "",
 		}
-		pushcli.SendRealtimeApi(l.ctx, "sync", payload1)
+		pushcli.SendRealtimeApi(context.Background(), "sync", payload1)
 
 		payload2 := map[string]interface{}{
 			"command":        wsCommandConst.FRIEND_OPERATION,
@@ -104,7 +104,7 @@ func (l *DeleteFriendLogic) DeleteFriend(req *types.DeleteFriendReq) (resp *type
 			"body":           map[string]interface{}{"tableUpdates": tableUpdates},
 			"conversationId": "",
 		}
-		pushcli.SendRealtimeApi(l.ctx, "sync", payload2)
+		pushcli.SendRealtimeApi(context.Background(), "sync", payload2)
 	}()
 
 	go func() {
@@ -113,7 +113,7 @@ func (l *DeleteFriendLogic) DeleteFriend(req *types.DeleteFriendReq) (resp *type
 				l.logger.Error(model.LogMsg{Text: "数字伙伴取关事件投递panic", Data: map[string]interface{}{"panic": r}})
 			}
 		}()
-		ctx := l.ctx
+		ctx := context.Background()
 		res, err := open.GetDigitalByUserIDApi(ctx, nil, &opentype.GetDigitalByUserIDReq{DigitalUserId: req.FriendID})
 		if err == nil && res != nil && res.Found {
 			if pushErr := openevent.Push(ctx, req.FriendID,

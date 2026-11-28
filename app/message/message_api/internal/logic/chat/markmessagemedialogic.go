@@ -138,7 +138,7 @@ func (l *MarkMessageMediaLogic) notifyMessageMedia(userID string, messageIDs []s
 			"tableUpdates": []map[string]interface{}{update},
 		},
 	}
-	if err := pushcli.SendRealtimeApi(l.ctx, "sync", payload); err != nil {
+	if err := pushcli.SendRealtimeApi(context.Background(), "sync", payload); err != nil {
 		l.logger.Error(model.LogMsg{
 			Text: "推送消息媒体状态失败",
 			Data: map[string]any{"userId": userID, "err": err.Error()},

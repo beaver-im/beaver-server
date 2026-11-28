@@ -203,12 +203,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Handler: file.FileListHandler(serverCtx),
 				},
 				{
-					// 队间：签发七牛上传凭证
-					Method:  http.MethodPost,
-					Path:    "/beaver/api/asset/file/v1/qiniu_token",
-					Handler: file.QiniuUploadTokenHandler(serverCtx),
-				},
-				{
 					// 队间：登记文件记录
 					Method:  http.MethodPost,
 					Path:    "/beaver/api/asset/file/v1/save",
@@ -237,6 +231,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Method:  http.MethodPost,
 					Path:    "/beaver/api/asset/file/v1/upload_qiniu",
 					Handler: file.FileUploadQiniuHandler(serverCtx),
+				},
+				{
+					// 队间：为后台签发文件上传用户票
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/asset/file/v1/upload_token",
+					Handler: file.GetUploadTokenHandler(serverCtx),
 				},
 			}...,
 		),

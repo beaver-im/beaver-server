@@ -37,6 +37,37 @@ type (
 	}
 )
 
+// 最近通知列表：服务端为权威数据源，客户端点开通知入口时直接拉取
+type (
+	getInboxListReq {
+		UserID string `header:"Beaver-User-Id"` // 当前用户ID（网关注入的可信身份头）
+		Categories []string `json:"categories,optional"` // 分类过滤，不传则 social/group/moment
+		Limit int32 `json:"limit,optional"` // 单页条数，默认20，上限100
+		Offset int32 `json:"offset,optional"` // 跳过条数
+	}
+	NotificationListItem {
+		EventID string `json:"eventId"`
+		EventType string `json:"eventType"`
+		Category string `json:"category"`
+		Version int64 `json:"version"`
+		IsRead bool `json:"isRead"`
+		ReadAt int64 `json:"readAt"` // ms，未读为0
+		Status int32 `json:"status"`
+		IsDeleted bool `json:"isDeleted"`
+		Silent bool `json:"silent"`
+		Payload string `json:"payload"` // 事件扩展数据JSON字符串
+		FromUserID string `json:"fromUserId"`
+		TargetID string `json:"targetId"`
+		TargetType string `json:"targetType"`
+		CreatedAt int64 `json:"createdAt"` // ms
+		UpdatedAt int64 `json:"updatedAt"` // ms
+	}
+	getInboxListRes {
+		Items []NotificationListItem `json:"items"`
+		HasMore bool `json:"hasMore"`
+	}
+)
+
 @server (
 	middleware: JwtS2s
 	group: inbox
@@ -45,6 +76,10 @@ service notification {
 	@doc "按ID拉取收件箱明细（数据库同步）"
 	@handler getInboxByIds
 	post /beaver/api/notification/inbox/v1/get_inbox_by_ids (getInboxByIdsReq) returns (getInboxByIdsRes)
+
+	@doc "按分类分页拉取最近通知（服务端权威，点开通知时调用）"
+	@handler getInboxList
+	post /beaver/api/notification/inbox/v1/get_inbox_list (getInboxListReq) returns (getInboxListRes)
 
 	@doc "按事件ID删除单个通知"
 	@handler deleteNotification

@@ -18,6 +18,9 @@ Redis:
   Addr: 127.0.0.1:6379
   Password: '123456'
   DB: 0
+Auth:
+  AccessSecret: beaver-jwt-user-5a99dd68227b4aa4bca260349995d485
+  AccessExpire: 600
 Etcd: 127.0.0.1:2379
 
 FileMaxSize:

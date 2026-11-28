@@ -38,6 +38,12 @@ type Config struct {
 		Password string
 		Db       int
 	}
+	// Auth 用户 JWT 签名密钥，本服务独立签发并校验用户票：
+	// 本服务独立验用户票，不信任任何外部直接塞进来的 Beaver-User-Id。
+	Auth struct {
+		AccessSecret string
+		AccessExpire int // 秒
+	}
 	Domain      string // 项目对外访问域名（用于生成本地文件完整URL）
 	FileMaxSize map[string]float64
 	WhiteList   []string
@@ -67,8 +73,6 @@ type Config struct {
 		UseSSL      bool   // 是否启用SSL
 		ProjectName string // 项目名称，用于文件路径前缀（为空则使用根目录）
 	}
-	// Auth 用户 JWT 签名密钥，本服务独立签发并校验用户票：
-	// 本服务独立验用户票，不信任任何外部直接塞进来的 Beaver-User-Id。
 	// RemoteProxy 唯一出站注册表：push_api 地址与 S2S 机器票凭据在此登记。
 	RemoteProxy commonconfig.RemoteProxy `json:",optional"`
 	// Assertion 北向：用 JWKS 验网关 ES256 断言（iss + kid），不是共享 HMAC。

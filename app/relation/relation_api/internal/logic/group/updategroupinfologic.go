@@ -100,7 +100,7 @@ func (l *UpdateGroupInfoLogic) UpdateGroupInfo(req *types.UpdateGroupInfoReq) (r
 	if newVersion > 0 {
 		go func() {
 			// 创建新的context，避免使用请求的context
-			ctx := l.ctx
+			ctx := context.Background()
 
 			// 获取群成员列表
 			response, err := l.svcCtx.GroupRpc.GetGroupMembers(ctx, &relationtypes.GetGroupMembersReq{
@@ -130,7 +130,7 @@ func (l *UpdateGroupInfoLogic) UpdateGroupInfo(req *types.UpdateGroupInfoReq) (r
 					},
 					"conversationId": req.GroupID,
 				}
-				pushcli.SendRealtimeApi(ctx, "sync", payload)
+				pushcli.SendRealtimeApi(context.Background(), "sync", payload)
 			}
 		}()
 	}

@@ -172,7 +172,7 @@ func (l *PushEventLogic) PushEvent(in *pb.PushEventReq) (*pb.PushEventRes, error
 				},
 				"conversationId": "",
 			}
-			pushcli.SendRealtimeApi(l.ctx, "sync", payload)
+			pushcli.SendRealtimeApi(context.Background(), "sync", payload)
 		}
 	}(l.svcCtx.Config.Etcd.Hosts[0], in.ToUserIds, eventID, eventVersion)
 

@@ -227,7 +227,7 @@ func (l *SendNotificationMessageLogic) notifyNotificationUpdateGrouped(conversat
 			},
 			"conversationId": conversationId,
 		}
-		if err := pushcli.SendRealtimeApi(l.ctx, "chat", payload); err != nil {
+		if err := pushcli.SendRealtimeApi(context.Background(), "chat", payload); err != nil {
 			l.logger.Error(model.LogMsg{Text: "MQ推送失败", Data: map[string]any{"recipient": recipientId, "conversation": conversationId, "err": err.Error()}})
 			continue
 		}

@@ -66,7 +66,7 @@ type PushToUserReq struct {
 	Type           string      `json:"type"`
 	ConversationID string      `json:"conversationId,optional"`
 	SenderID       string      `json:"senderId,optional"`
-	Body           interface{} `json:"body"`
+	Body           map[string]interface{} `json:"body"`
 }
 
 type PushToUserRes struct {

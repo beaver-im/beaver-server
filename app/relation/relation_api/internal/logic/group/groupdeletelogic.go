@@ -147,7 +147,7 @@ func (l *GroupDeleteLogic) GroupDelete(req *types.GroupDeleteReq) (resp *types.G
 				},
 				"conversationId": "",
 			}
-			pushcli.SendRealtimeApi(l.ctx, "sync", payload)
+			pushcli.SendRealtimeApi(context.Background(), "sync", payload)
 		}
 	}()
 

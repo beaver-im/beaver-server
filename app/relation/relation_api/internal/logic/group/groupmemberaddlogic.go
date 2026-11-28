@@ -158,7 +158,7 @@ func (l *GroupMemberAddLogic) GroupMemberAdd(req *types.GroupMemberAddReq) (resp
 	// 异步通知群成员
 	go func() {
 		// 创建新的context，避免使用请求的context
-		ctx := l.ctx
+		ctx := context.Background()
 		conversationID := "group_" + req.GroupID
 
 		// 群聊内系统通知：每位新成员各一条「xxx 加入了群聊」
@@ -231,7 +231,7 @@ func (l *GroupMemberAddLogic) GroupMemberAdd(req *types.GroupMemberAddReq) (resp
 					},
 					"conversationId": "",
 				}
-				pushcli.SendRealtimeApi(ctx, "sync", payload)
+				pushcli.SendRealtimeApi(context.Background(), "sync", payload)
 			}
 		}
 
@@ -261,7 +261,7 @@ func (l *GroupMemberAddLogic) GroupMemberAdd(req *types.GroupMemberAddReq) (resp
 				},
 				"conversationId": "",
 			}
-			pushcli.SendRealtimeApi(ctx, "sync", payload)
+			pushcli.SendRealtimeApi(context.Background(), "sync", payload)
 		}
 
 		// 3. 触发开放平台 Webhook 事件(群成员变更)

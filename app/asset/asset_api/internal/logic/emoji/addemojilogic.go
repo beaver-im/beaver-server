@@ -152,7 +152,7 @@ func (l *AddEmojiLogic) AddEmoji(req *types.AddEmojiReq) (resp *types.AddEmojiRe
 				"body":           map[string]interface{}{"tableUpdates": tableUpdates},
 				"conversationId": "",
 			}
-			pushcli.SendRealtimeApi(l.ctx, "sync", payload)
+			pushcli.SendRealtimeApi(context.Background(), "sync", payload)
 		}(l.svcCtx.Config.Etcd, req.UserID, favoriteEmoji.EmojiCollectID, collectVersion, emoji.Version)
 	}
 

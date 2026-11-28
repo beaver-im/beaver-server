@@ -65,6 +65,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 					Path:    "/beaver/api/notification/inbox/v1/get_inbox_by_ids",
 					Handler: inbox.GetInboxByIdsHandler(serverCtx),
 				},
+				{
+					// 按分类分页拉取最近通知（服务端权威，点开通知时调用）
+					Method:  http.MethodPost,
+					Path:    "/beaver/api/notification/inbox/v1/get_inbox_list",
+					Handler: inbox.GetInboxListHandler(serverCtx),
+				},
 			}...,
 		),
 	)

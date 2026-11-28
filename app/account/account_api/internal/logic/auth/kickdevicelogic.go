@@ -78,7 +78,7 @@ func (l *KickDeviceLogic) KickDevice(req *types.KickDeviceReq) (*types.KickDevic
 			},
 			"conversationId": "",
 		}
-		pushcli.SendRealtimeApi(l.ctx, "sync", payload)
+		pushcli.SendRealtimeApi(context.Background(), "sync", payload)
 	}()
 
 	l.logger.Info(model.LogMsg{

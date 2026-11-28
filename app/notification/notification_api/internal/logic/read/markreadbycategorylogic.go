@@ -132,7 +132,7 @@ func (l *MarkReadByCategoryLogic) MarkReadByCategory(req *types.MarkReadByCatego
 			},
 			"conversationId": "",
 		}
-		pushcli.SendRealtimeApi(l.ctx, "sync", payload)
+		pushcli.SendRealtimeApi(context.Background(), "sync", payload)
 	}(l.svcCtx.Config.Etcd, userId, category, cursorVersion)
 
 	l.logger.Info(model.LogMsg{

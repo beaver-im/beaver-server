@@ -245,7 +245,7 @@ func (l *InitializeConversationLogic) notifyConversationInitialized(
 			},
 			"conversationId": conversationId,
 		}
-		if err := pushcli.SendRealtimeApi(l.ctx, "chat", payload); err != nil {
+		if err := pushcli.SendRealtimeApi(context.Background(), "chat", payload); err != nil {
 			l.logger.Error(model.LogMsg{Text: "MQ推送会话初始化失败", Data: map[string]any{"recipient": user.UserID, "conversation": conversationId, "err": err.Error()}})
 			continue
 		}

@@ -35,29 +35,25 @@ import (
 )
 
 type (
-	BatchDeleteFilesReq    = pb.BatchDeleteFilesReq
-	BatchDeleteFilesRes    = pb.BatchDeleteFilesRes
-	DeleteFileReq          = pb.DeleteFileReq
-	DeleteFileRes          = pb.DeleteFileRes
-	FileItem               = pb.FileItem
-	GetFileByIdReq         = pb.GetFileByIdReq
-	GetFileByIdRes         = pb.GetFileByIdRes
-	GetFileByMd5Req        = pb.GetFileByMd5Req
-	GetFileByMd5Res        = pb.GetFileByMd5Res
-	GetFileDetailReq       = pb.GetFileDetailReq
-	GetFileDetailRes       = pb.GetFileDetailRes
-	GetQiniuUploadTokenReq = pb.GetQiniuUploadTokenReq
-	GetQiniuUploadTokenRes = pb.GetQiniuUploadTokenRes
-	ListFilesReq           = pb.ListFilesReq
-	ListFilesRes           = pb.ListFilesRes
-	SaveFileReq            = pb.SaveFileReq
-	SaveFileRes            = pb.SaveFileRes
+	BatchDeleteFilesReq = pb.BatchDeleteFilesReq
+	BatchDeleteFilesRes = pb.BatchDeleteFilesRes
+	DeleteFileReq       = pb.DeleteFileReq
+	DeleteFileRes       = pb.DeleteFileRes
+	FileItem            = pb.FileItem
+	GetFileByIdReq      = pb.GetFileByIdReq
+	GetFileByIdRes      = pb.GetFileByIdRes
+	GetFileByMd5Req     = pb.GetFileByMd5Req
+	GetFileByMd5Res     = pb.GetFileByMd5Res
+	GetFileDetailReq    = pb.GetFileDetailReq
+	GetFileDetailRes    = pb.GetFileDetailRes
+	ListFilesReq        = pb.ListFilesReq
+	ListFilesRes        = pb.ListFilesRes
+	SaveFileReq         = pb.SaveFileReq
+	SaveFileRes         = pb.SaveFileRes
 
 	File interface {
 		// 通过fileName查询文件详情
 		GetFileDetail(ctx context.Context, in *GetFileDetailReq, opts ...grpc.CallOption) (*GetFileDetailRes, error)
-		// 获取七牛云上传token
-		GetQiniuUploadToken(ctx context.Context, in *GetQiniuUploadTokenReq, opts ...grpc.CallOption) (*GetQiniuUploadTokenRes, error)
 		ListFiles(ctx context.Context, in *ListFilesReq, opts ...grpc.CallOption) (*ListFilesRes, error)
 		GetFileById(ctx context.Context, in *GetFileByIdReq, opts ...grpc.CallOption) (*GetFileByIdRes, error)
 		GetFileByMd5(ctx context.Context, in *GetFileByMd5Req, opts ...grpc.CallOption) (*GetFileByMd5Res, error)
@@ -81,12 +77,6 @@ func NewFile(cli zrpc.Client) File {
 func (m *defaultFile) GetFileDetail(ctx context.Context, in *GetFileDetailReq, opts ...grpc.CallOption) (*GetFileDetailRes, error) {
 	client := pb.NewFileClient(m.cli.Conn())
 	return client.GetFileDetail(ctx, in, opts...)
-}
-
-// 获取七牛云上传token
-func (m *defaultFile) GetQiniuUploadToken(ctx context.Context, in *GetQiniuUploadTokenReq, opts ...grpc.CallOption) (*GetQiniuUploadTokenRes, error) {
-	client := pb.NewFileClient(m.cli.Conn())
-	return client.GetQiniuUploadToken(ctx, in, opts...)
 }
 
 func (m *defaultFile) ListFiles(ctx context.Context, in *ListFilesReq, opts ...grpc.CallOption) (*ListFilesRes, error) {

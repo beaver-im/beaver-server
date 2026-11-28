@@ -114,7 +114,7 @@ func (l *UpdateInfoLogic) UpdateInfo(req *types.UpdateInfoReq) (resp *types.Upda
 	if version > 0 {
 		go func() {
 			// 创建新的context，避免使用请求的context
-			ctx := l.ctx
+			ctx := context.Background()
 
 			// 获取所有需要推送的用户ID
 			allRecipients, err := l.getAllRelatedUserIds(ctx, req.UserID)
@@ -139,7 +139,7 @@ func (l *UpdateInfoLogic) UpdateInfo(req *types.UpdateInfoReq) (resp *types.Upda
 					},
 					"conversationId": "",
 				}
-				pushcli.SendRealtimeApi(l.ctx, "sync", payload)
+				pushcli.SendRealtimeApi(context.Background(), "sync", payload)
 			}
 		}()
 	}

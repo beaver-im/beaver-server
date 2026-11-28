@@ -40,14 +40,13 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	File_GetFileDetail_FullMethodName       = "/asset_rpc.file/GetFileDetail"
-	File_GetQiniuUploadToken_FullMethodName = "/asset_rpc.file/GetQiniuUploadToken"
-	File_ListFiles_FullMethodName           = "/asset_rpc.file/ListFiles"
-	File_GetFileById_FullMethodName         = "/asset_rpc.file/GetFileById"
-	File_GetFileByMd5_FullMethodName        = "/asset_rpc.file/GetFileByMd5"
-	File_DeleteFile_FullMethodName          = "/asset_rpc.file/DeleteFile"
-	File_BatchDeleteFiles_FullMethodName    = "/asset_rpc.file/BatchDeleteFiles"
-	File_SaveFile_FullMethodName            = "/asset_rpc.file/SaveFile"
+	File_GetFileDetail_FullMethodName    = "/asset_rpc.file/GetFileDetail"
+	File_ListFiles_FullMethodName        = "/asset_rpc.file/ListFiles"
+	File_GetFileById_FullMethodName      = "/asset_rpc.file/GetFileById"
+	File_GetFileByMd5_FullMethodName     = "/asset_rpc.file/GetFileByMd5"
+	File_DeleteFile_FullMethodName       = "/asset_rpc.file/DeleteFile"
+	File_BatchDeleteFiles_FullMethodName = "/asset_rpc.file/BatchDeleteFiles"
+	File_SaveFile_FullMethodName         = "/asset_rpc.file/SaveFile"
 )
 
 // FileClient is the client API for File service.
@@ -56,8 +55,6 @@ const (
 type FileClient interface {
 	// 通过fileName查询文件详情
 	GetFileDetail(ctx context.Context, in *GetFileDetailReq, opts ...grpc.CallOption) (*GetFileDetailRes, error)
-	// 获取七牛云上传token
-	GetQiniuUploadToken(ctx context.Context, in *GetQiniuUploadTokenReq, opts ...grpc.CallOption) (*GetQiniuUploadTokenRes, error)
 	ListFiles(ctx context.Context, in *ListFilesReq, opts ...grpc.CallOption) (*ListFilesRes, error)
 	GetFileById(ctx context.Context, in *GetFileByIdReq, opts ...grpc.CallOption) (*GetFileByIdRes, error)
 	GetFileByMd5(ctx context.Context, in *GetFileByMd5Req, opts ...grpc.CallOption) (*GetFileByMd5Res, error)
@@ -78,16 +75,6 @@ func (c *fileClient) GetFileDetail(ctx context.Context, in *GetFileDetailReq, op
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetFileDetailRes)
 	err := c.cc.Invoke(ctx, File_GetFileDetail_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *fileClient) GetQiniuUploadToken(ctx context.Context, in *GetQiniuUploadTokenReq, opts ...grpc.CallOption) (*GetQiniuUploadTokenRes, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetQiniuUploadTokenRes)
-	err := c.cc.Invoke(ctx, File_GetQiniuUploadToken_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -160,8 +147,6 @@ func (c *fileClient) SaveFile(ctx context.Context, in *SaveFileReq, opts ...grpc
 type FileServer interface {
 	// 通过fileName查询文件详情
 	GetFileDetail(context.Context, *GetFileDetailReq) (*GetFileDetailRes, error)
-	// 获取七牛云上传token
-	GetQiniuUploadToken(context.Context, *GetQiniuUploadTokenReq) (*GetQiniuUploadTokenRes, error)
 	ListFiles(context.Context, *ListFilesReq) (*ListFilesRes, error)
 	GetFileById(context.Context, *GetFileByIdReq) (*GetFileByIdRes, error)
 	GetFileByMd5(context.Context, *GetFileByMd5Req) (*GetFileByMd5Res, error)
@@ -180,9 +165,6 @@ type UnimplementedFileServer struct{}
 
 func (UnimplementedFileServer) GetFileDetail(context.Context, *GetFileDetailReq) (*GetFileDetailRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFileDetail not implemented")
-}
-func (UnimplementedFileServer) GetQiniuUploadToken(context.Context, *GetQiniuUploadTokenReq) (*GetQiniuUploadTokenRes, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetQiniuUploadToken not implemented")
 }
 func (UnimplementedFileServer) ListFiles(context.Context, *ListFilesReq) (*ListFilesRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListFiles not implemented")
@@ -237,24 +219,6 @@ func _File_GetFileDetail_Handler(srv interface{}, ctx context.Context, dec func(
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(FileServer).GetFileDetail(ctx, req.(*GetFileDetailReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _File_GetQiniuUploadToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetQiniuUploadTokenReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(FileServer).GetQiniuUploadToken(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: File_GetQiniuUploadToken_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FileServer).GetQiniuUploadToken(ctx, req.(*GetQiniuUploadTokenReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -377,10 +341,6 @@ var File_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetFileDetail",
 			Handler:    _File_GetFileDetail_Handler,
-		},
-		{
-			MethodName: "GetQiniuUploadToken",
-			Handler:    _File_GetQiniuUploadToken_Handler,
 		},
 		{
 			MethodName: "ListFiles",

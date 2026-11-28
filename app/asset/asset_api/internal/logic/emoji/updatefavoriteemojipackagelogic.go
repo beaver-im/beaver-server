@@ -199,7 +199,7 @@ func (l *UpdateFavoriteEmojiPackageLogic) UpdateFavoriteEmojiPackage(req *types.
 				},
 				"conversationId": "",
 			}
-			pushcli.SendRealtimeApi(l.ctx, "sync", payload)
+			pushcli.SendRealtimeApi(context.Background(), "sync", payload)
 		}(l.svcCtx.Config.Etcd, req.UserID, collectRecord.PackageCollectID, collectVersion, req.PackageID, emojiPackage.Version)
 
 		l.logger.Info(model.LogMsg{
@@ -296,7 +296,7 @@ func (l *UpdateFavoriteEmojiPackageLogic) UpdateFavoriteEmojiPackage(req *types.
 				},
 				"conversationId": "",
 			}
-			pushcli.SendRealtimeApi(l.ctx, "sync", payload)
+			pushcli.SendRealtimeApi(context.Background(), "sync", payload)
 		}(l.svcCtx.Config.Etcd, req.UserID, collectRecord.PackageCollectID, collectRecord.Version, req.PackageID, emojiPackage.Version)
 
 		l.logger.Info(model.LogMsg{

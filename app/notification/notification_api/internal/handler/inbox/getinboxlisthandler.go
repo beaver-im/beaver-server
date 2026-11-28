@@ -22,25 +22,26 @@
 package handler
 
 import (
-	"beaver/app/asset/asset_api/internal/logic/file"
-	"beaver/app/asset/asset_api/internal/svc"
-	"beaver/app/asset/asset_api/internal/types"
-	"beaver/common/response"
 	"net/http"
+
+	"beaver/app/notification/notification_api/internal/logic/inbox"
+	"beaver/app/notification/notification_api/internal/svc"
+	"beaver/app/notification/notification_api/internal/types"
+	"beaver/common/response"
 
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
-func QiniuUploadTokenHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+func GetInboxListHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.GetQiniuUploadTokenReq
+		var req types.GetInboxListReq
 		if err := httpx.Parse(r, &req); err != nil {
 			response.Response(r, w, nil, err)
 			return
 		}
 
-		l := logic.NewQiniuUploadTokenLogic(r.Context(), svcCtx)
-		resp, err := l.QiniuUploadToken(&req)
+		l := logic.NewGetInboxListLogic(r.Context(), svcCtx)
+		resp, err := l.GetInboxList(&req)
 		response.Response(r, w, resp, err)
 	}
 }

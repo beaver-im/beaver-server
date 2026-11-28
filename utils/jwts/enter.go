@@ -49,10 +49,15 @@ type CustomClaims struct {
 // GenToken 签发外部票。audience 取 AudienceUser / AudienceDeveloper / AudienceAdmin，
 // 由签发票面所属平面决定，签错平面等于发错权限。
 func GenToken(payload JwtPayLoad, accessSecret string, expires int, audience string) (string, error) {
+	return GenTokenTTL(payload, accessSecret, time.Hour*time.Duration(expires), audience)
+}
+
+// GenTokenTTL 按指定有效期签发外部票。
+func GenTokenTTL(payload JwtPayLoad, accessSecret string, ttl time.Duration, audience string) (string, error) {
 	claims := CustomClaims{
 		JwtPayLoad: payload,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * time.Duration(expires))),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
 			Audience:  jwt.ClaimStrings{audience},
 		},
 	}

@@ -188,96 +188,6 @@ func (x *GetFileDetailRes) GetUpdatedAt() string {
 	return ""
 }
 
-// 获取七牛云上传token请求
-type GetQiniuUploadTokenReq struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetQiniuUploadTokenReq) Reset() {
-	*x = GetQiniuUploadTokenReq{}
-	mi := &file_asset_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetQiniuUploadTokenReq) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetQiniuUploadTokenReq) ProtoMessage() {}
-
-func (x *GetQiniuUploadTokenReq) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[2]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetQiniuUploadTokenReq.ProtoReflect.Descriptor instead.
-func (*GetQiniuUploadTokenReq) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{2}
-}
-
-// 获取七牛云上传token响应
-type GetQiniuUploadTokenRes struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UploadToken   string                 `protobuf:"bytes,1,opt,name=uploadToken,proto3" json:"uploadToken,omitempty"` // 上传token
-	ExpiresIn     int64                  `protobuf:"varint,2,opt,name=expiresIn,proto3" json:"expiresIn,omitempty"`    // token过期时间 (秒)
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetQiniuUploadTokenRes) Reset() {
-	*x = GetQiniuUploadTokenRes{}
-	mi := &file_asset_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetQiniuUploadTokenRes) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetQiniuUploadTokenRes) ProtoMessage() {}
-
-func (x *GetQiniuUploadTokenRes) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetQiniuUploadTokenRes.ProtoReflect.Descriptor instead.
-func (*GetQiniuUploadTokenRes) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *GetQiniuUploadTokenRes) GetUploadToken() string {
-	if x != nil {
-		return x.UploadToken
-	}
-	return ""
-}
-
-func (x *GetQiniuUploadTokenRes) GetExpiresIn() int64 {
-	if x != nil {
-		return x.ExpiresIn
-	}
-	return 0
-}
-
 type FileItem struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            uint64                 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`                                        // uint64 记录 ID
@@ -296,7 +206,7 @@ type FileItem struct {
 
 func (x *FileItem) Reset() {
 	*x = FileItem{}
-	mi := &file_asset_proto_msgTypes[4]
+	mi := &file_asset_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -308,7 +218,7 @@ func (x *FileItem) String() string {
 func (*FileItem) ProtoMessage() {}
 
 func (x *FileItem) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[4]
+	mi := &file_asset_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -321,7 +231,7 @@ func (x *FileItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FileItem.ProtoReflect.Descriptor instead.
 func (*FileItem) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{4}
+	return file_asset_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *FileItem) GetId() uint64 {
@@ -406,7 +316,7 @@ type ListFilesReq struct {
 
 func (x *ListFilesReq) Reset() {
 	*x = ListFilesReq{}
-	mi := &file_asset_proto_msgTypes[5]
+	mi := &file_asset_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -418,7 +328,7 @@ func (x *ListFilesReq) String() string {
 func (*ListFilesReq) ProtoMessage() {}
 
 func (x *ListFilesReq) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[5]
+	mi := &file_asset_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -431,7 +341,7 @@ func (x *ListFilesReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListFilesReq.ProtoReflect.Descriptor instead.
 func (*ListFilesReq) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{5}
+	return file_asset_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *ListFilesReq) GetPage() int32 {
@@ -472,7 +382,7 @@ type ListFilesRes struct {
 
 func (x *ListFilesRes) Reset() {
 	*x = ListFilesRes{}
-	mi := &file_asset_proto_msgTypes[6]
+	mi := &file_asset_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -484,7 +394,7 @@ func (x *ListFilesRes) String() string {
 func (*ListFilesRes) ProtoMessage() {}
 
 func (x *ListFilesRes) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[6]
+	mi := &file_asset_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -497,7 +407,7 @@ func (x *ListFilesRes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListFilesRes.ProtoReflect.Descriptor instead.
 func (*ListFilesRes) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{6}
+	return file_asset_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *ListFilesRes) GetTotal() int64 {
@@ -523,7 +433,7 @@ type GetFileByIdReq struct {
 
 func (x *GetFileByIdReq) Reset() {
 	*x = GetFileByIdReq{}
-	mi := &file_asset_proto_msgTypes[7]
+	mi := &file_asset_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -535,7 +445,7 @@ func (x *GetFileByIdReq) String() string {
 func (*GetFileByIdReq) ProtoMessage() {}
 
 func (x *GetFileByIdReq) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[7]
+	mi := &file_asset_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -548,7 +458,7 @@ func (x *GetFileByIdReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetFileByIdReq.ProtoReflect.Descriptor instead.
 func (*GetFileByIdReq) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{7}
+	return file_asset_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *GetFileByIdReq) GetId() uint64 {
@@ -567,7 +477,7 @@ type GetFileByIdRes struct {
 
 func (x *GetFileByIdRes) Reset() {
 	*x = GetFileByIdRes{}
-	mi := &file_asset_proto_msgTypes[8]
+	mi := &file_asset_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -579,7 +489,7 @@ func (x *GetFileByIdRes) String() string {
 func (*GetFileByIdRes) ProtoMessage() {}
 
 func (x *GetFileByIdRes) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[8]
+	mi := &file_asset_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -592,7 +502,7 @@ func (x *GetFileByIdRes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetFileByIdRes.ProtoReflect.Descriptor instead.
 func (*GetFileByIdRes) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{8}
+	return file_asset_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetFileByIdRes) GetFile() *FileItem {
@@ -611,7 +521,7 @@ type GetFileByMd5Req struct {
 
 func (x *GetFileByMd5Req) Reset() {
 	*x = GetFileByMd5Req{}
-	mi := &file_asset_proto_msgTypes[9]
+	mi := &file_asset_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -623,7 +533,7 @@ func (x *GetFileByMd5Req) String() string {
 func (*GetFileByMd5Req) ProtoMessage() {}
 
 func (x *GetFileByMd5Req) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[9]
+	mi := &file_asset_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -636,7 +546,7 @@ func (x *GetFileByMd5Req) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetFileByMd5Req.ProtoReflect.Descriptor instead.
 func (*GetFileByMd5Req) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{9}
+	return file_asset_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetFileByMd5Req) GetMd5() string {
@@ -655,7 +565,7 @@ type GetFileByMd5Res struct {
 
 func (x *GetFileByMd5Res) Reset() {
 	*x = GetFileByMd5Res{}
-	mi := &file_asset_proto_msgTypes[10]
+	mi := &file_asset_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -667,7 +577,7 @@ func (x *GetFileByMd5Res) String() string {
 func (*GetFileByMd5Res) ProtoMessage() {}
 
 func (x *GetFileByMd5Res) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[10]
+	mi := &file_asset_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -680,7 +590,7 @@ func (x *GetFileByMd5Res) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetFileByMd5Res.ProtoReflect.Descriptor instead.
 func (*GetFileByMd5Res) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{10}
+	return file_asset_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetFileByMd5Res) GetFile() *FileItem {
@@ -699,7 +609,7 @@ type DeleteFileReq struct {
 
 func (x *DeleteFileReq) Reset() {
 	*x = DeleteFileReq{}
-	mi := &file_asset_proto_msgTypes[11]
+	mi := &file_asset_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -711,7 +621,7 @@ func (x *DeleteFileReq) String() string {
 func (*DeleteFileReq) ProtoMessage() {}
 
 func (x *DeleteFileReq) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[11]
+	mi := &file_asset_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -724,7 +634,7 @@ func (x *DeleteFileReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteFileReq.ProtoReflect.Descriptor instead.
 func (*DeleteFileReq) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{11}
+	return file_asset_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *DeleteFileReq) GetId() uint64 {
@@ -743,7 +653,7 @@ type DeleteFileRes struct {
 
 func (x *DeleteFileRes) Reset() {
 	*x = DeleteFileRes{}
-	mi := &file_asset_proto_msgTypes[12]
+	mi := &file_asset_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -755,7 +665,7 @@ func (x *DeleteFileRes) String() string {
 func (*DeleteFileRes) ProtoMessage() {}
 
 func (x *DeleteFileRes) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[12]
+	mi := &file_asset_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -768,7 +678,7 @@ func (x *DeleteFileRes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteFileRes.ProtoReflect.Descriptor instead.
 func (*DeleteFileRes) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{12}
+	return file_asset_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *DeleteFileRes) GetPath() string {
@@ -787,7 +697,7 @@ type BatchDeleteFilesReq struct {
 
 func (x *BatchDeleteFilesReq) Reset() {
 	*x = BatchDeleteFilesReq{}
-	mi := &file_asset_proto_msgTypes[13]
+	mi := &file_asset_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -799,7 +709,7 @@ func (x *BatchDeleteFilesReq) String() string {
 func (*BatchDeleteFilesReq) ProtoMessage() {}
 
 func (x *BatchDeleteFilesReq) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[13]
+	mi := &file_asset_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -812,7 +722,7 @@ func (x *BatchDeleteFilesReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BatchDeleteFilesReq.ProtoReflect.Descriptor instead.
 func (*BatchDeleteFilesReq) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{13}
+	return file_asset_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *BatchDeleteFilesReq) GetIds() []uint64 {
@@ -831,7 +741,7 @@ type BatchDeleteFilesRes struct {
 
 func (x *BatchDeleteFilesRes) Reset() {
 	*x = BatchDeleteFilesRes{}
-	mi := &file_asset_proto_msgTypes[14]
+	mi := &file_asset_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -843,7 +753,7 @@ func (x *BatchDeleteFilesRes) String() string {
 func (*BatchDeleteFilesRes) ProtoMessage() {}
 
 func (x *BatchDeleteFilesRes) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[14]
+	mi := &file_asset_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -856,7 +766,7 @@ func (x *BatchDeleteFilesRes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BatchDeleteFilesRes.ProtoReflect.Descriptor instead.
 func (*BatchDeleteFilesRes) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{14}
+	return file_asset_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *BatchDeleteFilesRes) GetPaths() []string {
@@ -881,7 +791,7 @@ type SaveFileReq struct {
 
 func (x *SaveFileReq) Reset() {
 	*x = SaveFileReq{}
-	mi := &file_asset_proto_msgTypes[15]
+	mi := &file_asset_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -893,7 +803,7 @@ func (x *SaveFileReq) String() string {
 func (*SaveFileReq) ProtoMessage() {}
 
 func (x *SaveFileReq) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[15]
+	mi := &file_asset_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -906,7 +816,7 @@ func (x *SaveFileReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SaveFileReq.ProtoReflect.Descriptor instead.
 func (*SaveFileReq) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{15}
+	return file_asset_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *SaveFileReq) GetOriginalName() string {
@@ -967,7 +877,7 @@ type SaveFileRes struct {
 
 func (x *SaveFileRes) Reset() {
 	*x = SaveFileRes{}
-	mi := &file_asset_proto_msgTypes[16]
+	mi := &file_asset_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -979,7 +889,7 @@ func (x *SaveFileRes) String() string {
 func (*SaveFileRes) ProtoMessage() {}
 
 func (x *SaveFileRes) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[16]
+	mi := &file_asset_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -992,7 +902,7 @@ func (x *SaveFileRes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SaveFileRes.ProtoReflect.Descriptor instead.
 func (*SaveFileRes) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{16}
+	return file_asset_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *SaveFileRes) GetFileKey() string {
@@ -1013,7 +923,7 @@ type GetUserEmojiCollectsReq struct {
 
 func (x *GetUserEmojiCollectsReq) Reset() {
 	*x = GetUserEmojiCollectsReq{}
-	mi := &file_asset_proto_msgTypes[17]
+	mi := &file_asset_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1025,7 +935,7 @@ func (x *GetUserEmojiCollectsReq) String() string {
 func (*GetUserEmojiCollectsReq) ProtoMessage() {}
 
 func (x *GetUserEmojiCollectsReq) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[17]
+	mi := &file_asset_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1038,7 +948,7 @@ func (x *GetUserEmojiCollectsReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUserEmojiCollectsReq.ProtoReflect.Descriptor instead.
 func (*GetUserEmojiCollectsReq) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{17}
+	return file_asset_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *GetUserEmojiCollectsReq) GetUserId() string {
@@ -1065,7 +975,7 @@ type GetUserEmojiCollectsRes struct {
 
 func (x *GetUserEmojiCollectsRes) Reset() {
 	*x = GetUserEmojiCollectsRes{}
-	mi := &file_asset_proto_msgTypes[18]
+	mi := &file_asset_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1077,7 +987,7 @@ func (x *GetUserEmojiCollectsRes) String() string {
 func (*GetUserEmojiCollectsRes) ProtoMessage() {}
 
 func (x *GetUserEmojiCollectsRes) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[18]
+	mi := &file_asset_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1090,7 +1000,7 @@ func (x *GetUserEmojiCollectsRes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUserEmojiCollectsRes.ProtoReflect.Descriptor instead.
 func (*GetUserEmojiCollectsRes) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{18}
+	return file_asset_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *GetUserEmojiCollectsRes) GetEmojiCollectVersions() []*EmojiCollectVersionItem {
@@ -1118,7 +1028,7 @@ type GetUserEmojiPackageCollectsReq struct {
 
 func (x *GetUserEmojiPackageCollectsReq) Reset() {
 	*x = GetUserEmojiPackageCollectsReq{}
-	mi := &file_asset_proto_msgTypes[19]
+	mi := &file_asset_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1130,7 +1040,7 @@ func (x *GetUserEmojiPackageCollectsReq) String() string {
 func (*GetUserEmojiPackageCollectsReq) ProtoMessage() {}
 
 func (x *GetUserEmojiPackageCollectsReq) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[19]
+	mi := &file_asset_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1143,7 +1053,7 @@ func (x *GetUserEmojiPackageCollectsReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUserEmojiPackageCollectsReq.ProtoReflect.Descriptor instead.
 func (*GetUserEmojiPackageCollectsReq) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{19}
+	return file_asset_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *GetUserEmojiPackageCollectsReq) GetUserId() string {
@@ -1170,7 +1080,7 @@ type GetUserEmojiPackageCollectsRes struct {
 
 func (x *GetUserEmojiPackageCollectsRes) Reset() {
 	*x = GetUserEmojiPackageCollectsRes{}
-	mi := &file_asset_proto_msgTypes[20]
+	mi := &file_asset_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1182,7 +1092,7 @@ func (x *GetUserEmojiPackageCollectsRes) String() string {
 func (*GetUserEmojiPackageCollectsRes) ProtoMessage() {}
 
 func (x *GetUserEmojiPackageCollectsRes) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[20]
+	mi := &file_asset_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1195,7 +1105,7 @@ func (x *GetUserEmojiPackageCollectsRes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetUserEmojiPackageCollectsRes.ProtoReflect.Descriptor instead.
 func (*GetUserEmojiPackageCollectsRes) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{20}
+	return file_asset_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *GetUserEmojiPackageCollectsRes) GetEmojiPackageCollectVersions() []*EmojiPackageCollectVersionItem {
@@ -1223,7 +1133,7 @@ type GetEmojiPackagesReq struct {
 
 func (x *GetEmojiPackagesReq) Reset() {
 	*x = GetEmojiPackagesReq{}
-	mi := &file_asset_proto_msgTypes[21]
+	mi := &file_asset_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1235,7 +1145,7 @@ func (x *GetEmojiPackagesReq) String() string {
 func (*GetEmojiPackagesReq) ProtoMessage() {}
 
 func (x *GetEmojiPackagesReq) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[21]
+	mi := &file_asset_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1248,7 +1158,7 @@ func (x *GetEmojiPackagesReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetEmojiPackagesReq.ProtoReflect.Descriptor instead.
 func (*GetEmojiPackagesReq) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{21}
+	return file_asset_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *GetEmojiPackagesReq) GetUserId() string {
@@ -1275,7 +1185,7 @@ type GetEmojiPackagesRes struct {
 
 func (x *GetEmojiPackagesRes) Reset() {
 	*x = GetEmojiPackagesRes{}
-	mi := &file_asset_proto_msgTypes[22]
+	mi := &file_asset_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1287,7 +1197,7 @@ func (x *GetEmojiPackagesRes) String() string {
 func (*GetEmojiPackagesRes) ProtoMessage() {}
 
 func (x *GetEmojiPackagesRes) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[22]
+	mi := &file_asset_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1300,7 +1210,7 @@ func (x *GetEmojiPackagesRes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetEmojiPackagesRes.ProtoReflect.Descriptor instead.
 func (*GetEmojiPackagesRes) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{22}
+	return file_asset_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *GetEmojiPackagesRes) GetEmojiPackageVersions() []*EmojiPackageVersionItem {
@@ -1328,7 +1238,7 @@ type GetEmojiPackageContentsReq struct {
 
 func (x *GetEmojiPackageContentsReq) Reset() {
 	*x = GetEmojiPackageContentsReq{}
-	mi := &file_asset_proto_msgTypes[23]
+	mi := &file_asset_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1340,7 +1250,7 @@ func (x *GetEmojiPackageContentsReq) String() string {
 func (*GetEmojiPackageContentsReq) ProtoMessage() {}
 
 func (x *GetEmojiPackageContentsReq) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[23]
+	mi := &file_asset_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1353,7 +1263,7 @@ func (x *GetEmojiPackageContentsReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetEmojiPackageContentsReq.ProtoReflect.Descriptor instead.
 func (*GetEmojiPackageContentsReq) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{23}
+	return file_asset_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *GetEmojiPackageContentsReq) GetUserId() string {
@@ -1380,7 +1290,7 @@ type GetEmojiPackageContentsRes struct {
 
 func (x *GetEmojiPackageContentsRes) Reset() {
 	*x = GetEmojiPackageContentsRes{}
-	mi := &file_asset_proto_msgTypes[24]
+	mi := &file_asset_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1392,7 +1302,7 @@ func (x *GetEmojiPackageContentsRes) String() string {
 func (*GetEmojiPackageContentsRes) ProtoMessage() {}
 
 func (x *GetEmojiPackageContentsRes) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[24]
+	mi := &file_asset_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1405,7 +1315,7 @@ func (x *GetEmojiPackageContentsRes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetEmojiPackageContentsRes.ProtoReflect.Descriptor instead.
 func (*GetEmojiPackageContentsRes) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{24}
+	return file_asset_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *GetEmojiPackageContentsRes) GetEmojiPackageContentVersions() []*EmojiPackageContentVersionItem {
@@ -1433,7 +1343,7 @@ type GetEmojisReq struct {
 
 func (x *GetEmojisReq) Reset() {
 	*x = GetEmojisReq{}
-	mi := &file_asset_proto_msgTypes[25]
+	mi := &file_asset_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1445,7 +1355,7 @@ func (x *GetEmojisReq) String() string {
 func (*GetEmojisReq) ProtoMessage() {}
 
 func (x *GetEmojisReq) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[25]
+	mi := &file_asset_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1458,7 +1368,7 @@ func (x *GetEmojisReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetEmojisReq.ProtoReflect.Descriptor instead.
 func (*GetEmojisReq) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{25}
+	return file_asset_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *GetEmojisReq) GetUserId() string {
@@ -1485,7 +1395,7 @@ type GetEmojisRes struct {
 
 func (x *GetEmojisRes) Reset() {
 	*x = GetEmojisRes{}
-	mi := &file_asset_proto_msgTypes[26]
+	mi := &file_asset_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1497,7 +1407,7 @@ func (x *GetEmojisRes) String() string {
 func (*GetEmojisRes) ProtoMessage() {}
 
 func (x *GetEmojisRes) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[26]
+	mi := &file_asset_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1510,7 +1420,7 @@ func (x *GetEmojisRes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetEmojisRes.ProtoReflect.Descriptor instead.
 func (*GetEmojisRes) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{26}
+	return file_asset_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *GetEmojisRes) GetEmojiVersions() []*EmojiVersionItem {
@@ -1538,7 +1448,7 @@ type EmojiVersionItem struct {
 
 func (x *EmojiVersionItem) Reset() {
 	*x = EmojiVersionItem{}
-	mi := &file_asset_proto_msgTypes[27]
+	mi := &file_asset_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1550,7 +1460,7 @@ func (x *EmojiVersionItem) String() string {
 func (*EmojiVersionItem) ProtoMessage() {}
 
 func (x *EmojiVersionItem) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[27]
+	mi := &file_asset_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1563,7 +1473,7 @@ func (x *EmojiVersionItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EmojiVersionItem.ProtoReflect.Descriptor instead.
 func (*EmojiVersionItem) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{27}
+	return file_asset_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *EmojiVersionItem) GetEmojiId() string {
@@ -1590,7 +1500,7 @@ type EmojiPackageVersionItem struct {
 
 func (x *EmojiPackageVersionItem) Reset() {
 	*x = EmojiPackageVersionItem{}
-	mi := &file_asset_proto_msgTypes[28]
+	mi := &file_asset_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1602,7 +1512,7 @@ func (x *EmojiPackageVersionItem) String() string {
 func (*EmojiPackageVersionItem) ProtoMessage() {}
 
 func (x *EmojiPackageVersionItem) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[28]
+	mi := &file_asset_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1615,7 +1525,7 @@ func (x *EmojiPackageVersionItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EmojiPackageVersionItem.ProtoReflect.Descriptor instead.
 func (*EmojiPackageVersionItem) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{28}
+	return file_asset_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *EmojiPackageVersionItem) GetPackageId() string {
@@ -1642,7 +1552,7 @@ type EmojiPackageContentVersionItem struct {
 
 func (x *EmojiPackageContentVersionItem) Reset() {
 	*x = EmojiPackageContentVersionItem{}
-	mi := &file_asset_proto_msgTypes[29]
+	mi := &file_asset_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1654,7 +1564,7 @@ func (x *EmojiPackageContentVersionItem) String() string {
 func (*EmojiPackageContentVersionItem) ProtoMessage() {}
 
 func (x *EmojiPackageContentVersionItem) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[29]
+	mi := &file_asset_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1667,7 +1577,7 @@ func (x *EmojiPackageContentVersionItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EmojiPackageContentVersionItem.ProtoReflect.Descriptor instead.
 func (*EmojiPackageContentVersionItem) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{29}
+	return file_asset_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *EmojiPackageContentVersionItem) GetPackageId() string {
@@ -1694,7 +1604,7 @@ type EmojiCollectVersionItem struct {
 
 func (x *EmojiCollectVersionItem) Reset() {
 	*x = EmojiCollectVersionItem{}
-	mi := &file_asset_proto_msgTypes[30]
+	mi := &file_asset_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1706,7 +1616,7 @@ func (x *EmojiCollectVersionItem) String() string {
 func (*EmojiCollectVersionItem) ProtoMessage() {}
 
 func (x *EmojiCollectVersionItem) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[30]
+	mi := &file_asset_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1719,7 +1629,7 @@ func (x *EmojiCollectVersionItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EmojiCollectVersionItem.ProtoReflect.Descriptor instead.
 func (*EmojiCollectVersionItem) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{30}
+	return file_asset_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *EmojiCollectVersionItem) GetEmojiCollectId() string {
@@ -1746,7 +1656,7 @@ type EmojiPackageCollectVersionItem struct {
 
 func (x *EmojiPackageCollectVersionItem) Reset() {
 	*x = EmojiPackageCollectVersionItem{}
-	mi := &file_asset_proto_msgTypes[31]
+	mi := &file_asset_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1758,7 +1668,7 @@ func (x *EmojiPackageCollectVersionItem) String() string {
 func (*EmojiPackageCollectVersionItem) ProtoMessage() {}
 
 func (x *EmojiPackageCollectVersionItem) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[31]
+	mi := &file_asset_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1771,7 +1681,7 @@ func (x *EmojiPackageCollectVersionItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EmojiPackageCollectVersionItem.ProtoReflect.Descriptor instead.
 func (*EmojiPackageCollectVersionItem) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{31}
+	return file_asset_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *EmojiPackageCollectVersionItem) GetPackageCollectId() string {
@@ -1798,7 +1708,7 @@ type EmojiInfoMsg struct {
 
 func (x *EmojiInfoMsg) Reset() {
 	*x = EmojiInfoMsg{}
-	mi := &file_asset_proto_msgTypes[32]
+	mi := &file_asset_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1810,7 +1720,7 @@ func (x *EmojiInfoMsg) String() string {
 func (*EmojiInfoMsg) ProtoMessage() {}
 
 func (x *EmojiInfoMsg) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[32]
+	mi := &file_asset_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1823,7 +1733,7 @@ func (x *EmojiInfoMsg) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EmojiInfoMsg.ProtoReflect.Descriptor instead.
 func (*EmojiInfoMsg) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{32}
+	return file_asset_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *EmojiInfoMsg) GetWidth() int32 {
@@ -1855,7 +1765,7 @@ type EmojiItem struct {
 
 func (x *EmojiItem) Reset() {
 	*x = EmojiItem{}
-	mi := &file_asset_proto_msgTypes[33]
+	mi := &file_asset_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1867,7 +1777,7 @@ func (x *EmojiItem) String() string {
 func (*EmojiItem) ProtoMessage() {}
 
 func (x *EmojiItem) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[33]
+	mi := &file_asset_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1880,7 +1790,7 @@ func (x *EmojiItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EmojiItem.ProtoReflect.Descriptor instead.
 func (*EmojiItem) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{33}
+	return file_asset_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *EmojiItem) GetEmojiId() string {
@@ -1948,7 +1858,7 @@ type ListEmojisReq struct {
 
 func (x *ListEmojisReq) Reset() {
 	*x = ListEmojisReq{}
-	mi := &file_asset_proto_msgTypes[34]
+	mi := &file_asset_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1960,7 +1870,7 @@ func (x *ListEmojisReq) String() string {
 func (*ListEmojisReq) ProtoMessage() {}
 
 func (x *ListEmojisReq) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[34]
+	mi := &file_asset_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1973,7 +1883,7 @@ func (x *ListEmojisReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListEmojisReq.ProtoReflect.Descriptor instead.
 func (*ListEmojisReq) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{34}
+	return file_asset_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *ListEmojisReq) GetPage() int32 {
@@ -2035,7 +1945,7 @@ type ListEmojisRes struct {
 
 func (x *ListEmojisRes) Reset() {
 	*x = ListEmojisRes{}
-	mi := &file_asset_proto_msgTypes[35]
+	mi := &file_asset_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2047,7 +1957,7 @@ func (x *ListEmojisRes) String() string {
 func (*ListEmojisRes) ProtoMessage() {}
 
 func (x *ListEmojisRes) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[35]
+	mi := &file_asset_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2060,7 +1970,7 @@ func (x *ListEmojisRes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListEmojisRes.ProtoReflect.Descriptor instead.
 func (*ListEmojisRes) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{35}
+	return file_asset_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *ListEmojisRes) GetTotal() int64 {
@@ -2093,7 +2003,7 @@ type SaveEmojiReq struct {
 
 func (x *SaveEmojiReq) Reset() {
 	*x = SaveEmojiReq{}
-	mi := &file_asset_proto_msgTypes[36]
+	mi := &file_asset_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2105,7 +2015,7 @@ func (x *SaveEmojiReq) String() string {
 func (*SaveEmojiReq) ProtoMessage() {}
 
 func (x *SaveEmojiReq) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[36]
+	mi := &file_asset_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2118,7 +2028,7 @@ func (x *SaveEmojiReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SaveEmojiReq.ProtoReflect.Descriptor instead.
 func (*SaveEmojiReq) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{36}
+	return file_asset_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *SaveEmojiReq) GetEmojiId() string {
@@ -2179,7 +2089,7 @@ type SaveEmojiRes struct {
 
 func (x *SaveEmojiRes) Reset() {
 	*x = SaveEmojiRes{}
-	mi := &file_asset_proto_msgTypes[37]
+	mi := &file_asset_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2191,7 +2101,7 @@ func (x *SaveEmojiRes) String() string {
 func (*SaveEmojiRes) ProtoMessage() {}
 
 func (x *SaveEmojiRes) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[37]
+	mi := &file_asset_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2204,7 +2114,7 @@ func (x *SaveEmojiRes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SaveEmojiRes.ProtoReflect.Descriptor instead.
 func (*SaveEmojiRes) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{37}
+	return file_asset_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *SaveEmojiRes) GetEmojiId() string {
@@ -2231,7 +2141,7 @@ type EmojiPackageItem struct {
 
 func (x *EmojiPackageItem) Reset() {
 	*x = EmojiPackageItem{}
-	mi := &file_asset_proto_msgTypes[38]
+	mi := &file_asset_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2243,7 +2153,7 @@ func (x *EmojiPackageItem) String() string {
 func (*EmojiPackageItem) ProtoMessage() {}
 
 func (x *EmojiPackageItem) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[38]
+	mi := &file_asset_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2256,7 +2166,7 @@ func (x *EmojiPackageItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EmojiPackageItem.ProtoReflect.Descriptor instead.
 func (*EmojiPackageItem) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{38}
+	return file_asset_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *EmojiPackageItem) GetPackageId() string {
@@ -2340,7 +2250,7 @@ type ListEmojiPackagesReq struct {
 
 func (x *ListEmojiPackagesReq) Reset() {
 	*x = ListEmojiPackagesReq{}
-	mi := &file_asset_proto_msgTypes[39]
+	mi := &file_asset_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2352,7 +2262,7 @@ func (x *ListEmojiPackagesReq) String() string {
 func (*ListEmojiPackagesReq) ProtoMessage() {}
 
 func (x *ListEmojiPackagesReq) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[39]
+	mi := &file_asset_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2365,7 +2275,7 @@ func (x *ListEmojiPackagesReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListEmojiPackagesReq.ProtoReflect.Descriptor instead.
 func (*ListEmojiPackagesReq) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{39}
+	return file_asset_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *ListEmojiPackagesReq) GetPage() int32 {
@@ -2441,7 +2351,7 @@ type ListEmojiPackagesRes struct {
 
 func (x *ListEmojiPackagesRes) Reset() {
 	*x = ListEmojiPackagesRes{}
-	mi := &file_asset_proto_msgTypes[40]
+	mi := &file_asset_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2453,7 +2363,7 @@ func (x *ListEmojiPackagesRes) String() string {
 func (*ListEmojiPackagesRes) ProtoMessage() {}
 
 func (x *ListEmojiPackagesRes) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[40]
+	mi := &file_asset_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2466,7 +2376,7 @@ func (x *ListEmojiPackagesRes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListEmojiPackagesRes.ProtoReflect.Descriptor instead.
 func (*ListEmojiPackagesRes) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{40}
+	return file_asset_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *ListEmojiPackagesRes) GetTotal() int64 {
@@ -2504,7 +2414,7 @@ type SaveEmojiPackageReq struct {
 
 func (x *SaveEmojiPackageReq) Reset() {
 	*x = SaveEmojiPackageReq{}
-	mi := &file_asset_proto_msgTypes[41]
+	mi := &file_asset_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2516,7 +2426,7 @@ func (x *SaveEmojiPackageReq) String() string {
 func (*SaveEmojiPackageReq) ProtoMessage() {}
 
 func (x *SaveEmojiPackageReq) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[41]
+	mi := &file_asset_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2529,7 +2439,7 @@ func (x *SaveEmojiPackageReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SaveEmojiPackageReq.ProtoReflect.Descriptor instead.
 func (*SaveEmojiPackageReq) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{41}
+	return file_asset_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *SaveEmojiPackageReq) GetPackageId() string {
@@ -2625,7 +2535,7 @@ type SaveEmojiPackageRes struct {
 
 func (x *SaveEmojiPackageRes) Reset() {
 	*x = SaveEmojiPackageRes{}
-	mi := &file_asset_proto_msgTypes[42]
+	mi := &file_asset_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2637,7 +2547,7 @@ func (x *SaveEmojiPackageRes) String() string {
 func (*SaveEmojiPackageRes) ProtoMessage() {}
 
 func (x *SaveEmojiPackageRes) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[42]
+	mi := &file_asset_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2650,7 +2560,7 @@ func (x *SaveEmojiPackageRes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SaveEmojiPackageRes.ProtoReflect.Descriptor instead.
 func (*SaveEmojiPackageRes) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{42}
+	return file_asset_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *SaveEmojiPackageRes) GetPackageId() string {
@@ -2675,7 +2585,7 @@ type UpdateEmojiPackageContentReq struct {
 
 func (x *UpdateEmojiPackageContentReq) Reset() {
 	*x = UpdateEmojiPackageContentReq{}
-	mi := &file_asset_proto_msgTypes[43]
+	mi := &file_asset_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2687,7 +2597,7 @@ func (x *UpdateEmojiPackageContentReq) String() string {
 func (*UpdateEmojiPackageContentReq) ProtoMessage() {}
 
 func (x *UpdateEmojiPackageContentReq) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[43]
+	mi := &file_asset_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2700,7 +2610,7 @@ func (x *UpdateEmojiPackageContentReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateEmojiPackageContentReq.ProtoReflect.Descriptor instead.
 func (*UpdateEmojiPackageContentReq) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{43}
+	return file_asset_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *UpdateEmojiPackageContentReq) GetPackageId() string {
@@ -2755,7 +2665,7 @@ type UpdateEmojiPackageContentRes struct {
 
 func (x *UpdateEmojiPackageContentRes) Reset() {
 	*x = UpdateEmojiPackageContentRes{}
-	mi := &file_asset_proto_msgTypes[44]
+	mi := &file_asset_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2767,7 +2677,7 @@ func (x *UpdateEmojiPackageContentRes) String() string {
 func (*UpdateEmojiPackageContentRes) ProtoMessage() {}
 
 func (x *UpdateEmojiPackageContentRes) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[44]
+	mi := &file_asset_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2780,7 +2690,7 @@ func (x *UpdateEmojiPackageContentRes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateEmojiPackageContentRes.ProtoReflect.Descriptor instead.
 func (*UpdateEmojiPackageContentRes) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{44}
+	return file_asset_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *UpdateEmojiPackageContentRes) GetRelationId() string {
@@ -2812,7 +2722,7 @@ type EmojiCollectItem struct {
 
 func (x *EmojiCollectItem) Reset() {
 	*x = EmojiCollectItem{}
-	mi := &file_asset_proto_msgTypes[45]
+	mi := &file_asset_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2824,7 +2734,7 @@ func (x *EmojiCollectItem) String() string {
 func (*EmojiCollectItem) ProtoMessage() {}
 
 func (x *EmojiCollectItem) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[45]
+	mi := &file_asset_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2837,7 +2747,7 @@ func (x *EmojiCollectItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EmojiCollectItem.ProtoReflect.Descriptor instead.
 func (*EmojiCollectItem) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{45}
+	return file_asset_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *EmojiCollectItem) GetCollectId() string {
@@ -2903,7 +2813,7 @@ type ListEmojiCollectsReq struct {
 
 func (x *ListEmojiCollectsReq) Reset() {
 	*x = ListEmojiCollectsReq{}
-	mi := &file_asset_proto_msgTypes[46]
+	mi := &file_asset_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2915,7 +2825,7 @@ func (x *ListEmojiCollectsReq) String() string {
 func (*ListEmojiCollectsReq) ProtoMessage() {}
 
 func (x *ListEmojiCollectsReq) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[46]
+	mi := &file_asset_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2928,7 +2838,7 @@ func (x *ListEmojiCollectsReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListEmojiCollectsReq.ProtoReflect.Descriptor instead.
 func (*ListEmojiCollectsReq) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{46}
+	return file_asset_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *ListEmojiCollectsReq) GetPage() int32 {
@@ -2983,7 +2893,7 @@ type ListEmojiCollectsRes struct {
 
 func (x *ListEmojiCollectsRes) Reset() {
 	*x = ListEmojiCollectsRes{}
-	mi := &file_asset_proto_msgTypes[47]
+	mi := &file_asset_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2995,7 +2905,7 @@ func (x *ListEmojiCollectsRes) String() string {
 func (*ListEmojiCollectsRes) ProtoMessage() {}
 
 func (x *ListEmojiCollectsRes) ProtoReflect() protoreflect.Message {
-	mi := &file_asset_proto_msgTypes[47]
+	mi := &file_asset_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3008,7 +2918,7 @@ func (x *ListEmojiCollectsRes) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListEmojiCollectsRes.ProtoReflect.Descriptor instead.
 func (*ListEmojiCollectsRes) Descriptor() ([]byte, []int) {
-	return file_asset_proto_rawDescGZIP(), []int{47}
+	return file_asset_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *ListEmojiCollectsRes) GetTotal() int64 {
@@ -3040,11 +2950,7 @@ const file_asset_proto_rawDesc = "" +
 	"\x03md5\x18\x05 \x01(\tR\x03md5\x12\x12\n" +
 	"\x04type\x18\x06 \x01(\tR\x04type\x12\x1c\n" +
 	"\tcreatedAt\x18\a \x01(\tR\tcreatedAt\x12\x1c\n" +
-	"\tupdatedAt\x18\b \x01(\tR\tupdatedAt\"\x18\n" +
-	"\x16GetQiniuUploadTokenReq\"X\n" +
-	"\x16GetQiniuUploadTokenRes\x12 \n" +
-	"\vuploadToken\x18\x01 \x01(\tR\vuploadToken\x12\x1c\n" +
-	"\texpiresIn\x18\x02 \x01(\x03R\texpiresIn\"\xfe\x01\n" +
+	"\tupdatedAt\x18\b \x01(\tR\tupdatedAt\"\xfe\x01\n" +
 	"\bFileItem\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x04R\x02id\x12\x19\n" +
 	"\bfile_key\x18\x02 \x01(\tR\afileKey\x12#\n" +
@@ -3271,10 +3177,9 @@ const file_asset_proto_rawDesc = "" +
 	"\bend_time\x18\x06 \x01(\tR\aendTime\"]\n" +
 	"\x14ListEmojiCollectsRes\x12\x14\n" +
 	"\x05total\x18\x01 \x01(\x03R\x05total\x12/\n" +
-	"\x04list\x18\x02 \x03(\v2\x1b.asset_rpc.EmojiCollectItemR\x04list2\xcc\x04\n" +
+	"\x04list\x18\x02 \x03(\v2\x1b.asset_rpc.EmojiCollectItemR\x04list2\xef\x03\n" +
 	"\x04file\x12I\n" +
-	"\rGetFileDetail\x12\x1b.asset_rpc.GetFileDetailReq\x1a\x1b.asset_rpc.GetFileDetailRes\x12[\n" +
-	"\x13GetQiniuUploadToken\x12!.asset_rpc.GetQiniuUploadTokenReq\x1a!.asset_rpc.GetQiniuUploadTokenRes\x12=\n" +
+	"\rGetFileDetail\x12\x1b.asset_rpc.GetFileDetailReq\x1a\x1b.asset_rpc.GetFileDetailRes\x12=\n" +
 	"\tListFiles\x12\x17.asset_rpc.ListFilesReq\x1a\x17.asset_rpc.ListFilesRes\x12C\n" +
 	"\vGetFileById\x12\x19.asset_rpc.GetFileByIdReq\x1a\x19.asset_rpc.GetFileByIdRes\x12F\n" +
 	"\fGetFileByMd5\x12\x1a.asset_rpc.GetFileByMd5Req\x1a\x1a.asset_rpc.GetFileByMd5Res\x12@\n" +
@@ -3294,7 +3199,7 @@ const file_asset_proto_rawDesc = "" +
 	"\x11ListEmojiPackages\x12\x1f.asset_rpc.ListEmojiPackagesReq\x1a\x1f.asset_rpc.ListEmojiPackagesRes\x12R\n" +
 	"\x10SaveEmojiPackage\x12\x1e.asset_rpc.SaveEmojiPackageReq\x1a\x1e.asset_rpc.SaveEmojiPackageRes\x12m\n" +
 	"\x19UpdateEmojiPackageContent\x12'.asset_rpc.UpdateEmojiPackageContentReq\x1a'.asset_rpc.UpdateEmojiPackageContentRes\x12U\n" +
-	"\x11ListEmojiCollects\x12\x1f.asset_rpc.ListEmojiCollectsReq\x1a\x1f.asset_rpc.ListEmojiCollectsResB\tZ\a./typesb\x06proto3"
+	"\x11ListEmojiCollects\x12\x1f.asset_rpc.ListEmojiCollectsReq\x1a\x1f.asset_rpc.ListEmojiCollectsResB\x06Z\x04./pbb\x06proto3"
 
 var (
 	file_asset_proto_rawDescOnce sync.Once
@@ -3308,112 +3213,108 @@ func file_asset_proto_rawDescGZIP() []byte {
 	return file_asset_proto_rawDescData
 }
 
-var file_asset_proto_msgTypes = make([]protoimpl.MessageInfo, 48)
+var file_asset_proto_msgTypes = make([]protoimpl.MessageInfo, 46)
 var file_asset_proto_goTypes = []any{
 	(*GetFileDetailReq)(nil),               // 0: asset_rpc.GetFileDetailReq
 	(*GetFileDetailRes)(nil),               // 1: asset_rpc.GetFileDetailRes
-	(*GetQiniuUploadTokenReq)(nil),         // 2: asset_rpc.GetQiniuUploadTokenReq
-	(*GetQiniuUploadTokenRes)(nil),         // 3: asset_rpc.GetQiniuUploadTokenRes
-	(*FileItem)(nil),                       // 4: asset_rpc.FileItem
-	(*ListFilesReq)(nil),                   // 5: asset_rpc.ListFilesReq
-	(*ListFilesRes)(nil),                   // 6: asset_rpc.ListFilesRes
-	(*GetFileByIdReq)(nil),                 // 7: asset_rpc.GetFileByIdReq
-	(*GetFileByIdRes)(nil),                 // 8: asset_rpc.GetFileByIdRes
-	(*GetFileByMd5Req)(nil),                // 9: asset_rpc.GetFileByMd5Req
-	(*GetFileByMd5Res)(nil),                // 10: asset_rpc.GetFileByMd5Res
-	(*DeleteFileReq)(nil),                  // 11: asset_rpc.DeleteFileReq
-	(*DeleteFileRes)(nil),                  // 12: asset_rpc.DeleteFileRes
-	(*BatchDeleteFilesReq)(nil),            // 13: asset_rpc.BatchDeleteFilesReq
-	(*BatchDeleteFilesRes)(nil),            // 14: asset_rpc.BatchDeleteFilesRes
-	(*SaveFileReq)(nil),                    // 15: asset_rpc.SaveFileReq
-	(*SaveFileRes)(nil),                    // 16: asset_rpc.SaveFileRes
-	(*GetUserEmojiCollectsReq)(nil),        // 17: asset_rpc.GetUserEmojiCollectsReq
-	(*GetUserEmojiCollectsRes)(nil),        // 18: asset_rpc.GetUserEmojiCollectsRes
-	(*GetUserEmojiPackageCollectsReq)(nil), // 19: asset_rpc.GetUserEmojiPackageCollectsReq
-	(*GetUserEmojiPackageCollectsRes)(nil), // 20: asset_rpc.GetUserEmojiPackageCollectsRes
-	(*GetEmojiPackagesReq)(nil),            // 21: asset_rpc.GetEmojiPackagesReq
-	(*GetEmojiPackagesRes)(nil),            // 22: asset_rpc.GetEmojiPackagesRes
-	(*GetEmojiPackageContentsReq)(nil),     // 23: asset_rpc.GetEmojiPackageContentsReq
-	(*GetEmojiPackageContentsRes)(nil),     // 24: asset_rpc.GetEmojiPackageContentsRes
-	(*GetEmojisReq)(nil),                   // 25: asset_rpc.GetEmojisReq
-	(*GetEmojisRes)(nil),                   // 26: asset_rpc.GetEmojisRes
-	(*EmojiVersionItem)(nil),               // 27: asset_rpc.EmojiVersionItem
-	(*EmojiPackageVersionItem)(nil),        // 28: asset_rpc.EmojiPackageVersionItem
-	(*EmojiPackageContentVersionItem)(nil), // 29: asset_rpc.EmojiPackageContentVersionItem
-	(*EmojiCollectVersionItem)(nil),        // 30: asset_rpc.EmojiCollectVersionItem
-	(*EmojiPackageCollectVersionItem)(nil), // 31: asset_rpc.EmojiPackageCollectVersionItem
-	(*EmojiInfoMsg)(nil),                   // 32: asset_rpc.EmojiInfoMsg
-	(*EmojiItem)(nil),                      // 33: asset_rpc.EmojiItem
-	(*ListEmojisReq)(nil),                  // 34: asset_rpc.ListEmojisReq
-	(*ListEmojisRes)(nil),                  // 35: asset_rpc.ListEmojisRes
-	(*SaveEmojiReq)(nil),                   // 36: asset_rpc.SaveEmojiReq
-	(*SaveEmojiRes)(nil),                   // 37: asset_rpc.SaveEmojiRes
-	(*EmojiPackageItem)(nil),               // 38: asset_rpc.EmojiPackageItem
-	(*ListEmojiPackagesReq)(nil),           // 39: asset_rpc.ListEmojiPackagesReq
-	(*ListEmojiPackagesRes)(nil),           // 40: asset_rpc.ListEmojiPackagesRes
-	(*SaveEmojiPackageReq)(nil),            // 41: asset_rpc.SaveEmojiPackageReq
-	(*SaveEmojiPackageRes)(nil),            // 42: asset_rpc.SaveEmojiPackageRes
-	(*UpdateEmojiPackageContentReq)(nil),   // 43: asset_rpc.UpdateEmojiPackageContentReq
-	(*UpdateEmojiPackageContentRes)(nil),   // 44: asset_rpc.UpdateEmojiPackageContentRes
-	(*EmojiCollectItem)(nil),               // 45: asset_rpc.EmojiCollectItem
-	(*ListEmojiCollectsReq)(nil),           // 46: asset_rpc.ListEmojiCollectsReq
-	(*ListEmojiCollectsRes)(nil),           // 47: asset_rpc.ListEmojiCollectsRes
+	(*FileItem)(nil),                       // 2: asset_rpc.FileItem
+	(*ListFilesReq)(nil),                   // 3: asset_rpc.ListFilesReq
+	(*ListFilesRes)(nil),                   // 4: asset_rpc.ListFilesRes
+	(*GetFileByIdReq)(nil),                 // 5: asset_rpc.GetFileByIdReq
+	(*GetFileByIdRes)(nil),                 // 6: asset_rpc.GetFileByIdRes
+	(*GetFileByMd5Req)(nil),                // 7: asset_rpc.GetFileByMd5Req
+	(*GetFileByMd5Res)(nil),                // 8: asset_rpc.GetFileByMd5Res
+	(*DeleteFileReq)(nil),                  // 9: asset_rpc.DeleteFileReq
+	(*DeleteFileRes)(nil),                  // 10: asset_rpc.DeleteFileRes
+	(*BatchDeleteFilesReq)(nil),            // 11: asset_rpc.BatchDeleteFilesReq
+	(*BatchDeleteFilesRes)(nil),            // 12: asset_rpc.BatchDeleteFilesRes
+	(*SaveFileReq)(nil),                    // 13: asset_rpc.SaveFileReq
+	(*SaveFileRes)(nil),                    // 14: asset_rpc.SaveFileRes
+	(*GetUserEmojiCollectsReq)(nil),        // 15: asset_rpc.GetUserEmojiCollectsReq
+	(*GetUserEmojiCollectsRes)(nil),        // 16: asset_rpc.GetUserEmojiCollectsRes
+	(*GetUserEmojiPackageCollectsReq)(nil), // 17: asset_rpc.GetUserEmojiPackageCollectsReq
+	(*GetUserEmojiPackageCollectsRes)(nil), // 18: asset_rpc.GetUserEmojiPackageCollectsRes
+	(*GetEmojiPackagesReq)(nil),            // 19: asset_rpc.GetEmojiPackagesReq
+	(*GetEmojiPackagesRes)(nil),            // 20: asset_rpc.GetEmojiPackagesRes
+	(*GetEmojiPackageContentsReq)(nil),     // 21: asset_rpc.GetEmojiPackageContentsReq
+	(*GetEmojiPackageContentsRes)(nil),     // 22: asset_rpc.GetEmojiPackageContentsRes
+	(*GetEmojisReq)(nil),                   // 23: asset_rpc.GetEmojisReq
+	(*GetEmojisRes)(nil),                   // 24: asset_rpc.GetEmojisRes
+	(*EmojiVersionItem)(nil),               // 25: asset_rpc.EmojiVersionItem
+	(*EmojiPackageVersionItem)(nil),        // 26: asset_rpc.EmojiPackageVersionItem
+	(*EmojiPackageContentVersionItem)(nil), // 27: asset_rpc.EmojiPackageContentVersionItem
+	(*EmojiCollectVersionItem)(nil),        // 28: asset_rpc.EmojiCollectVersionItem
+	(*EmojiPackageCollectVersionItem)(nil), // 29: asset_rpc.EmojiPackageCollectVersionItem
+	(*EmojiInfoMsg)(nil),                   // 30: asset_rpc.EmojiInfoMsg
+	(*EmojiItem)(nil),                      // 31: asset_rpc.EmojiItem
+	(*ListEmojisReq)(nil),                  // 32: asset_rpc.ListEmojisReq
+	(*ListEmojisRes)(nil),                  // 33: asset_rpc.ListEmojisRes
+	(*SaveEmojiReq)(nil),                   // 34: asset_rpc.SaveEmojiReq
+	(*SaveEmojiRes)(nil),                   // 35: asset_rpc.SaveEmojiRes
+	(*EmojiPackageItem)(nil),               // 36: asset_rpc.EmojiPackageItem
+	(*ListEmojiPackagesReq)(nil),           // 37: asset_rpc.ListEmojiPackagesReq
+	(*ListEmojiPackagesRes)(nil),           // 38: asset_rpc.ListEmojiPackagesRes
+	(*SaveEmojiPackageReq)(nil),            // 39: asset_rpc.SaveEmojiPackageReq
+	(*SaveEmojiPackageRes)(nil),            // 40: asset_rpc.SaveEmojiPackageRes
+	(*UpdateEmojiPackageContentReq)(nil),   // 41: asset_rpc.UpdateEmojiPackageContentReq
+	(*UpdateEmojiPackageContentRes)(nil),   // 42: asset_rpc.UpdateEmojiPackageContentRes
+	(*EmojiCollectItem)(nil),               // 43: asset_rpc.EmojiCollectItem
+	(*ListEmojiCollectsReq)(nil),           // 44: asset_rpc.ListEmojiCollectsReq
+	(*ListEmojiCollectsRes)(nil),           // 45: asset_rpc.ListEmojiCollectsRes
 }
 var file_asset_proto_depIdxs = []int32{
-	4,  // 0: asset_rpc.ListFilesRes.list:type_name -> asset_rpc.FileItem
-	4,  // 1: asset_rpc.GetFileByIdRes.file:type_name -> asset_rpc.FileItem
-	4,  // 2: asset_rpc.GetFileByMd5Res.file:type_name -> asset_rpc.FileItem
-	30, // 3: asset_rpc.GetUserEmojiCollectsRes.emojiCollectVersions:type_name -> asset_rpc.EmojiCollectVersionItem
-	31, // 4: asset_rpc.GetUserEmojiPackageCollectsRes.emojiPackageCollectVersions:type_name -> asset_rpc.EmojiPackageCollectVersionItem
-	28, // 5: asset_rpc.GetEmojiPackagesRes.emojiPackageVersions:type_name -> asset_rpc.EmojiPackageVersionItem
-	29, // 6: asset_rpc.GetEmojiPackageContentsRes.emojiPackageContentVersions:type_name -> asset_rpc.EmojiPackageContentVersionItem
-	27, // 7: asset_rpc.GetEmojisRes.emojiVersions:type_name -> asset_rpc.EmojiVersionItem
-	32, // 8: asset_rpc.EmojiItem.emoji_info:type_name -> asset_rpc.EmojiInfoMsg
-	33, // 9: asset_rpc.ListEmojisRes.list:type_name -> asset_rpc.EmojiItem
-	32, // 10: asset_rpc.SaveEmojiReq.emoji_info:type_name -> asset_rpc.EmojiInfoMsg
-	38, // 11: asset_rpc.ListEmojiPackagesRes.list:type_name -> asset_rpc.EmojiPackageItem
-	32, // 12: asset_rpc.UpdateEmojiPackageContentReq.emoji_info:type_name -> asset_rpc.EmojiInfoMsg
-	45, // 13: asset_rpc.ListEmojiCollectsRes.list:type_name -> asset_rpc.EmojiCollectItem
+	2,  // 0: asset_rpc.ListFilesRes.list:type_name -> asset_rpc.FileItem
+	2,  // 1: asset_rpc.GetFileByIdRes.file:type_name -> asset_rpc.FileItem
+	2,  // 2: asset_rpc.GetFileByMd5Res.file:type_name -> asset_rpc.FileItem
+	28, // 3: asset_rpc.GetUserEmojiCollectsRes.emojiCollectVersions:type_name -> asset_rpc.EmojiCollectVersionItem
+	29, // 4: asset_rpc.GetUserEmojiPackageCollectsRes.emojiPackageCollectVersions:type_name -> asset_rpc.EmojiPackageCollectVersionItem
+	26, // 5: asset_rpc.GetEmojiPackagesRes.emojiPackageVersions:type_name -> asset_rpc.EmojiPackageVersionItem
+	27, // 6: asset_rpc.GetEmojiPackageContentsRes.emojiPackageContentVersions:type_name -> asset_rpc.EmojiPackageContentVersionItem
+	25, // 7: asset_rpc.GetEmojisRes.emojiVersions:type_name -> asset_rpc.EmojiVersionItem
+	30, // 8: asset_rpc.EmojiItem.emoji_info:type_name -> asset_rpc.EmojiInfoMsg
+	31, // 9: asset_rpc.ListEmojisRes.list:type_name -> asset_rpc.EmojiItem
+	30, // 10: asset_rpc.SaveEmojiReq.emoji_info:type_name -> asset_rpc.EmojiInfoMsg
+	36, // 11: asset_rpc.ListEmojiPackagesRes.list:type_name -> asset_rpc.EmojiPackageItem
+	30, // 12: asset_rpc.UpdateEmojiPackageContentReq.emoji_info:type_name -> asset_rpc.EmojiInfoMsg
+	43, // 13: asset_rpc.ListEmojiCollectsRes.list:type_name -> asset_rpc.EmojiCollectItem
 	0,  // 14: asset_rpc.file.GetFileDetail:input_type -> asset_rpc.GetFileDetailReq
-	2,  // 15: asset_rpc.file.GetQiniuUploadToken:input_type -> asset_rpc.GetQiniuUploadTokenReq
-	5,  // 16: asset_rpc.file.ListFiles:input_type -> asset_rpc.ListFilesReq
-	7,  // 17: asset_rpc.file.GetFileById:input_type -> asset_rpc.GetFileByIdReq
-	9,  // 18: asset_rpc.file.GetFileByMd5:input_type -> asset_rpc.GetFileByMd5Req
-	11, // 19: asset_rpc.file.DeleteFile:input_type -> asset_rpc.DeleteFileReq
-	13, // 20: asset_rpc.file.BatchDeleteFiles:input_type -> asset_rpc.BatchDeleteFilesReq
-	15, // 21: asset_rpc.file.SaveFile:input_type -> asset_rpc.SaveFileReq
-	17, // 22: asset_rpc.emoji.GetUserEmojiCollects:input_type -> asset_rpc.GetUserEmojiCollectsReq
-	19, // 23: asset_rpc.emoji.GetUserEmojiPackageCollects:input_type -> asset_rpc.GetUserEmojiPackageCollectsReq
-	21, // 24: asset_rpc.emoji.GetEmojiPackages:input_type -> asset_rpc.GetEmojiPackagesReq
-	23, // 25: asset_rpc.emoji.GetEmojiPackageContents:input_type -> asset_rpc.GetEmojiPackageContentsReq
-	25, // 26: asset_rpc.emoji.GetEmojis:input_type -> asset_rpc.GetEmojisReq
-	34, // 27: asset_rpc.emoji.ListEmojis:input_type -> asset_rpc.ListEmojisReq
-	36, // 28: asset_rpc.emoji.SaveEmoji:input_type -> asset_rpc.SaveEmojiReq
-	39, // 29: asset_rpc.emoji.ListEmojiPackages:input_type -> asset_rpc.ListEmojiPackagesReq
-	41, // 30: asset_rpc.emoji.SaveEmojiPackage:input_type -> asset_rpc.SaveEmojiPackageReq
-	43, // 31: asset_rpc.emoji.UpdateEmojiPackageContent:input_type -> asset_rpc.UpdateEmojiPackageContentReq
-	46, // 32: asset_rpc.emoji.ListEmojiCollects:input_type -> asset_rpc.ListEmojiCollectsReq
-	1,  // 33: asset_rpc.file.GetFileDetail:output_type -> asset_rpc.GetFileDetailRes
-	3,  // 34: asset_rpc.file.GetQiniuUploadToken:output_type -> asset_rpc.GetQiniuUploadTokenRes
-	6,  // 35: asset_rpc.file.ListFiles:output_type -> asset_rpc.ListFilesRes
-	8,  // 36: asset_rpc.file.GetFileById:output_type -> asset_rpc.GetFileByIdRes
-	10, // 37: asset_rpc.file.GetFileByMd5:output_type -> asset_rpc.GetFileByMd5Res
-	12, // 38: asset_rpc.file.DeleteFile:output_type -> asset_rpc.DeleteFileRes
-	14, // 39: asset_rpc.file.BatchDeleteFiles:output_type -> asset_rpc.BatchDeleteFilesRes
-	16, // 40: asset_rpc.file.SaveFile:output_type -> asset_rpc.SaveFileRes
-	18, // 41: asset_rpc.emoji.GetUserEmojiCollects:output_type -> asset_rpc.GetUserEmojiCollectsRes
-	20, // 42: asset_rpc.emoji.GetUserEmojiPackageCollects:output_type -> asset_rpc.GetUserEmojiPackageCollectsRes
-	22, // 43: asset_rpc.emoji.GetEmojiPackages:output_type -> asset_rpc.GetEmojiPackagesRes
-	24, // 44: asset_rpc.emoji.GetEmojiPackageContents:output_type -> asset_rpc.GetEmojiPackageContentsRes
-	26, // 45: asset_rpc.emoji.GetEmojis:output_type -> asset_rpc.GetEmojisRes
-	35, // 46: asset_rpc.emoji.ListEmojis:output_type -> asset_rpc.ListEmojisRes
-	37, // 47: asset_rpc.emoji.SaveEmoji:output_type -> asset_rpc.SaveEmojiRes
-	40, // 48: asset_rpc.emoji.ListEmojiPackages:output_type -> asset_rpc.ListEmojiPackagesRes
-	42, // 49: asset_rpc.emoji.SaveEmojiPackage:output_type -> asset_rpc.SaveEmojiPackageRes
-	44, // 50: asset_rpc.emoji.UpdateEmojiPackageContent:output_type -> asset_rpc.UpdateEmojiPackageContentRes
-	47, // 51: asset_rpc.emoji.ListEmojiCollects:output_type -> asset_rpc.ListEmojiCollectsRes
-	33, // [33:52] is the sub-list for method output_type
-	14, // [14:33] is the sub-list for method input_type
+	3,  // 15: asset_rpc.file.ListFiles:input_type -> asset_rpc.ListFilesReq
+	5,  // 16: asset_rpc.file.GetFileById:input_type -> asset_rpc.GetFileByIdReq
+	7,  // 17: asset_rpc.file.GetFileByMd5:input_type -> asset_rpc.GetFileByMd5Req
+	9,  // 18: asset_rpc.file.DeleteFile:input_type -> asset_rpc.DeleteFileReq
+	11, // 19: asset_rpc.file.BatchDeleteFiles:input_type -> asset_rpc.BatchDeleteFilesReq
+	13, // 20: asset_rpc.file.SaveFile:input_type -> asset_rpc.SaveFileReq
+	15, // 21: asset_rpc.emoji.GetUserEmojiCollects:input_type -> asset_rpc.GetUserEmojiCollectsReq
+	17, // 22: asset_rpc.emoji.GetUserEmojiPackageCollects:input_type -> asset_rpc.GetUserEmojiPackageCollectsReq
+	19, // 23: asset_rpc.emoji.GetEmojiPackages:input_type -> asset_rpc.GetEmojiPackagesReq
+	21, // 24: asset_rpc.emoji.GetEmojiPackageContents:input_type -> asset_rpc.GetEmojiPackageContentsReq
+	23, // 25: asset_rpc.emoji.GetEmojis:input_type -> asset_rpc.GetEmojisReq
+	32, // 26: asset_rpc.emoji.ListEmojis:input_type -> asset_rpc.ListEmojisReq
+	34, // 27: asset_rpc.emoji.SaveEmoji:input_type -> asset_rpc.SaveEmojiReq
+	37, // 28: asset_rpc.emoji.ListEmojiPackages:input_type -> asset_rpc.ListEmojiPackagesReq
+	39, // 29: asset_rpc.emoji.SaveEmojiPackage:input_type -> asset_rpc.SaveEmojiPackageReq
+	41, // 30: asset_rpc.emoji.UpdateEmojiPackageContent:input_type -> asset_rpc.UpdateEmojiPackageContentReq
+	44, // 31: asset_rpc.emoji.ListEmojiCollects:input_type -> asset_rpc.ListEmojiCollectsReq
+	1,  // 32: asset_rpc.file.GetFileDetail:output_type -> asset_rpc.GetFileDetailRes
+	4,  // 33: asset_rpc.file.ListFiles:output_type -> asset_rpc.ListFilesRes
+	6,  // 34: asset_rpc.file.GetFileById:output_type -> asset_rpc.GetFileByIdRes
+	8,  // 35: asset_rpc.file.GetFileByMd5:output_type -> asset_rpc.GetFileByMd5Res
+	10, // 36: asset_rpc.file.DeleteFile:output_type -> asset_rpc.DeleteFileRes
+	12, // 37: asset_rpc.file.BatchDeleteFiles:output_type -> asset_rpc.BatchDeleteFilesRes
+	14, // 38: asset_rpc.file.SaveFile:output_type -> asset_rpc.SaveFileRes
+	16, // 39: asset_rpc.emoji.GetUserEmojiCollects:output_type -> asset_rpc.GetUserEmojiCollectsRes
+	18, // 40: asset_rpc.emoji.GetUserEmojiPackageCollects:output_type -> asset_rpc.GetUserEmojiPackageCollectsRes
+	20, // 41: asset_rpc.emoji.GetEmojiPackages:output_type -> asset_rpc.GetEmojiPackagesRes
+	22, // 42: asset_rpc.emoji.GetEmojiPackageContents:output_type -> asset_rpc.GetEmojiPackageContentsRes
+	24, // 43: asset_rpc.emoji.GetEmojis:output_type -> asset_rpc.GetEmojisRes
+	33, // 44: asset_rpc.emoji.ListEmojis:output_type -> asset_rpc.ListEmojisRes
+	35, // 45: asset_rpc.emoji.SaveEmoji:output_type -> asset_rpc.SaveEmojiRes
+	38, // 46: asset_rpc.emoji.ListEmojiPackages:output_type -> asset_rpc.ListEmojiPackagesRes
+	40, // 47: asset_rpc.emoji.SaveEmojiPackage:output_type -> asset_rpc.SaveEmojiPackageRes
+	42, // 48: asset_rpc.emoji.UpdateEmojiPackageContent:output_type -> asset_rpc.UpdateEmojiPackageContentRes
+	45, // 49: asset_rpc.emoji.ListEmojiCollects:output_type -> asset_rpc.ListEmojiCollectsRes
+	32, // [32:50] is the sub-list for method output_type
+	14, // [14:32] is the sub-list for method input_type
 	14, // [14:14] is the sub-list for extension type_name
 	14, // [14:14] is the sub-list for extension extendee
 	0,  // [0:14] is the sub-list for field type_name
@@ -3424,15 +3325,15 @@ func file_asset_proto_init() {
 	if File_asset_proto != nil {
 		return
 	}
-	file_asset_proto_msgTypes[36].OneofWrappers = []any{}
-	file_asset_proto_msgTypes[41].OneofWrappers = []any{}
+	file_asset_proto_msgTypes[34].OneofWrappers = []any{}
+	file_asset_proto_msgTypes[39].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_asset_proto_rawDesc), len(file_asset_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   48,
+			NumMessages:   46,
 			NumExtensions: 0,
 			NumServices:   2,
 		},

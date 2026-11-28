@@ -121,7 +121,7 @@ func (l *UpdateFavoriteEmojiLogic) UpdateFavoriteEmoji(req *types.UpdateFavorite
 				},
 				"conversationId": "",
 			}
-			pushcli.SendRealtimeApi(l.ctx, "sync", payload)
+			pushcli.SendRealtimeApi(context.Background(), "sync", payload)
 		}(l.svcCtx.Config.Etcd, req.UserID, newFavoriteEmoji.EmojiCollectID, collectVersion)
 
 	case "unfavorite":
@@ -174,7 +174,7 @@ func (l *UpdateFavoriteEmojiLogic) UpdateFavoriteEmoji(req *types.UpdateFavorite
 				},
 				"conversationId": "",
 			}
-			pushcli.SendRealtimeApi(l.ctx, "sync", payload)
+			pushcli.SendRealtimeApi(context.Background(), "sync", payload)
 		}(l.svcCtx.Config.Etcd, req.UserID, favoriteEmoji.EmojiCollectID, favoriteEmoji.Version)
 
 	default:

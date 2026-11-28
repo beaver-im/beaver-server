@@ -146,7 +146,7 @@ func (l *UserValidStatusLogic) UserValidStatus(req *types.FriendValidStatusReq) 
 			}()
 
 			// 调用Chat服务的通知消息发送接口
-			_, err := l.svcCtx.ChatRpc.SendNotificationMessage(l.ctx, &chat_rpc.SendNotificationMessageReq{
+			_, err := l.svcCtx.ChatRpc.SendNotificationMessage(context.Background(), &chat_rpc.SendNotificationMessageReq{
 				ConversationId: conversationID,
 				MessageType:    1, // 好友添加成功欢迎消息
 				Content:        "我们已经是好友了，开始聊天吧",
@@ -166,7 +166,7 @@ func (l *UserValidStatusLogic) UserValidStatus(req *types.FriendValidStatusReq) 
 					l.logger.Error(model.LogMsg{Text: "数字伙伴关注事件投递panic", Data: map[string]interface{}{"panic": r}})
 				}
 			}()
-			ctx := l.ctx
+			ctx := context.Background()
 			res, err := open.GetDigitalByUserIDApi(ctx, nil, &opentype.GetDigitalByUserIDReq{DigitalUserId: friendVerify.RevUserID})
 			if err == nil && res != nil && res.Found {
 				if pushErr := openevent.Push(ctx, friendVerify.RevUserID,
@@ -265,7 +265,7 @@ func (l *UserValidStatusLogic) UserValidStatus(req *types.FriendValidStatusReq) 
 			})
 
 			for _, uid := range []string{friendVerify.SendUserID, friendVerify.RevUserID} {
-				info, uErr := l.svcCtx.UserRpc.UserInfo(l.ctx, &accttypes.UserInfoReq{UserID: uid})
+				info, uErr := l.svcCtx.UserRpc.UserInfo(context.Background(), &accttypes.UserInfoReq{UserID: uid})
 				if uErr != nil || info == nil || info.UserInfo == nil {
 					l.logger.Error(model.LogMsg{Text: "同意好友后查询用户资料失败，跳过该用户的 users 更新", Data: map[string]interface{}{"userId": uid, "err": fmt.Sprint(uErr)}})
 					continue
@@ -289,7 +289,7 @@ func (l *UserValidStatusLogic) UserValidStatus(req *types.FriendValidStatusReq) 
 			},
 			"conversationId": conversationID,
 		}
-		pushcli.SendRealtimeApi(l.ctx, "sync", payload1)
+		pushcli.SendRealtimeApi(context.Background(), "sync", payload1)
 		payload2 := map[string]interface{}{
 			"command":  wsCommandConst.FRIEND_OPERATION,
 			"type":     wsTypeConst.FriendVerifyReceive,
@@ -300,7 +300,7 @@ func (l *UserValidStatusLogic) UserValidStatus(req *types.FriendValidStatusReq) 
 			},
 			"conversationId": conversationID,
 		}
-		pushcli.SendRealtimeApi(l.ctx, "sync", payload2)
+		pushcli.SendRealtimeApi(context.Background(), "sync", payload2)
 
 		l.logger.Info(model.LogMsg{Text: "异步发送WebSocket通知完成", Data: map[string]interface{}{"verifyId": req.VerifyID, "status": friendVerify.RevStatus}})
 	}()
@@ -335,7 +335,7 @@ func (l *UserValidStatusLogic) UserValidStatus(req *types.FriendValidStatusReq) 
 			"status":   decisionStatus,
 		})
 
-		_, err := l.svcCtx.NotifyRpc.PushEvent(l.ctx, &notification_rpc.PushEventReq{
+		_, err := l.svcCtx.NotifyRpc.PushEvent(context.Background(), &notification_rpc.PushEventReq{
 			EventType:   eventType,
 			Category:    notifyconst.CategorySocial,
 			FromUserId:  friendVerify.RevUserID, // 审核人
